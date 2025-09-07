@@ -1,38 +1,17 @@
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+  display: flex;
+  justify-content: center;  /* 가운데 정렬 */
+  align-items: center;
   min-height: 100vh;
+  background-color: #ececec; /* 좌우/배경 회색 */
+}
+
+/* 흰색 중앙 공간 */
+.App-container {
+  width: 430px;       /* 모바일 기기 폭 (아이폰 12 기준) */
+  min-height: 100vh;
+  background-color: #fff;
+  box-shadow: 0 0 20px rgba(0,0,0,0.15); /* 약간 그림자 */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
