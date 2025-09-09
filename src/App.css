@@ -3,14 +3,14 @@
   justify-content: center;  /* 가운데 정렬 */
   align-items: center;
   min-height: 100vh;
-  background-color: #ececec; /* 좌우/배경 회색 */
+  background-color: #9e2525; /* 좌우/배경 회색 */
 }
 
 /* 흰색 중앙 공간 */
 .App-container {
-  width: 430px;       /* 모바일 기기 폭 (아이폰 12 기준) */
+  max-width: 430px;       /* 모바일 기기 폭 (아이폰 12 기준) */
   min-height: 100vh;
-  background-color: #fff;
+  background-color: #7b2c2c;
   box-shadow: 0 0 20px rgba(0,0,0,0.15); /* 약간 그림자 */
   display: flex;
   flex-direction: column;
