@@ -1,5 +1,5 @@
 import React from "react";
-import "../css/loginPage.css";
+import "../css/LoginPage.css";
 
 /* SVG 파일을 URL로 사용 (안정적) */
 import heartSvg from "../image/loginPage/heart.svg";

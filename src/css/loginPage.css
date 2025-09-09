@@ -201,7 +201,7 @@ html { font-size: 16px; }
   display: block;
 }
 
-/* ===== 작은 화면(예: iPhone SE 등) 전용 튜닝 ===== */
+/* ===== 아이폰 SE ===== */
 @media (max-height: 700px) {
   :root{
     --arch-top-gap: 6rem;     /* 상단 여백 축소 */
@@ -213,6 +213,10 @@ html { font-size: 16px; }
   .logo-img{ width: clamp(13rem, 54%, 16rem); }
   .kakao-btn{ height: clamp(2.8rem, 6.2vh, 3.2rem); }
 
+  .sub {
+    margin-left: -1.5rem;
+  }
+  
   .hint {
     margin-top: 6rem;
   }
