@@ -1,9 +1,12 @@
 // src/pages/LoginPage.jsx
 import React from "react";
-import { useLocation } from "react-router-dom";
 import "../css/LoginPage.css";
+
+import { useLocation } from "react-router-dom";
+
 import heartSvg from "../image/loginPage/heart.svg";
 import logoSvg from "../image/loginPage/logo.svg";
+import backgroundImage from "../image/loginPage/background.png";
 
 const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
 const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
@@ -23,7 +26,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="login-root" role="main">
+    <main className="login-root" role="main" style={{backgroundImage: `url(${backgroundImage})`}}>
       <section className="arch-card" aria-label="너랑 나랑 소개 및 로그인">
         <div className="brand">
           <img src={heartSvg} alt="" className="heart-img" aria-hidden="true" />

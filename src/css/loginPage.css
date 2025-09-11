@@ -1,230 +1,136 @@
-/* 기본 폰트 (Jua + NotoSansKR), VitroCore는 @font-face로 추가 */
+/* =========================
+   Fonts
+========================= */
 @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;800&display=swap');
-
-/* VitroCore 웹폰트 (Noonnu CDN) */
-@font-face {
-  font-family: "VitroCore";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/Vitro_core.woff") format("woff");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
 
 html { font-size: 16px; }
 
-/* 아치/브랜드/카피 레이아웃 변수 (rem 기반: 기기 바뀌어도 일정) */
+/* =========================
+   Theme variables
+========================= */
 :root{
   --pink:#E15BB7;
   --pink-deep:#D84DAE;
   --text:#434343;
   --muted:#8F8F8F;
   --kakao:#FEE500;
-
-  --arch-top-gap: 10rem;    /* 화면 상단과 하얀 아치 사이 여백 */
-  --arch-left-right: 1rem;  /* 좌우 프레임 여백 */
-  --arch-dome-r: 14rem;     /* 아치 상단 반경(고정) */
-  --arch-pad-top: 12rem;    /* 아치 내부 상단 기본 패딩(돔 공간) */
-  --arch-radius-bottom: 0;  /* 하단 둥금 제거 */
-
-  /* 브랜드 영역(하트+로고) 높이와 복사문구와의 간격을 명시적으로 확보 */
-  --brand-h: 8rem;          /* 브랜드(하트+로고) 덩어리 높이 */
-  --brand-gap: 0.75rem;     /* 브랜드와 카피 사이 간격 */
-
-  --brand-font: "VitroCore", "Jua", "Noto Sans KR", sans-serif;
-
-  /* 카피(글) 추가 오프셋/줄 간격 */
-  --copy-offset: -4rem;      /* 카피 상단에서 조금 더 내림 */
-  --copy-gap:    0.3rem;    /* headline ↔ sub 간격 */
 }
 
-/* 중앙 캔버스(.App-container) 안에서 전체 높이 기준을 잡음 */
-.login-root{
-  height: 100dvh;                 /* 확정 높이 */
-  position: relative;             /* 아치 절대배치 기준 */
-  background: #FF69C3;
-  overflow: hidden;
+/* =========================
+   Root background
+========================= */
+.login-root {
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  height: 100vh;
+
+  display: flex;                 /* flex 컨테이너 */
+  flex-direction: column;        /* 세로 방향 정렬 */
+  justify-content: center;       /* 세로 중앙 */
+  align-items: center;           /* 가로 중앙 */
 }
 
-/* 아치형 카드: 상단 둥글게, 하단 0 (바닥 밀착) + 내용 스크롤 허용(작은 화면 대응) */
-.arch-card{
-  position: absolute;
-  top: var(--arch-top-gap);
-  bottom: 0;
-  left: var(--arch-left-right);
-  right: var(--arch-left-right);
-
-  background: #fff;
-
-  border-radius:
-    var(--arch-dome-r) var(--arch-dome-r) var(--arch-radius-bottom) var(--arch-radius-bottom) /
-    var(--arch-dome-r) var(--arch-dome-r) var(--arch-radius-bottom) var(--arch-radius-bottom);
-
-  /* 상단 여백 = 돔 공간 + 브랜드 블록 높이 + 브랜드와 카피 간격 */
-  padding: calc(var(--arch-pad-top) + var(--brand-h) + var(--brand-gap)) 6vw 0;
-
-  display: grid;
-  grid-template-rows: auto 1fr auto; /* [copy] [spacer] [cta] */
-  gap: 2rem;
-
-  box-shadow: 0 1rem 2rem rgba(0,0,0,.06);
-
-  /* 둥근 테두리 밖 내용은 가리되, 세로 스크롤은 허용 (iPhone SE 대응) */
-  overflow: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  box-sizing: border-box;
-}
-
-/* ===== 상단 브랜드(하트 + 로고) — 아치 상단 영역에 고정 ===== */
-.brand{
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: calc(var(--arch-pad-top) - 2rem);  /* 돔 공간 안쪽에 고정 */
+/* =========================
+   Brand (heart + logo)
+========================= */
+.brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: none;
+  gap: 0.6rem;
 }
 
-.heart-img{
-  width: 1.6rem;
+.heart-img {
+  width: 1.8rem;
   height: auto;
-  margin-bottom: 0.4rem;
+  margin-top: 2vh;
 }
 
-.logo-img{
-  /* 기본: 아치 내부 폭의 58% 근처, 하한/상한으로 안정 */
-  width: clamp(15rem, 58%, 18rem);
+.logo-img {
+  width: clamp(12rem, 82%, 20rem);
   height: auto;
   display: block;
-  max-width: none !important;  /* 전역 reset의 max-width:100% 무력화 */
 }
-
-/* ===== 카피: 세로 스택 + 중앙 정렬 + 안정 간격 ===== */
-.copy{
+/* =========================
+   Copy texts
+========================= */
+.copy {
   display: flex;
   flex-direction: column;
-  align-items: center;                 /* 가로 중앙 */
-  justify-content: center;             /* 세로도 중앙 쪽으로 */
-  gap: var(--copy-gap);                /* headline ↔ sub 간격 */
-  width: 100%;
-  margin: var(--copy-offset) 0 0;      /* 브랜드 아래에서 조금 더 내림 */
-  padding: 0 clamp(12px, 4vw, 24px);   /* 좌우 여백(둥근 모서리 닿지 않게) */
+  justify-content: center;
+  align-items: center;
   text-align: center;
-  color: var(--text);
+  gap: 0.1rem;
+  
+  margin-top: 6vh;
 
-  /* 컨테이너 단위(cqi) 사용을 위한 컨테이너 선언 */
-  container-type: inline-size;
-
-  /* Grid 컨텍스트에서 수축 허용 */
-  min-width: 0;
-  box-sizing: border-box;
+  color: #434343;
 }
 
-/* 각 줄: 한 줄 고정 + 중앙 정렬 (말줄임/클립 없이 폰트 크기로 대응) */
-.headline,
-.sub{
-  display: block;                 /* 각자 자기 줄 확보 */
-  width: 100%;
+.headline {
   margin: 0;
-  line-height: 1.2;               /* 글자 크기 변동에도 안정 */
-  white-space: nowrap;            /* 줄바꿈 금지 */
-  word-break: keep-all;
-  text-align: center;
-  font-family: var(--brand-font);
-  box-sizing: border-box;
+  font-weight: 900;
+  font-size: clamp(1.1rem, 3.6vw, 1.3rem);
+  line-height: 1.3;
 }
 
-/* 기본(컨테이너 단위 미지원 브라우저) — viewport 기반 스케일 */
-.headline{ font-weight: 800; font-size: clamp(0.95rem, 3.2vw, 1.15rem); }
-.sub     { font-weight: 400; font-size: clamp(0.90rem, 3.0vw, 1.10rem); }
-
-/* 컨테이너 단위 지원 시: 컨테이너 폭(=아치 내부 폭)에 맞춰 더 정확히 스케일 */
-@supports (width: 1cqi) {
-  .headline{ font-size: clamp(0.95rem, 5cqi, 1.15rem); }
-  .sub     { font-size: clamp(0.90rem, 4.8cqi, 1.10rem); }
+.sub {
+  margin: 0;
+  font-weight: 900;
+  font-size: clamp(1.1rem, 3.6vw, 1.3rem);
+  line-height: 1.4;
 }
 
 .em,
-.em-strong{
+.em-strong {
   color:#E8048D;
   font-weight: 800;
 }
 
-/* ===== CTA (항상 바닥에 붙어 보이도록 + 잘림 방지) ===== */
-.cta{
+/* =========================
+   CTA (button)
+========================= */
+.cta {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .8rem;
-  /* 홈바/노치 고려 + 작은 화면에서 잘림 방지 */
-  padding: 1rem 0 calc(env(safe-area-inset-bottom) + 14px);
-  margin: 0;
-  min-width: 0;
+  margin-top: 3rem;
 }
 
-.hint{
-  margin-top: 10rem;
-  font-size: clamp(0.78rem, 2.6vw, 0.9rem);
+.hint {
+  font-size: clamp(0.82rem, 2.8vw, 0.9rem);
   color: var(--muted);
-  white-space: nowrap;
+  
+  margin-top: 4rem;
 }
 
 /* 카카오 버튼 */
-.kakao-btn{
+.kakao-btn {
   width: min(82%, 20rem);
-  height: clamp(3.0rem, 6.8vh, 3.4rem);  /* SE에서 조금 낮게 */
+  height: clamp(3rem, 6.5vh, 3.4rem);
   border: none;
-  border-radius: 3rem;
+  border-radius: 999px;
   background: var(--kakao);
   color: #1A1A1A;
   font-weight: 700;
-  font-size: clamp(0.92rem, 0.98rem, 1.02rem);
+  font-size: 1rem;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .6rem;
+  gap: 0.6rem;
+
   cursor: pointer;
-  box-shadow: 0 .9rem 1.4rem rgba(0,0,0,.08);
   transition: transform .06s ease, filter .15s ease;
 }
 
-.kakao-btn:hover{ filter: brightness(0.98); }
-.kakao-btn:active{ transform: translateY(0.08rem) scale(0.995); }
+.kakao-btn:hover { filter: brightness(0.98); }
+.kakao-btn:active { transform: translateY(0.06rem) scale(0.995); }
 
-.kakao-icon{
+.kakao-icon {
   width: 1.25rem;
   height: 1.25rem;
   fill: #191600;
   display: block;
-}
-
-/* ===== 아이폰 SE ===== */
-@media (max-height: 700px) {
-  :root{
-    --arch-top-gap: 6rem;     /* 상단 여백 축소 */
-    --arch-pad-top: 9rem;     /* 돔 패딩 축소 */
-    --brand-h: 6.5rem;        /* 브랜드 블록 높이 보수적으로 줄임 */
-    --brand-gap: 0.6rem;
-    --copy-offset: -1rem;   /* 카피 덜 내림 (겹침 방지) */
-  }
-  .logo-img{ width: clamp(13rem, 54%, 16rem); }
-  .kakao-btn{ height: clamp(2.8rem, 6.2vh, 3.2rem); }
-
-  .sub {
-    margin-left: -1.5rem;
-  }
-  
-  .hint {
-    margin-top: 6rem;
-  }
-}
-
-/* 아이폰 14프로 맥스 */
-@media (min-height: 900px) {
-    .hint {
-      margin-top: 15rem;
-    }   
 }
