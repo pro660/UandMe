@@ -3,7 +3,7 @@
 
 /* ===== 테마 변수 ===== */
 :root{
-  --bg: #F4F6F8;
+  --bg: #fff;
   --text: #333;
   --muted: #8F8F8F;
   --line: #E3E6EA;
@@ -38,7 +38,7 @@
 
 /* 타이틀 */
 .page-title{
-  margin: 0 0 4vh;
+  margin: 0 0 10vh;
   text-align: center;
   font-family: var(--ui-font);
   font-weight: 700;
@@ -54,7 +54,7 @@
 
 .field-label{
   font-family: var(--ui-font);
-  font-weight: 600;
+  font-weight: 450;
   font-size: .9rem;
   line-height: 1;
   color: #80848A;
@@ -63,9 +63,9 @@
 /* 입력 공통 래퍼 */
 .input-wrap{
   position: relative;
-  background: #fff;
+  background: #D9D9D9;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 5px;
   height: 3rem;
   display:flex;
   align-items:center;
@@ -86,6 +86,7 @@
   font-size: 1rem;
   line-height: 1;
   color: var(--text);
+  
 }
 .text-input::placeholder{ color:#B0B6BD; }
 
@@ -110,6 +111,7 @@
   background: #F1F3F5;
   border-radius: .6rem;
   padding: .35rem .5rem;
+
 }
 
 /* API 상태 힌트 */
@@ -137,15 +139,28 @@
   height: 3rem;
   padding: 0 1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--line);
-  background: #fff;
+  background: #FF69C3;
   font-family: var(--ui-font);
   font-weight: 600;
-  font-size: .95rem;
+  font-size: .8rem;
   line-height: 1;
-  color: #444;
+  color: #fff;
+  border:2px solid #FF69C3;
+
+  cursor: pointer;
 }
-.pill-btn:disabled{ opacity:.6; cursor: not-allowed; }
+.pill-btn:disabled{ opacity:.6; cursor: not-allowed; background-color: #fff; color: #7D7D7D; border: 1.5px solid black}
+
+/* 닉네임 줄 우측에 뜨는 '확인 완료' */
+.dup-done{
+  align-self: center;
+  font-family: var(--ui-font);
+  font-weight: 700;
+  font-size: .85rem;
+  color: #0a6;
+  white-space: nowrap;
+  margin-left: .25rem;
+}
 
 /* 3열 그리드 */
 .grid-3{
@@ -169,6 +184,10 @@
   color: var(--text);
 }
 
+#gender.select-input {
+  cursor: pointer;
+}
+
 /* 학번 suffix */
 .input-wrap.has-suffix{ padding-right: 3.2rem; }
 .suffix{
@@ -188,7 +207,8 @@
 .field select:invalid { color:#B0B6BD; }
 
 .notice{
-  margin: 1.2rem 0 0;
+
+  margin: 30vh 0 0;
   padding-left: 1rem;
   color: #6F7680;
   font-family: var(--ui-font);
@@ -198,8 +218,13 @@
 }
 .notice li{ list-style: disc; }
 
+@media ((max-width: 376px) and (min-width: 320px)) {
+  .notice{ margin-top: 5vh; }
+}
+
 /* 하단 고정 영역 */
 .sticky-actions{
+  
   position: sticky;
   bottom: 0;
   background: linear-gradient(to top, var(--bg) 70%, transparent);
@@ -218,10 +243,12 @@
   font-weight: 700;
   font-size: 1rem;
   line-height: 1;
+
+  cursor: pointer;
 }
 .primary-btn:not(:disabled){
   border-color: transparent;
-  background: var(--primary);
+  background: linear-gradient(90deg, #FF69C3 0%, #E8048D 100%);
   color: #1A1A1A;
   box-shadow: 0 .7rem 1.2rem rgba(0,0,0,.08);
 }
@@ -297,7 +324,15 @@
 }
 .acc-header.is-open .caret{ transform: rotate(90deg); }
 
-.acc-body{ overflow:hidden; transition:max-height .22s ease; }
+.acc-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+.acc-body.open {
+  max-height: 600px; /* 충분히 큰 값 (학과 개수에 맞게 조정 가능) */
+}
+
 .program-list{ list-style:none; margin:.25rem 0 0; padding:0 .25rem .25rem; }
 
 .program-item{
