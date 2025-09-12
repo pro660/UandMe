@@ -1,28 +1,14 @@
-// src/pages/InfoForm.jsx
-import React, { useMemo, useState, useEffect } from "react";
+// src/jsx/InfoForm.jsx
+import React, { useMemo, useState } from "react";
 import "../css/InfoForm.css";
-
-/** ✅ 토큰/리프레시가 붙어있는 axios 인스턴스 (axios.js는 수정하지 않음) */
-import api from "../api/axios.js";
-
-/** QPage를 라우터 없이 내부에서 사용 */
 import QPage from "./QPage.jsx";
 
-/** ===== API BASE (닉네임 중복확인에서만 사용 - fetch용) =====
- *  주 서버가 8080임을 보장하기 위해 절대 URL을 유지합니다.
- *  (환경 변수에 절대 URL이 있다면 그걸 우선 사용)
- */
-const RAW_BASE = process.env.REACT_APP_API_BASE_URL?.trim();
+/** ===== 닉네임 중복확인에만 fetch 사용 (토큰 불필요) ===== */
+const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
 const IS_ABS_URL = /^https?:\/\//i.test(RAW_BASE || "");
-const API_BASE = IS_ABS_URL ? RAW_BASE : "http://localhost:8080";
-
-/** 닉네임 중복확인 엔드포인트 (fetch 사용) */
+const API_BASE = (IS_ABS_URL ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
 const CHECK_URL = `${API_BASE}/users/me/name/check`;
 
-/** 프로필 엔드포인트 (토큰 인스턴스 api로 호출; 절대 URL로 8080 고정) */
-const PROFILE_URL_ABS = "http://localhost:8080/users/me/profile";
-
-/** 네트워크 타임아웃 fetch (중복확인용) */
 async function fetchWithTimeout(resource, options = {}) {
   const { timeout = 3000 } = options;
   const controller = new AbortController();
@@ -37,49 +23,41 @@ async function fetchWithTimeout(resource, options = {}) {
   }
 }
 
-/** 닉네임 중복확인 API (서버 스펙에 맞춰 바디키가 code인 점은 유지) */
+/** 서버 스펙: body 키가 code 인지 확실치 않음 → 현재까지 공유된 내용 기준 유지 */
 async function checkNicknameAPI(code) {
   const resp = await fetchWithTimeout(CHECK_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ code }), // ← 확실치 않으면 백엔드와 키명 합의 필요
     timeout: 3000,
   });
-  // 서버가 409를 "이미 사용중"으로 줄 수도 있음
   if (!resp.ok) {
-    if (resp.status === 409) return { ok: true, available: false }; // 사용중
+    if (resp.status === 409) return { ok: true, available: false }; // 이미 사용중
     return { ok: false };
   }
   const data = await resp.json().catch(() => ({}));
-  // available 필드가 있으면 사용, 없으면 200=가능으로 처리
   const available = typeof data.available === "boolean" ? data.available : true;
   return { ok: true, available };
 }
 
 export default function InfoForm() {
-  /** 폼 → 질문 페이지로 진입 여부 */
   const [started, setStarted] = useState(false);
 
-  /** 입력값 */
   const [nickname, setNickname] = useState("");
-  const [age, setAge] = useState("");
-  const [year, setYear] = useState("");
+  const [birthYear, setBirthYear] = useState(""); // 출생년도
+  const [year, setYear] = useState("");           // 학번(예: "22")
   const [gender, setGender] = useState("남자");
   const [major, setMajor] = useState("");
 
-  /** 닉네임 카운터 */
   const nickLen = nickname.length;
   const nickMax = 8;
   const nickOver = nickLen > nickMax;
 
-  /** 중복확인 상태 */
   const [dupState, setDupState] = useState("idle"); // idle|checking|ok|taken|error
 
-  /** 바텀시트/아코디언 */
   const [sheetOpen, setSheetOpen] = useState(false);
   const [expanded, setExpanded] = useState({});
 
-  /** 학부/학과 데이터 */
   const FACULTIES = useMemo(() => [
     { name: "해양·스포츠학부", majors: ["경호비서학과", "레저해양스포츠학과", "해양경찰학과"] },
     { name: "AI·SW학부", majors: ["항공AI소프트웨어학과", "AI로보틱스학과", "AI모빌리티학과"] },
@@ -92,8 +70,9 @@ export default function InfoForm() {
     { name: "디자인엔터미디어학부", majors: ["문화재보존학과","영화영상학과","미디어예술창작학과","영상애니메이션학과","실용음악학과","공간디자인학과","산업디자인학과","시각디자인학과","패션디자인학과"] },
   ], []);
 
-  const AGE_MIN = 20, AGE_MAX = 36;
-  const YEAR_MIN = 15, YEAR_MAX = 25;
+  const YEAR_NOW = new Date().getFullYear();
+  const BIRTHYEAR_MIN = YEAR_NOW - 36;
+  const BIRTHYEAR_MAX = YEAR_NOW - 20;
 
   const toggleFaculty = (name) =>
     setExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
@@ -103,7 +82,6 @@ export default function InfoForm() {
     if (dupState !== "idle") setDupState("idle");
   };
 
-  /** 닉네임 중복확인 */
   const handleCheckNickname = async () => {
     if (!nickname || nickOver) return;
     setDupState("checking");
@@ -119,39 +97,37 @@ export default function InfoForm() {
     }
   };
 
-  /** 제출 → 서버에 즉시 저장(PATCH) → 같은 페이지에서 QPage로 전환 */
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (nickOver) return;
 
-    const payload = {
-      name: nickname.trim(),
-      department: major,
-      studentNo: String(year),
-      age: Number(age),
-      gender,
-    };
-
-    try {
-      await api.patch(PROFILE_URL_ABS, payload);
-      setSheetOpen(false);
-      setStarted(true);          // ✅ 질문 페이지 표시
-      window.scrollTo(0, 0);     // UX: 상단으로 스크롤
-    } catch (err) {
-      console.error(err);
-      alert("프로필 저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+    const by = Number(birthYear);
+    if (!by || by < BIRTHYEAR_MIN || by > BIRTHYEAR_MAX) {
+      alert(`출생년도는 ${BIRTHYEAR_MIN} ~ ${BIRTHYEAR_MAX} 사이여야 합니다.`);
+      return;
     }
+
+    setSheetOpen(false);
+    setStarted(true);
+    window.scrollTo(0, 0);
   };
 
-  // 👉 started가 true면 QPage를 표시 (라우터 사용 X)
   if (started) {
-    // (선택) QPage에 "처음 화면으로" 복귀 콜백을 주고 싶으면 onClose 전달
     const handleCloseQPage = () => {
       setStarted(false);
       window.scrollTo(0, 0);
     };
 
-    return <QPage onClose={handleCloseQPage} />;
+    // ✅ InfoForm에서 입력한 값들을 QPage로 전달 (프론트 메모리 상 보관)
+    const baseInfo = {
+      name: nickname.trim(),
+      department: major,
+      studentNo: String(year),
+      birthYear: Number(birthYear),
+      gender: gender === "남자" ? "MALE" : "FEMALE", // 서버 스펙 맞춤
+    };
+
+    return <QPage onClose={handleCloseQPage} baseInfo={baseInfo} />;
   }
 
   return (
@@ -193,18 +169,18 @@ export default function InfoForm() {
             {nickOver && <p className="hint-error">닉네임은 최대 8자까지 입력할 수 있어요.</p>}
           </div>
 
-          {/* 나이 / 학번 / 성별 */}
+          {/* 출생년도 / 학번 / 성별 */}
           <div className="grid-3">
             <div className="field">
-              <label className="field-label" htmlFor="age">나이</label>
+              <label className="field-label" htmlFor="birthYear">출생년도</label>
               <div className="input-wrap">
                 <input
-                  id="age"
+                  id="birthYear"
                   className="text-input"
                   inputMode="numeric"
-                  placeholder={`${AGE_MIN}~${AGE_MAX}`}
-                  value={age}
-                  onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))}
+                  placeholder={`${BIRTHYEAR_MIN}~${BIRTHYEAR_MAX}`}
+                  value={birthYear}
+                  onChange={(e) => setBirthYear(e.target.value.replace(/\D/g, ""))}
                 />
               </div>
             </div>
@@ -216,7 +192,7 @@ export default function InfoForm() {
                   id="year"
                   className="text-input"
                   inputMode="numeric"
-                  placeholder={`${YEAR_MIN}~${YEAR_MAX}`}
+                  placeholder="예: 22"
                   value={year}
                   onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))}
                 />
@@ -263,7 +239,7 @@ export default function InfoForm() {
               type="submit"
               disabled={
                 !nickname || nickOver ||
-                !age || !year || !gender || !major ||
+                !birthYear || !year || !gender || !major ||
                 dupState !== "ok"
               }
             >

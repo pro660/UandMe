@@ -1,32 +1,26 @@
 // src/pages/LoginPage.jsx
 import React from "react";
 import "../css/LoginPage.css";
-
-import { useLocation } from "react-router-dom";
-
 import heartSvg from "../image/loginPage/heart.svg";
 import logoSvg from "../image/loginPage/logo.svg";
 import backgroundImage from "../image/loginPage/background.png";
 
 const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
 const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
-const API_BASE = IS_ABS ? RAW_BASE : "http://localhost:8080"; // ✅ 절대 URL만 사용
-
+const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
 
 export default function LoginPage() {
-  const location = useLocation();
-  const nextPath =
-    (location.state && location.state.from && location.state.from.pathname) || "/";
+  // 로그인 성공 후 항상 이 경유 페이지에서 회원가입 여부를 판단
+  const nextPath = "/post-login";
 
   const handleKakao = () => {
-    const base = API_BASE.replace(/\/+$/, "");
-    const url = `${base}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextPath)}`;
-    window.location.assign(url); // 백엔드로 완전 이동
+    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextPath)}`;
+    window.location.assign(url); // 백엔드로 이동(카카오 인증)
   };
 
   return (
-    <main className="login-root" role="main" style={{backgroundImage: `url(${backgroundImage})`}}>
+    <main className="login-root" role="main" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <section className="arch-card" aria-label="너랑 나랑 소개 및 로그인">
         <div className="brand">
           <img src={heartSvg} alt="" className="heart-img" aria-hidden="true" />

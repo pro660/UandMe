@@ -1,15 +1,13 @@
 // src/pages/QPage.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-
-// ✅ 토큰/리프레시가 붙어있는 axios 인스턴스 (수정 금지 파일)
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios.js";
-import useUserStore from "../api/userStore.js";
 
-/** 절대 URL: axios.js의 baseURL(4000/api)와 무관하게 8080 서버를 확실히 찍음 */
-const PROFILE_URL_ABS = "http://localhost:8080/users/me/profile";
+const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
+const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
+const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
+const PROFILE_URL = `${API_BASE}/users/me/profile`;
 
-/** 10가지 데이팅 스타일 설문지 */
 const DEFAULT_QUESTIONS = [
   { id: 1, text: "새로운 사람을 만날 때, 당신은 주로 어떤 상황을 선호하나요?",
     options: ["친구들과 함께하는 편안하고 시끌벅적한 모임", "조용하고 분위기 좋은 카페나 레스토랑에서의 일대일 대화"] },
@@ -34,17 +32,8 @@ const DEFAULT_QUESTIONS = [
     options: ["재미있는 분위기를 주도하고 리드하는 편이다.", "상대방의 이야기에 귀 기울이고 잘 맞춰주는 편이다."] },
 ];
 
-export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
+export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useUserStore(); // 필요 시 user.profile 힌트로 사용
-
-  /** 전 페이지에서 넘겨준 힌트(없어도 동작) */
-  const hinted = (location && location.state) || null;
-
-  /** 실제로 PATCH에 쓸 프로필 원천 데이터 */
-  const [profile, setProfile] = useState(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
 
   const TOTAL = questions.length;
   const [step, setStep] = useState(0);
@@ -54,43 +43,6 @@ export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
 
   const q = questions[step];
   const displayNo = useMemo(() => String(step + 1).padStart(2, "0"), [step]);
-
-  /** 초기 프로필 채우기 전략
-   *  1) 라우팅 state(hinted)
-   *  2) store.user.profile (있다면)
-   *  3) 최종 GET /users/me/profile 로 서버에서 가져오기
-   */
-  useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        // 1) 라우팅 힌트
-        if (hinted) {
-          setProfile(hinted);
-          return;
-        }
-
-        // 2) 전역 store의 프로필 힌트
-        const storeProfile = user?.profile;
-        if (storeProfile) {
-          setProfile(storeProfile);
-          return;
-        }
-
-        // 3) 서버에서 확정값 GET (axios 인스턴스가 토큰/리프레시 처리)
-        const { data } = await api.get(PROFILE_URL_ABS);
-        if (mounted) setProfile(data);
-      } catch (e) {
-        // 프로필이 꼭 필요하다면 이 시점에 온보딩/로그인 등으로 보낼 수 있음
-        console.error("프로필 불러오기 실패:", e);
-      } finally {
-        if (mounted) setLoadingProfile(false);
-      }
-    })();
-
-    return () => { mounted = false; };
-  }, [hinted, user]);
 
   const handleSelect = (idx) => setChoice(idx);
 
@@ -107,29 +59,34 @@ export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
       return;
     }
 
-    // 마지막 문항 → 프로필 업데이트
     try {
       setSubmitting(true);
 
-      // 프로필 소스가 없으면 안전하게 방지
-      const base = profile || {};
-      const payload = {
-        // 서버 스펙에 맞춰 InfoForm과 동일한 키 유지
-        name: base.name,
-        department: base.department,
-        studentNo: base.studentNo,
-        age: base.age,
-        gender: base.gender,
-
-        // 성격/취향 테스트는 나중에 추가
-        // personalityTest: { answers: next, scoreA, scoreB, version: 1 },
+      // 0 → "a", 1 → "b"
+      const ab = next.map((v) => (v === 0 ? "a" : "b"));
+      const qPayload = {
+        q1: ab[0], q2: ab[1], q3: ab[2], q4: ab[3], q5: ab[4],
+        q6: ab[5], q7: ab[6], q8: ab[7], q9: ab[8], q10: ab[9],
       };
 
-      // ✅ 절대 URL 사용 → axios.js의 baseURL과 상관없이 8080 서버로 보냄
-      await api.patch(PROFILE_URL_ABS, payload);
+      // 최종 페이로드: InfoForm에서 받은 기본 정보 + 질문 결과
+      const payload = {
+        ...baseInfo, // { name, department, studentNo, birthYear, gender: "MALE"/"FEMALE" }
+        ...qPayload, // q1~q10: "a"/"b"
+      };
 
-      // 결과 페이지로 이동 (즉시 표시용 힌트로만 전달)
-      navigate("/match/result", { state: { ...payload } });
+      await api.patch(PROFILE_URL, payload);
+
+      // 결과 계산(간단)
+      const scoreA = ab.filter((c) => c === "a").length;
+      const scoreB = ab.filter((c) => c === "b").length;
+      const dominant = scoreA === scoreB ? "BALANCED" : (scoreA > scoreB ? "A-TYPE" : "B-TYPE");
+
+      // 테스트 결과 페이지로 이동 (경로는 프로젝트 라우팅에 맞춰 조정)
+      navigate("/match/result", {
+        replace: true,
+        state: { profile: payload, answers: ab, scoreA, scoreB, dominant },
+      });
     } catch (e) {
       console.error(e);
       alert("프로필 저장 중 오류가 발생했습니다.");
@@ -140,17 +97,16 @@ export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
 
   const handleBack = () => {
     if (step === 0) {
-        if (onClose) return onClose(); // ✅ 폼 화면으로 복귀
-      navigate(-1);
+      if (onClose) return onClose(); // InfoForm으로 복귀
+      window.history.back();
     } else {
       setStep((s) => s - 1);
       setChoice(answers[step - 1]);
     }
   };
 
-  // (선택) 프로필 로딩 중 표시
-  if (loadingProfile && !hinted && !user?.profile) {
-    return <div className="qpage-loading">Loading...</div>;
+  if (!q) {
+    return <div className="qpage-error">문항 데이터를 불러오지 못했어요.</div>;
   }
 
   return (
@@ -158,8 +114,14 @@ export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
       {/* 상단: 뒤로가기 + 진행도(10칸) */}
       <div className="qpage-top">
         <button className="qpage-back" onClick={handleBack} type="button">←</button>
-        <div className="qpage-progress" role="progressbar" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={step}>
-          <div className="qpage-progress-fill" style={{ width: `${(step / TOTAL) * 100}%` }} />
+        <div
+          className="qpage-progress"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={TOTAL}
+          aria-valuenow={step + 1}
+        >
+          <div className="qpage-progress-fill" style={{ width: `${((step + 1) / TOTAL) * 100}%` }} />
         </div>
       </div>
 
@@ -180,7 +142,7 @@ export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
           <button
             key={idx}
             className={`qpage-option ${choice === idx ? "active" : ""}`}
-            onClick={() => handleSelect(idx)}
+            onClick={() => setChoice(idx)}
             type="button"
           >
             {opt}
@@ -195,7 +157,7 @@ export default function QPage({ onClose, questions = DEFAULT_QUESTIONS }) {
         disabled={choice === null || submitting}
         type="button"
       >
-        {step === TOTAL - 1 ? (submitting ? "제출 중..." : "확인") : "확인"}
+        {step === TOTAL - 1 ? (submitting ? "제출 중..." : "결과 보기") : "확인"}
       </button>
     </div>
   );
