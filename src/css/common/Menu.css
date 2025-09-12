@@ -1,0 +1,101 @@
+/* ===== 하단 고정: 화면 폭 꽉 차게(4등분) ===== */
+.menu.menu-fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  pointer-events: none;             /* 바깥은 클릭 막음 */
+  padding: 0 12px;                  /* 좌우 여백(화면 내부) */
+}
+
+.menu-buttons {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  pointer-events: auto;             /* 버튼 그룹만 클릭 가능 */
+}
+
+/* ===== 글래스 버튼 그룹 (4개 균등 분할) ===== */
+.glass-radio-group {
+  --bg: rgba(255,255,255,0.06);
+  --text: #c1c1c1;
+  --count: 4;                       /* ✅ 기본값: 4개 */
+  --pos: 0;
+
+  width: 100%;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(var(--count), 1fr);
+
+  position: relative;
+  background: var(--bg);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 6px 22px rgba(0,0,0,0.28),
+    inset 1px 1px 4px rgba(255,255,255,0.18),
+    inset -1px -1px 6px rgba(0,0,0,0.28);
+  overflow: hidden;
+}
+
+/* ===== 각 버튼 ===== */
+.glass-radio-group button {
+  min-width: 0;                     
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: clamp(1.2rem, 0.9vw + 0.8rem, 1.6rem);
+  padding: clamp(10px, 1.2vh, 14px) 0;
+  height: 44px;
+
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.03rem;
+  color: var(--text);
+  position: relative;
+  z-index: 2;
+
+  background: none;
+  border: none;
+
+  transition: color .25s ease-in-out, transform .12s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.glass-radio-group button:hover {
+  color: #d9d9d9;
+}
+
+.glass-radio-group button.active {
+  color: #000;
+}
+
+/* ===== 글라이더 (선택된 버튼 하이라이트) ===== */
+.glass-glider {
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: calc(100% / var(--count));
+  border-radius: 14px;
+  z-index: 1;
+
+  background: linear-gradient(135deg,#c0c0c055,#FF69C3);
+  box-shadow:
+    0 0 18px rgba(192,192,192,.5),
+    inset 0 0 10px rgba(255,255,255,.4);
+}
+
+
+/* ===== 초소형 화면 튜닝 ===== */
+@media (max-width:360px){
+  .glass-radio-group button {
+    font-size: 1.25rem;
+  }
+}

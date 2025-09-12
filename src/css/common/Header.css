@@ -1,0 +1,22 @@
+header {
+  display: flex;
+  align-items: center;      
+  justify-content: space-between;
+  padding: 1.5rem 1rem;
+
+  /* ✅ 헤더 전체 그림자 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background-color: #fff;  /* 그림자가 잘 보이도록 배경색 지정 */
+  position: sticky;        /* 스크롤 시 상단 고정하고 싶다면 */
+  top: 0;                  /* sticky 위치 기준 */
+  z-index: 100;            /* 다른 요소 위에 보이도록 */
+}
+
+header img:first-child {
+  height: 30px;
+}
+
+header img:last-child {
+  height: 28px;
+  cursor: pointer;
+}
