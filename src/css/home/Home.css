@@ -62,7 +62,7 @@
   gap: 2rem;
   justify-content: center;
   margin: 1rem auto;
-  margin-bottom: 5rem;
+  padding-bottom: 5rem;
   flex-wrap: wrap; /* 작은 화면에서는 세로 배치 */
 }
 
