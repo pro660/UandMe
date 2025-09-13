@@ -11,7 +11,6 @@ import MyPage from "./jsx/mypage/MyPage";
 
 import LoginPage from "./jsx/loginPage";
 import InfoForm from "./jsx/InfoForm";
-import PostLoginGate from "./jsx/PostLoginGate";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -41,8 +40,6 @@ function AppRouter() {
           <Route path="/matching" element={<Matching />} />
           <Route path="/mypage" element={<MyPage />} />
 
-          {/* 로그인 후 첫 분기: 회원가입 여부 판단 */}
-          <Route path="/post-login" element={<PostLoginGate />} />
 
           {/* 회원가입(정보 입력 페이지) */}
           <Route path="/infoform" element={<InfoForm />} />
