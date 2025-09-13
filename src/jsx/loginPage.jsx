@@ -15,17 +15,27 @@ const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "")
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
 const ME_URL = `${API_BASE}/users/me`;
 
-// src/pages/LoginOrGate.jsx
-// ... (import 부분 동일)
-
 export default function LoginOrGate() {
   const navigate = useNavigate();
   const location = useLocation();
   const setUser = useUserStore((s) => s.setUser);
 
   const [busy, setBusy] = useState(false);
-  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const incomingAccessToken = params.get("accessToken");
+
+  // 1) 토큰 추출: 쿼리(?accessToken / ?access) + 해시(#accessToken / #access) 모두 허용
+  const tokenFromQuery = useMemo(() => {
+    const sp = new URLSearchParams(location.search);
+    return sp.get("accessToken") || sp.get("access");
+  }, [location.search]);
+
+  const tokenFromHash = useMemo(() => {
+    const raw = (location.hash || "").replace(/^#/, "");
+    if (!raw) return null;
+    const sp = new URLSearchParams(raw);
+    return sp.get("accessToken") || sp.get("access");
+  }, [location.hash]);
+
+  const incomingAccessToken = tokenFromQuery || tokenFromHash;
 
   useEffect(() => {
     let mounted = true;
@@ -36,14 +46,28 @@ export default function LoginOrGate() {
 
       try {
         if (incomingAccessToken) {
-          console.log("✅ 쿼리에서 accessToken 확인:", incomingAccessToken);
+          console.log("✅ URL에서 accessToken 확인:", incomingAccessToken);
+
+          // store + localStorage에 저장 (axios가 localStorage를 참조하는 경우 대비)
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, accessToken: incomingAccessToken });
-
           try {
-            const cleanUrl = location.pathname + (location.hash || "");
-            window.history.replaceState({}, "", cleanUrl);
-            console.log("🔄 URL에서 accessToken 파라미터 제거 완료");
+            localStorage.setItem("accessToken", incomingAccessToken);
+          } catch {}
+
+          // (선택) 현재 런타임의 axios 기본 헤더도 즉시 갱신
+          try {
+            api.defaults.headers.common.Authorization = `Bearer ${incomingAccessToken}`;
+          } catch {}
+
+          // URL 정리: 쿼리/해시 둘 다 제거
+          try {
+            const qs = new URLSearchParams(location.search);
+            qs.delete("accessToken");
+            qs.delete("access");
+            const cleanUrl = location.pathname + (qs.toString() ? `?${qs.toString()}` : "");
+            window.history.replaceState({}, "", cleanUrl); // 해시는 포함하지 않아 제거됨
+            console.log("🔄 URL에서 토큰 파라미터/해시 제거 완료");
           } catch {
             console.warn("⚠️ URL 정리 실패");
           }
@@ -70,9 +94,16 @@ export default function LoginOrGate() {
             data?.registered ??
             data?.profileCompleted;
 
-          const isRegistered = (typeof flag === "boolean")
-            ? flag
-            : !!(data?.name && data?.studentNo && data?.gender && data?.department && (typeof data?.birthYear === "number" || data?.birthYear));
+          const isRegistered =
+            typeof flag === "boolean"
+              ? flag
+              : !!(
+                  data?.name &&
+                  data?.studentNo &&
+                  data?.gender &&
+                  data?.department &&
+                  (typeof data?.birthYear === "number" || data?.birthYear)
+                );
 
           console.log("📝 회원가입 여부 판정:", isRegistered ? "가입 완료" : "미가입");
 
@@ -97,16 +128,24 @@ export default function LoginOrGate() {
       }
     };
 
-    const hasToken = !!incomingAccessToken || !!useUserStore.getState().user?.accessToken;
+    // 2) 토큰이 있거나(방금 받은/저장된) 이미 저장된 토큰이 있으면 게이트 시도
+    const hasToken =
+      !!incomingAccessToken ||
+      !!useUserStore.getState().user?.accessToken ||
+      !!localStorage.getItem("accessToken");
+
     console.log("🔍 토큰 존재 여부 확인 →", hasToken ? "있음" : "없음");
     if (hasToken) gate();
 
-    return () => { mounted = false; };
-  }, [incomingAccessToken, location.pathname, navigate, setUser, location.hash]);
+    return () => {
+      mounted = false;
+    };
+  }, [incomingAccessToken, location.pathname, location.hash, navigate, setUser, location.search]);
 
+  // 3) 카카오 로그인: next는 상대경로로 보내서 서버의 이중 도메인 버그를 회피
   const handleKakao = () => {
-    const nextAbs = `${window.location.origin}/login`;
-    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextAbs)}`;
+    const nextRel = "/login"; // 콜백 후 다시 이 페이지로 돌아오게
+    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextRel)}`;
     console.log("➡️ 카카오 로그인 URL로 이동:", url);
     window.location.assign(url);
   };
