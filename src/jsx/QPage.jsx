@@ -73,7 +73,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
         ...qPayload, // q1~q10: "a"/"b"
       };
 
-      await api.patch(PROFILE_URL, payload);
+      await api.put(PROFILE_URL, payload);
 
       // 결과 계산(간단)
       const scoreA = ab.filter((c) => c === "a").length;
