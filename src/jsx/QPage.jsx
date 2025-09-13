@@ -2,12 +2,9 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios.js";
+import useUserStore from "../api/userStore.js";
 
-const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
-const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
-const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
-const PROFILE_URL = `${API_BASE}/users/me/profile`;
-
+/** 기본 문항(필요시 외부에서 questions prop으로 대체 가능) */
 const DEFAULT_QUESTIONS = [
   { id: 1, text: "새로운 사람을 만날 때, 당신은 주로 어떤 상황을 선호하나요?",
     options: ["친구들과 함께하는 편안하고 시끌벅적한 모임", "조용하고 분위기 좋은 카페나 레스토랑에서의 일대일 대화"] },
@@ -51,12 +48,14 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
     next[step] = choice;
     setAnswers(next);
 
+    // 다음 문항으로
     if (step < TOTAL - 1) {
       setStep((s) => s + 1);
       setChoice(next[step + 1]);
       return;
     }
 
+    // 마지막 문항 → 제출
     try {
       setSubmitting(true);
 
@@ -67,23 +66,29 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
         q6: ab[5], q7: ab[6], q8: ab[7], q9: ab[8], q10: ab[9],
       };
 
-      // 최종 페이로드: InfoForm에서 받은 기본 정보 + 질문 결과
+      // InfoForm에서 넘겨준 기본 정보 + 문항 응답
       const payload = {
         ...baseInfo, // { name, department, studentNo, birthYear, gender: "MALE"/"FEMALE" }
-        ...qPayload, // q1~q10: "a"/"b"
+        ...qPayload,
       };
 
-      await api.put(PROFILE_URL, payload);
+      // ✅ 토큰 자동첨부되는 axios 인스턴스로 PUT
+      await api.put("/users/me/profile", payload);
 
-      // 결과 계산(간단)
+      // ✅ 최신 프로필 GET 후 전역 상태 & localStorage에 저장
+      const resp = await api.get("/users/me/profile");
+      const profileData = resp.data;
+      useUserStore.getState().setUser(profileData);
+
+      // 간단 결과 계산
       const scoreA = ab.filter((c) => c === "a").length;
       const scoreB = ab.filter((c) => c === "b").length;
       const dominant = scoreA === scoreB ? "BALANCED" : (scoreA > scoreB ? "A-TYPE" : "B-TYPE");
 
-      // 테스트 결과 페이지로 이동 (경로는 프로젝트 라우팅에 맞춰 조정)
+      // 결과 페이지 이동 (라우팅 경로는 프로젝트에 맞춰 사용)
       navigate("/match/result", {
         replace: true,
-        state: { profile: payload, answers: ab, scoreA, scoreB, dominant },
+        state: { profile: profileData, answers: ab, scoreA, scoreB, dominant },
       });
     } catch (e) {
       console.error(e);
@@ -103,9 +108,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
     }
   };
 
-  if (!q) {
-    return <div className="qpage-error">문항 데이터를 불러오지 못했어요.</div>;
-  }
+  if (!q) return <div className="qpage-error">문항 데이터를 불러오지 못했어요.</div>;
 
   return (
     <div className="qpage">
