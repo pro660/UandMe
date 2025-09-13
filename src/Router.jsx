@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./jsx/common/Header";
 import Menu from "./jsx/common/Menu";
 
-import Home from "./jsx/Home";
+import Home from "./jsx/home/Home";
 import ChatList from "./jsx/chat/ChatList";
 import Matching from "./jsx/matching/Matching";
 import MyPage from "./jsx/mypage/MyPage";

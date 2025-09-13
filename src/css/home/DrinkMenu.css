@@ -1,0 +1,58 @@
+.drink-menu-container {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 90%;
+  margin: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.drink-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.drink-detail {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.drink-image {
+  width: 6rem;
+  height: 8rem;
+  border-radius: 0.5rem;
+}
+
+.drink-info h3 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.drink-price {
+  font-weight: bold;
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.drink-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.drink-item {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.drink-item.active {
+  font-weight: bold;
+  color: #e63946;
+}

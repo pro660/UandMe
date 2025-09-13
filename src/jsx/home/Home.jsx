@@ -1,5 +1,7 @@
-import "../css/Home.css";
-import Logo from "../image/loginPage/logo.svg"; // 로고 import
+import "../../css/home/Home.css";
+import Logo from "../../image/loginPage/logo.svg"; // 로고 import
+
+import DrinkMenu from "../home/DrinkMenu";
 
 function Home() {
   return (
@@ -14,6 +16,17 @@ function Home() {
 
           {/* 로고 이미지 */}
           <img src={Logo} alt="너랑 나랑 로고" className="hero-logo-img" />
+        </div>
+      </section>
+            <section className="drink-and-map">
+        <DrinkMenu />
+
+        <div className="booth-location">
+          <h3>멋사부스는 <span className="highlight">이곳</span>에 있어요</h3>
+          <div className="booth-map">
+            {/* 나중에 이미지 바꿔치기 가능 */}
+            <img src={Logo} alt="부스 위치 이미지" />
+          </div>
         </div>
       </section>
     </>

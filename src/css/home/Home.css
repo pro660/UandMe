@@ -2,7 +2,7 @@
 .hero {
   position: relative;
   width: 100%;
-  min-height: calc(100vh - 72px); /* Header 제외 영역 */
+  min-height: calc(100vh - 30rem); /* Header 제외 영역 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13,10 +13,10 @@
 
 .hero-bg {
   position: absolute;
-  top: 20%;
+  top: 30%;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 90%;
   background: #fff;
   border-top-left-radius: 50% 15%;
   border-top-right-radius: 50% 15%;
@@ -54,4 +54,46 @@
   .hero-logo-text {
     font-size: 3rem;
   }
+}
+
+/* 음료, 부스 위치 */
+.drink-and-map {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin: 1rem auto;
+  margin-bottom: 5rem;
+  flex-wrap: wrap; /* 작은 화면에서는 세로 배치 */
+}
+
+.booth-location {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  max-width: 90%;
+  flex: 1;
+  text-align: center;
+}
+
+.booth-location h3 {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.booth-map {
+  background: #e0e0e0; /* 회색 박스 대체 */
+  border-radius: 0.8rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 250px;
+}
+
+.booth-map img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
