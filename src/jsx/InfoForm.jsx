@@ -26,7 +26,7 @@ async function fetchWithTimeout(resource, options = {}) {
 /** 서버 스펙: body 키가 code 인지 확실치 않음 → 현재까지 공유된 내용 기준 유지 */
 async function checkNicknameAPI(code) {
   const resp = await fetchWithTimeout(CHECK_URL, {
-    method: "POST",
+    method: "GET",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ code }), // ← 확실치 않으면 백엔드와 키명 합의 필요
     timeout: 3000,
