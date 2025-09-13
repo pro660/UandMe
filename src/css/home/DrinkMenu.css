@@ -1,7 +1,7 @@
 .drink-menu-container {
   background: #fff;
   border-radius: 1rem;
-  padding: 2rem;
+  padding: 1rem 2rem 2rem 2rem;
   max-width: 90%;
   margin: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
