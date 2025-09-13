@@ -3,6 +3,7 @@ import Logo from "../../image/loginPage/logo.svg"; // 로고 import
 import MatchingBanner from "../../image/home/match.svg";
 
 import DrinkMenu from "../home/DrinkMenu";
+import { Link } from "react-router-dom"; // 추가
 
 function Home() {
   return (
@@ -21,8 +22,9 @@ function Home() {
           <img src={Logo} alt="너랑 나랑 로고" className="hero-logo-img" />
         </div>
       </section>
+
       {/* 매칭 배너 섹션 */}
-      <div className="home-matching-banner">
+      <Link to="/matching" className="home-matching-banner">
         <img
           src={MatchingBanner}
           alt="매칭 배너 이미지"
@@ -34,7 +36,7 @@ function Home() {
           <h2>매칭하기</h2>
           <p>당신의 인연을 찾아보세요</p>
         </div>
-      </div>
+      </Link>
 
       {/* 음료 메뉴 + 부스 위치 섹션 */}
       <section className="drink-and-map">
