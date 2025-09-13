@@ -48,7 +48,7 @@
   align-items: center;
   justify-content: center;
 
-  font-size: clamp(1.2rem, 0.9vw + 0.8rem, 1.6rem);
+  font-size: clamp(0.9rem, 0.5vw + 0.4rem, 1.4rem);
   padding: clamp(10px, 1.2vh, 14px) 0;
   height: 44px;
 
@@ -96,6 +96,6 @@
 /* ===== 초소형 화면 튜닝 ===== */
 @media (max-width:360px){
   .glass-radio-group button {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 }
