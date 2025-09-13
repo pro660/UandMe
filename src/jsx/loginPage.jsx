@@ -15,6 +15,9 @@ const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "")
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
 const ME_URL = `${API_BASE}/users/me`;
 
+// src/pages/LoginOrGate.jsx
+// ... (import 부분 동일)
+
 export default function LoginOrGate() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,40 +27,44 @@ export default function LoginOrGate() {
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const incomingAccessToken = params.get("accessToken");
 
-  // 1) 카카오 콜백으로 돌아왔으면 게이트 로직 수행
   useEffect(() => {
     let mounted = true;
 
     const gate = async () => {
+      console.log("🚀 게이트 로직 시작");
       setBusy(true);
+
       try {
-        // URL 쿼리의 토큰을 스토어에 병합
         if (incomingAccessToken) {
+          console.log("✅ 쿼리에서 accessToken 확인:", incomingAccessToken);
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, accessToken: incomingAccessToken });
 
-          // URL 정리
           try {
             const cleanUrl = location.pathname + (location.hash || "");
             window.history.replaceState({}, "", cleanUrl);
-          } catch {}
+            console.log("🔄 URL에서 accessToken 파라미터 제거 완료");
+          } catch {
+            console.warn("⚠️ URL 정리 실패");
+          }
         }
 
-        // 내 정보 조회
+        console.log("📡 /users/me 요청 보냄:", ME_URL);
         const { data, status } = await api.get(ME_URL, { validateStatus: () => true });
+        console.log("📥 /users/me 응답:", status, data);
 
         if (status === 401 || status === 419) {
+          console.warn("⚠️ 토큰이 유효하지 않음 → 로그인 화면 유지");
           if (!mounted) return;
           setBusy(false);
-          // 토큰 문제 → 로그인 UI 유지
           return;
         }
 
         if (status >= 200 && status < 300 && data) {
+          console.log("✅ 사용자 정보 조회 성공:", data);
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, ...data });
 
-          // 등록 여부 판단(백엔드가 isRegistered 확정해주면 한 줄로 대체)
           const flag =
             data?.isRegistered ??
             data?.registered ??
@@ -67,43 +74,43 @@ export default function LoginOrGate() {
             ? flag
             : !!(data?.name && data?.studentNo && data?.gender && data?.department && (typeof data?.birthYear === "number" || data?.birthYear));
 
+          console.log("📝 회원가입 여부 판정:", isRegistered ? "가입 완료" : "미가입");
+
           if (!mounted) return;
           navigate(isRegistered ? "/" : "/infoform", { replace: true });
           return;
         }
 
-        // 404/204 등 “프로필 없음” 신호 → 회원가입
         if (status === 404 || status === 204) {
+          console.log("ℹ️ 프로필 없음 → 회원가입 페이지로 이동");
           if (!mounted) return;
           navigate("/infoform", { replace: true });
           return;
         }
 
-        // 예외 → 로그인 UI 유지
+        console.error("❌ 예상치 못한 상태 코드:", status);
         setBusy(false);
       } catch (e) {
-        console.error("LoginOrGate gate error:", e);
+        console.error("💥 게이트 로직 오류:", e);
         if (!mounted) return;
-        setBusy(false); // 로그인 UI로 남겨둠
+        setBusy(false);
       }
     };
 
-    // 쿼리에 accessToken이 있거나, 이미 스토어에 토큰이 있으면 gate 시도
     const hasToken = !!incomingAccessToken || !!useUserStore.getState().user?.accessToken;
+    console.log("🔍 토큰 존재 여부 확인 →", hasToken ? "있음" : "없음");
     if (hasToken) gate();
 
     return () => { mounted = false; };
   }, [incomingAccessToken, location.pathname, navigate, setUser, location.hash]);
 
-  // 2) 카카오 로그인 버튼
   const handleKakao = () => {
-    // next는 현재 페이지의 절대경로(/login)로: 콜백 후 다시 여기로 돌아와 gate 실행
     const nextAbs = `${window.location.origin}/login`;
     const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextAbs)}`;
+    console.log("➡️ 카카오 로그인 URL로 이동:", url);
     window.location.assign(url);
   };
 
-  // 3) 게이트 동작 중일 땐 스피너/문구만
   if (busy) {
     return (
       <main className="login-root" role="main" style={{ padding: 24 }}>
@@ -112,7 +119,6 @@ export default function LoginOrGate() {
     );
   }
 
-  // 4) 평소엔 로그인 UI
   return (
     <main className="login-root" role="main" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <section className="arch-card" aria-label="너랑 나랑 소개 및 로그인">
