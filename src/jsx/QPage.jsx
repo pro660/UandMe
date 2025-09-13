@@ -44,7 +44,6 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
   const q = questions[step];
   const displayNo = useMemo(() => String(step + 1).padStart(2, "0"), [step]);
 
-  const handleSelect = (idx) => setChoice(idx);
 
   const handleConfirm = async () => {
     if (choice === null) return;

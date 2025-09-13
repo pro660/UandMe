@@ -1,6 +1,6 @@
 // src/pages/LoginPage.jsx
 import React from "react";
-import "../css/LoginPage.css";
+import "../css/loginPage.css";
 import heartSvg from "../image/loginPage/heart.svg";
 import logoSvg from "../image/loginPage/logo.svg";
 import backgroundImage from "../image/loginPage/background.png";

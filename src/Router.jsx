@@ -9,7 +9,7 @@ import ChatList from "./jsx/chat/ChatList";
 import Matching from "./jsx/matching/Matching";
 import MyPage from "./jsx/mypage/MyPage";
 
-import LoginPage from "./jsx/LoginPage";
+import LoginPage from "./jsx/loginPage";
 import InfoForm from "./jsx/InfoForm";
 import PostLoginGate from "./jsx/PostLoginGate";
 
