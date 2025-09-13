@@ -1,23 +1,32 @@
+// src/pages/LoginPage.jsx
 import React from "react";
-import "../css/loginPage.css";
-
-/* SVG 파일을 URL로 사용 (안정적) */
+import "../css/LoginPage.css";
 import heartSvg from "../image/loginPage/heart.svg";
 import logoSvg from "../image/loginPage/logo.svg";
+import backgroundImage from "../image/loginPage/background.png";
 
-export default function LoginPage({ onKakaoStart }) {
-  const handleKakao = () => onKakaoStart?.();
+const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
+const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
+const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
+const KAKAO_LOGIN_PATH = "/auth/kakao/login";
+
+export default function LoginPage() {
+  // 로그인 성공 후 항상 이 경유 페이지에서 회원가입 여부를 판단
+  const nextPath = "/post-login";
+
+  const handleKakao = () => {
+    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextPath)}`;
+    window.location.assign(url); // 백엔드로 이동(카카오 인증)
+  };
 
   return (
-    <main className="login-root" role="main">
+    <main className="login-root" role="main" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <section className="arch-card" aria-label="너랑 나랑 소개 및 로그인">
-        {/* 상단 브랜드(하트 + 로고) */}
         <div className="brand">
           <img src={heartSvg} alt="" className="heart-img" aria-hidden="true" />
           <img src={logoSvg} alt="너랑 나랑" className="logo-img" />
         </div>
 
-        {/* 카피 */}
         <div className="copy">
           <p className="headline">
             평범한 축제가 <span className="em">특별</span>해지는 순간!
@@ -27,7 +36,6 @@ export default function LoginPage({ onKakaoStart }) {
           </p>
         </div>
 
-        {/* CTA */}
         <div className="cta">
           <p className="hint">간편 로그인하고 바로 시작해보세요</p>
           <button type="button" className="kakao-btn" onClick={handleKakao}>
