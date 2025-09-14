@@ -1,13 +1,11 @@
 import "../../css/mypage/MyPage.css";
-import ProfileCard from "./ProfileCard";
+import ResultPage from "../signup/ResultPage";
 
 function Matching() {
   return (
-    <>
-      <div className="matching-page">
-        <ProfileCard />
-      </div>
-    </>
+    <div className="matching-page">
+      <ResultPage hideHomeButton={true} />
+    </div>
   );
 }
 

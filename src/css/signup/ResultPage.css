@@ -11,7 +11,6 @@
 .result-page {
   position: relative;
   min-height: 100svh;
-  max-width: clamp(22rem, 95vw, 27rem);
   margin: 0 auto;
   padding: 1.25rem 1.125rem 2rem;
   background: radial-gradient(
