@@ -4,8 +4,6 @@ import api from "../../api/axios";
 import "../../css/mypage/ProfileCard.css";
 import editIcon from "../../image/home/edit.svg"
 
-import Animal from "../../image/home/animal.svg";
-
 export default function ProfileCard({
   imageSrc,
   name = "홍길동",
@@ -108,9 +106,9 @@ export default function ProfileCard({
           {/* 앞면 */}
           <div className="profile-card-front">
             <div className="profile-card-image-wrap">
-              {Animal ? (
+              {imageSrc ? (
                 <img
-                  src={Animal}
+                  src={imageSrc}
                   alt={`${name} 프로필`}
                   className="profile-card-image"
                 />
