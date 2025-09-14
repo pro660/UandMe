@@ -219,6 +219,7 @@ export default function InfoForm() {
     <main className="profile-root">
       <div className="form-shell">
         <h1 className="page-title">정보를 입력하고 시작하세요</h1>
+        <p className="page-subtitle">최초 가입 후 수정이 불가합니다</p>
 
         <form className="info-form" onSubmit={handleSubmit} noValidate>
           {/* 닉네임 */}

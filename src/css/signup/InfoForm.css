@@ -38,7 +38,7 @@
 
 /* 타이틀 */
 .page-title {
-  margin: 0 0 10vh;
+  margin: 0 auto;
   text-align: center;
   font-family: var(--ui-font);
   font-weight: 700;
@@ -47,6 +47,16 @@
   color: var(--text);
   letter-spacing: 0.01em;
 }
+
+.page-subtitle {
+  margin: 0.5rem 0 4rem;   /* 제목과 약간 간격 */
+  text-align: center;      /* 제목과 동일하게 중앙정렬 */
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: red;
+  font-family: var(--ui-font);
+}
+
 
 /* 공통 필드 */
 .info-form {
@@ -309,7 +319,7 @@
 .primary-btn {
   width: 100%;
   height: 3.25rem;
-  margin-top: 27vh;
+  margin-top: 20%;
   border-radius: 2rem;
   border: 1.5px solid var(--btn-disabled-border);
   background: #fff;
