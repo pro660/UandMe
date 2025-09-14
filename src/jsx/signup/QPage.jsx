@@ -1,9 +1,13 @@
 // src/pages/QPage.jsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
+
 import "../../css/signup/QPage.css";
+
+import bigheartImg from "../../image/loginPage/bigheart.svg";
 
 /** 기본 문항(필요시 외부에서 questions prop으로 대체 가능) */
 const DEFAULT_QUESTIONS = [
@@ -129,7 +133,9 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
       {/* 하트 + 번호 */}
       <div className="qpage-heart">
-        <span className="qpage-heart-icon" aria-hidden>❤</span>
+        <span className="qpage-heart-icon" aria-hidden>
+          <img src={bigheartImg} alt="하트 이미지" />
+        </span>
         <span className="qpage-heart-no">{displayNo}</span>
       </div>
 
