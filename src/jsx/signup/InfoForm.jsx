@@ -279,7 +279,7 @@ export default function InfoForm() {
           <div className="grid-3">
             <div className="field">
               <label className="field-label" htmlFor="birthYear">
-                나이
+                출생년도
               </label>
               <div className="input-wrap">
                 <input
@@ -292,7 +292,7 @@ export default function InfoForm() {
                     setBirthYear(e.target.value.replace(/\D/g, "").slice(0, 4))
                   }
                 />
-                <span className="suffix">세</span>
+                <span className="suffix">년</span>
               </div>
 
               <div className="hint-box">
