@@ -1,7 +1,7 @@
 import { useState } from "react";
-import "../../css/mypage/ProfileCard.css";
 import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
+import "../../css/mypage/ProfileCard.css";
 
 export default function ProfileCard({
   imageSrc,
@@ -12,31 +12,28 @@ export default function ProfileCard({
   gender,
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   const user = useUserStore((s) => s.user);
   const setUser = useUserStore((s) => s.setUser);
 
-  const [editingIntroduce, setEditingIntroduce] = useState(
-    user?.introduce || ""
-  );
-
-  // === API 호출 함수 ===
-  const updateIntroduce = async (introduce) => {
-    const res = await api.put("/users/me/introduce", { introduce });
-    return res.data;
-  };
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingIntroduce, setEditingIntroduce] = useState(user?.introduce || "");
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      const updated = await updateIntroduce(editingIntroduce);
-      setUser({ ...user, introduce: updated.introduce });
-      setIsEditing(false); // 저장 후 다시 보기 모드
-    } catch (e) {
-      console.error("한줄 소개 저장 실패:", e);
-      alert("저장에 실패했습니다.");
+      const res = await api.put("/users/me/introduce", {
+        introduce: editingIntroduce,
+      });
+      if (res.status >= 200 && res.status < 300) {
+        const updated = { ...user, introduce: editingIntroduce };
+        setUser(updated);
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error("❌ 소개 업데이트 실패:", err);
+      alert("소개를 저장하지 못했습니다.");
     } finally {
       setSaving(false);
     }
@@ -44,7 +41,54 @@ export default function ProfileCard({
 
   return (
     <div className="profile-card-wrapper">
-      {/* 프로필 카드 */}
+      {/* === 말풍선 소개 영역 === */}
+      <div className="introduce-bubble">
+        {!isEditing ? (
+          <>
+            <span className="introduce-text">
+              {user?.introduce || "한줄 소개가 없습니다."}
+            </span>
+            <button
+              type="button"
+              className="introduce-edit-icon"
+              onClick={() => setIsEditing(true)}
+            >
+              ✏️
+            </button>
+          </>
+        ) : (
+          <div className="introduce-edit-row">
+            <input
+              type="text"
+              value={editingIntroduce}
+              onChange={(e) => setEditingIntroduce(e.target.value)}
+              className="introduce-input"
+              maxLength={50}
+              placeholder="안녕하세요, 영화 보는 걸 좋아해요."
+            />
+            <button
+              type="button"
+              className="introduce-save-btn"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "..." : "✔"}
+            </button>
+            <button
+              type="button"
+              className="introduce-cancel-btn"
+              onClick={() => {
+                setIsEditing(false);
+                setEditingIntroduce(user?.introduce || "");
+              }}
+            >
+              ✖
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* === 프로필 카드 === */}
       <div
         className="profile-card-container"
         onClick={() => setIsFlipped((v) => !v)}
@@ -110,53 +154,6 @@ export default function ProfileCard({
             </ul>
           </div>
         </div>
-      </div>
-
-      {/* === 카드 바로 아래: 한줄 소개 === */}
-      <div className="introduce-section">
-        {!isEditing ? (
-          <div className="introduce-view">
-            <span className="introduce-text">
-              {user?.introduce || "한줄 소개가 없습니다."}
-            </span>
-            <button
-              type="button"
-              className="introduce-edit-btn"
-              onClick={() => setIsEditing(true)}
-            >
-              ✏️ 수정
-            </button>
-          </div>
-        ) : (
-          <div className="introduce-edit">
-            <input
-              type="text"
-              value={editingIntroduce}
-              onChange={(e) => setEditingIntroduce(e.target.value)}
-              className="introduce-input"
-              maxLength={50}
-              placeholder="안녕하세요, 영화 보는 걸 좋아해요."
-            />
-            <button
-              type="button"
-              className="introduce-save-btn"
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? "저장중..." : "저장"}
-            </button>
-            <button
-              type="button"
-              className="introduce-cancel-btn"
-              onClick={() => {
-                setIsEditing(false);
-                setEditingIntroduce(user?.introduce || "");
-              }}
-            >
-              취소
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
