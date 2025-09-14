@@ -8,12 +8,57 @@ import backgroundImage from "../../image/loginPage/background.png";
 import api from "../../api/axios";
 import useUserStore from "../../api/userStore";
 
-const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
-const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
-const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
-
+/* 상대 경로 상수 */
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
-const ME_URL = `${API_BASE}/users/me`;
+const ME_PATH = "/users/me";
+
+/* 유틸: 절대 URL 만들기 */
+function toAbsoluteUrl(baseLike, path) {
+  const p = (path || "").replace(/^\/+/, "");
+  const b = (baseLike || "").trim();
+  const hasProto = /^https?:\/\//i.test(b);
+  if (hasProto) return `${b.replace(/\/+$/, "")}/${p}`;
+  const origin = (typeof window !== "undefined" ? window.location.origin : "").replace(/\/+$/, "");
+  const basePart = b ? `/${b.replace(/^\/+/, "").replace(/\/+$/, "")}` : "";
+  return `${origin}${basePart}/${p}`;
+}
+
+/* 유틸: baseURL 정규화/토글(/api 붙였다 뗐다) */
+const trimSlash = (s) => (s || "").replace(/\/+$/, "");
+function normalizeBase(base) {
+  const b = (base || "").trim();
+  if (!b) return "/api"; // 최소 기본치
+  return b;
+}
+function toggleApiSuffix(base) {
+  const b = trimSlash(base);
+  if (b.match(/\/api$/i)) return b.replace(/\/api$/i, "");
+  return `${b}/api`;
+}
+
+/* /users/me 스마트 호출: 404면 /api 붙여(또는 제거) 재시도 */
+async function getMeSmart() {
+  const primaryBase = normalizeBase(api.defaults.baseURL || process.env.REACT_APP_API_URL || "/api");
+
+  // 1차 시도
+  let res;
+  try {
+    res = await api.get(ME_PATH, { validateStatus: () => true, baseURL: primaryBase });
+    if (res?.status !== 404) return { ...res, usedBase: primaryBase };
+  } catch (e) {
+    // 네트워크 에러는 바로 리턴(아래에서 busy 해제)
+    return { error: e, usedBase: primaryBase };
+  }
+
+  // 404면 /api 붙이거나 제거해서 재시도
+  const altBase = toggleApiSuffix(primaryBase);
+  try {
+    const res2 = await api.get(ME_PATH, { validateStatus: () => true, baseURL: altBase });
+    return { ...res2, usedBase: altBase, altTried: true };
+  } catch (e2) {
+    return { error: e2, usedBase: altBase, altTried: true };
+  }
+}
 
 export default function LoginOrGate() {
   const navigate = useNavigate();
@@ -22,104 +67,103 @@ export default function LoginOrGate() {
 
   const [busy, setBusy] = useState(false);
 
-  // 1) 토큰 추출: 쿼리(?accessToken / ?access) + 해시(#accessToken / #access) 모두 허용
+  // 토큰 추출: ?accessToken | ?access | #accessToken | #access
   const tokenFromQuery = useMemo(() => {
     const sp = new URLSearchParams(location.search);
     return sp.get("accessToken") || sp.get("access");
   }, [location.search]);
-
   const tokenFromHash = useMemo(() => {
     const raw = (location.hash || "").replace(/^#/, "");
     if (!raw) return null;
     const sp = new URLSearchParams(raw);
     return sp.get("accessToken") || sp.get("access");
   }, [location.hash]);
-
   const incomingAccessToken = tokenFromQuery || tokenFromHash;
 
   useEffect(() => {
     let mounted = true;
 
     const gate = async () => {
-      console.log("🚀 게이트 로직 시작");
       setBusy(true);
-
       try {
+        // 0) 토큰 주입/정리
         if (incomingAccessToken) {
-          console.log("✅ URL에서 accessToken 확인:", incomingAccessToken);
-
-          // store + localStorage에 저장 (axios가 localStorage를 참조하는 경우 대비)
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, accessToken: incomingAccessToken });
-          try {
-            localStorage.setItem("accessToken", incomingAccessToken);
-          } catch {}
+          try { localStorage.setItem("accessToken", incomingAccessToken); } catch {}
+          try { api.defaults.headers.common.Authorization = `Bearer ${incomingAccessToken}`; } catch {}
 
-          // (선택) 현재 런타임의 axios 기본 헤더도 즉시 갱신
-          try {
-            api.defaults.headers.common.Authorization = `Bearer ${incomingAccessToken}`;
-          } catch {}
-
-          // URL 정리: 쿼리/해시 둘 다 제거
+          // URL에서 토큰 파라미터/해시 제거
           try {
             const qs = new URLSearchParams(location.search);
-            qs.delete("accessToken");
-            qs.delete("access");
-            const cleanUrl = location.pathname + (qs.toString() ? `?${qs.toString()}` : "");
-            window.history.replaceState({}, "", cleanUrl); // 해시는 포함하지 않아 제거됨
-            console.log("🔄 URL에서 토큰 파라미터/해시 제거 완료");
-          } catch {
-            console.warn("⚠️ URL 정리 실패");
-          }
+            qs.delete("accessToken"); qs.delete("access");
+            const clean = location.pathname + (qs.toString() ? `?${qs}` : "");
+            window.history.replaceState({}, "", clean);
+          } catch {}
+        } else {
+          // 저장된 토큰을 헤더에 보강
+          try {
+            const ls = localStorage.getItem("accessToken");
+            if (ls && !api.defaults.headers.common.Authorization) {
+              api.defaults.headers.common.Authorization = `Bearer ${ls}`;
+            }
+          } catch {}
         }
 
-        console.log("📡 /users/me 요청 보냄:", ME_URL);
-        const { data, status } = await api.get(ME_URL, { validateStatus: () => true });
-        console.log("📥 /users/me 응답:", status, data);
+        // 1) /users/me 스마트 호출
+        const resp = await getMeSmart();
+        const { data, status, usedBase, error } = resp || {};
 
-        if (status === 401 || status === 419) {
-          console.warn("⚠️ 토큰이 유효하지 않음 → 로그인 화면 유지");
+        console.log("[/users/me] status:", status, "base:", usedBase, "data:", data);
+
+        if (error) {
+          console.error("💥 /users/me 네트워크 오류:", error);
           if (!mounted) return;
           setBusy(false);
           return;
         }
 
+        // 401/419 → 인증 필요
+        if (status === 401 || status === 419) {
+          if (!mounted) return;
+          setBusy(false);
+          return;
+        }
+
+        // 2xx → 사용자 정보 OK
         if (status >= 200 && status < 300 && data) {
-          console.log("✅ 사용자 정보 조회 성공:", data);
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, ...data });
 
-          const flag =
-            data?.isRegistered ??
-            data?.registered ??
-            data?.profileCompleted;
-
+          const flag = data?.isRegistered ?? data?.registered ?? data?.profileCompleted;
           const isRegistered =
             typeof flag === "boolean"
               ? flag
-              : !!(
-                  data?.name &&
-                  data?.studentNo &&
-                  data?.gender &&
-                  data?.department &&
-                  (typeof data?.birthYear === "number" || data?.birthYear)
-                );
-
-          console.log("📝 회원가입 여부 판정:", isRegistered ? "가입 완료" : "미가입");
+              : !!(data?.name && data?.studentNo && data?.gender && data?.department && (typeof data?.birthYear === "number" || data?.birthYear));
 
           if (!mounted) return;
           navigate(isRegistered ? "/" : "/infoform", { replace: true });
           return;
         }
 
-        if (status === 404 || status === 204) {
-          console.log("ℹ️ 프로필 없음 → 회원가입 페이지로 이동");
+        // 204 → 프로필 없음(회원가입)
+        if (status === 204) {
           if (!mounted) return;
           navigate("/infoform", { replace: true });
           return;
         }
 
-        console.error("❌ 예상치 못한 상태 코드:", status);
+        // 404 → 경로 미스 가능성 높음. 여기선 로그인 화면 유지
+        if (status === 404) {
+          console.warn("⚠️ 404 Not Found - 백엔드의 /api 프록시/컨텍스트 경로를 확인하세요.");
+          if (!mounted) return;
+          setBusy(false);
+          return;
+        }
+
+        // 기타 상태 → 로그인 화면 유지
+        console.error("❌ 예외 상태 코드:", status, data);
+        if (!mounted) return;
         setBusy(false);
       } catch (e) {
         console.error("💥 게이트 로직 오류:", e);
@@ -128,26 +172,22 @@ export default function LoginOrGate() {
       }
     };
 
-    // 2) 토큰이 있거나(방금 받은/저장된) 이미 저장된 토큰이 있으면 게이트 시도
     const hasToken =
       !!incomingAccessToken ||
       !!useUserStore.getState().user?.accessToken ||
-      !!localStorage.getItem("accessToken");
+      (() => { try { return !!localStorage.getItem("accessToken"); } catch { return false; } })();
 
-    console.log("🔍 토큰 존재 여부 확인 →", hasToken ? "있음" : "없음");
     if (hasToken) gate();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [incomingAccessToken, location.pathname, location.hash, navigate, setUser, location.search]);
 
-  // 3) 카카오 로그인: next는 상대경로로 보내서 서버의 이중 도메인 버그를 회피
+  // 카카오 로그인: baseURL을 절대화해서 안전 리다이렉트
   const handleKakao = () => {
-    const nextRel = "/login"; // 콜백 후 다시 이 페이지로 돌아오게
-    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextRel)}`;
-    console.log("➡️ 카카오 로그인 URL로 이동:", url);
-    window.location.assign(url);
+    const configuredBase = api.defaults.baseURL || process.env.REACT_APP_API_URL || "/api";
+    const baseAbs = toAbsoluteUrl(configuredBase, "/");
+    const nextRel = "/login";
+    const loginAbs = toAbsoluteUrl(baseAbs, `${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextRel)}`);
+    window.location.assign(loginAbs);
   };
 
   if (busy) {
