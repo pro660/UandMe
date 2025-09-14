@@ -2,6 +2,7 @@ import { useState } from "react";
 import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 import "../../css/mypage/ProfileCard.css";
+import editIcon from "../../image/home/edit.svg"
 
 export default function ProfileCard({
   imageSrc,
@@ -17,7 +18,9 @@ export default function ProfileCard({
   const setUser = useUserStore((s) => s.setUser);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editingIntroduce, setEditingIntroduce] = useState(user?.introduce || "");
+  const [editingIntroduce, setEditingIntroduce] = useState(
+    user?.introduce || ""
+  );
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -53,7 +56,11 @@ export default function ProfileCard({
               className="introduce-edit-icon"
               onClick={() => setIsEditing(true)}
             >
-              ✏️
+              <img
+                src= {editIcon}
+                alt="수정하기"
+                className="introduce-edit-img"
+              />
             </button>
           </>
         ) : (
@@ -147,9 +154,7 @@ export default function ProfileCard({
               </li>
               <li>
                 <span className="label">성별</span>
-                <span className="value">
-                  {gender}
-                </span>
+                <span className="value">{gender}</span>
               </li>
             </ul>
           </div>
