@@ -8,24 +8,12 @@ import backgroundImage from "../../image/loginPage/background.png";
 import api from "../../api/axios";
 import useUserStore from "../../api/userStore";
 
-/* 경로 상수(상대경로 유지) */
+const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
+const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
+const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
+
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
-const ME_PATH = "/users/me";
-
-/* baseURL를 안전하게 절대 URL로 만드는 유틸 */
-function toAbsoluteUrl(baseLike, path) {
-  const p = (path || "").replace(/^\/+/, "");
-  const b = (baseLike || "").trim();
-  const hasProto = /^https?:\/\//i.test(b);
-
-  if (hasProto) {
-    return `${b.replace(/\/+$/, "")}/${p}`;
-  }
-  // baseLike가 '/api' 같이 상대경로면, 현재 origin과 합쳐서 절대화
-  const origin = (typeof window !== "undefined" ? window.location.origin : "").replace(/\/+$/, "");
-  const basePart = b ? `/${b.replace(/^\/+/, "").replace(/\/+$/, "")}` : "";
-  return `${origin}${basePart}/${p}`;
-}
+const ME_URL = `${API_BASE}/users/me`;
 
 export default function LoginOrGate() {
   const navigate = useNavigate();
@@ -57,49 +45,38 @@ export default function LoginOrGate() {
       setBusy(true);
 
       try {
-        // 0) 로컬/URL 토큰 반영
         if (incomingAccessToken) {
           console.log("✅ URL에서 accessToken 확인:", incomingAccessToken);
 
-          // store + localStorage
+          // store + localStorage에 저장 (axios가 localStorage를 참조하는 경우 대비)
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, accessToken: incomingAccessToken });
           try {
             localStorage.setItem("accessToken", incomingAccessToken);
           } catch {}
 
-          // axios 헤더도 즉시 반영
+          // (선택) 현재 런타임의 axios 기본 헤더도 즉시 갱신
           try {
             api.defaults.headers.common.Authorization = `Bearer ${incomingAccessToken}`;
           } catch {}
 
-          // URL 정리: 쿼리/해시 제거
+          // URL 정리: 쿼리/해시 둘 다 제거
           try {
             const qs = new URLSearchParams(location.search);
             qs.delete("accessToken");
             qs.delete("access");
             const cleanUrl = location.pathname + (qs.toString() ? `?${qs.toString()}` : "");
-            window.history.replaceState({}, "", cleanUrl);
+            window.history.replaceState({}, "", cleanUrl); // 해시는 포함하지 않아 제거됨
             console.log("🔄 URL에서 토큰 파라미터/해시 제거 완료");
           } catch {
             console.warn("⚠️ URL 정리 실패");
           }
-        } else {
-          // 저장된 토큰을 헤더에 반영(인스턴스 인터셉터가 없다면 대비)
-          const tokenLS = (() => {
-            try { return localStorage.getItem("accessToken"); } catch { return null; }
-          })();
-          if (tokenLS && !api.defaults.headers.common.Authorization) {
-            api.defaults.headers.common.Authorization = `Bearer ${tokenLS}`;
-          }
         }
 
-        // 1) 내 정보 요청: 상대경로로 호출 (api 인스턴스 baseURL 사용)
-        console.log("📡 GET", ME_PATH, "(baseURL:", api.defaults.baseURL, ")");
-        const { data, status } = await api.get(ME_PATH, { validateStatus: () => true });
+        console.log("📡 /users/me 요청 보냄:", ME_URL);
+        const { data, status } = await api.get(ME_URL, { validateStatus: () => true });
         console.log("📥 /users/me 응답:", status, data);
 
-        // 401/419 → 인증 필요
         if (status === 401 || status === 419) {
           console.warn("⚠️ 토큰이 유효하지 않음 → 로그인 화면 유지");
           if (!mounted) return;
@@ -107,7 +84,6 @@ export default function LoginOrGate() {
           return;
         }
 
-        // 200 OK → 사용자 정보 수신
         if (status >= 200 && status < 300 && data) {
           console.log("✅ 사용자 정보 조회 성공:", data);
           const prev = useUserStore.getState().user || {};
@@ -136,26 +112,14 @@ export default function LoginOrGate() {
           return;
         }
 
-        // 204 No Content → 프로필 없음(회원가입 필요)
-        if (status === 204) {
-          console.log("ℹ️ 프로필 없음(204) → 회원가입 페이지로 이동");
+        if (status === 404 || status === 204) {
+          console.log("ℹ️ 프로필 없음 → 회원가입 페이지로 이동");
           if (!mounted) return;
           navigate("/infoform", { replace: true });
           return;
         }
 
-        // 404는 보통 엔드포인트 미스/배포 설정 문제 → 가입 유무와 무관
-        if (status === 404) {
-          console.warn("⚠️ 404 Not Found: baseURL 또는 API 경로를 확인하세요.");
-          // 여기서는 로그인 화면을 유지해서 사용자가 다시 시도할 수 있게 함
-          if (!mounted) return;
-          setBusy(false);
-          return;
-        }
-
-        // 그 외 상태 → 에러로 처리하고 로그인 화면 유지
         console.error("❌ 예상치 못한 상태 코드:", status);
-        if (!mounted) return;
         setBusy(false);
       } catch (e) {
         console.error("💥 게이트 로직 오류:", e);
@@ -168,7 +132,7 @@ export default function LoginOrGate() {
     const hasToken =
       !!incomingAccessToken ||
       !!useUserStore.getState().user?.accessToken ||
-      !!(() => { try { return localStorage.getItem("accessToken"); } catch { return null; } })();
+      !!localStorage.getItem("accessToken");
 
     console.log("🔍 토큰 존재 여부 확인 →", hasToken ? "있음" : "없음");
     if (hasToken) gate();
@@ -178,14 +142,12 @@ export default function LoginOrGate() {
     };
   }, [incomingAccessToken, location.pathname, location.hash, navigate, setUser, location.search]);
 
-  // 3) 카카오 로그인: baseURL을 안전하게 절대 URL로 만든 뒤 next를 상대경로로 전달
+  // 3) 카카오 로그인: next는 상대경로로 보내서 서버의 이중 도메인 버그를 회피
   const handleKakao = () => {
-    const configuredBase = api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
-    const baseAbs = toAbsoluteUrl(configuredBase, "/"); // 절대 base
-    const nextRel = "/login"; // 콜백 후 다시 이 페이지로
-    const loginAbs = toAbsoluteUrl(baseAbs, `${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextRel)}`);
-    console.log("➡️ 카카오 로그인 URL로 이동:", loginAbs);
-    window.location.assign(loginAbs);
+    const nextRel = "/login"; // 콜백 후 다시 이 페이지로 돌아오게
+    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextRel)}`;
+    console.log("➡️ 카카오 로그인 URL로 이동:", url);
+    window.location.assign(url);
   };
 
   if (busy) {
