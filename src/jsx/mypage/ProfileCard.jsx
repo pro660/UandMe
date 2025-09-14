@@ -2,19 +2,22 @@ import { useState } from "react";
 import "../../css/mypage/ProfileCard.css";
 
 export default function ProfileCard({
-  imageSrc, // 앞면 프로필 이미지 URL
-  name = "홍길동", // 이름
-  department = "학과", // 학과
-  studentNo = "22", // 학번
-  birthYear = "2003", // 출생년도
-  gender = "MALE", // "MALE" | "FEMALE"
+  imageSrc,                // 앞면 프로필 이미지 URL
+  name = "홍길동",          // 이름
+  department = "학과",      // 학과
+  studentNo = "22",         // 학번
+  birthYear = "2003",       // 출생년도
+  gender = "MALE",          // "MALE" | "FEMALE"
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const toggleFlip = () => setIsFlipped((prev) => !prev);
-
   return (
-    <div className="profile-card-container" onClick={toggleFlip}>
+    <div
+      className="profile-card-container"
+      onClick={() => setIsFlipped((v) => !v)} // 탭/클릭으로 앞뒤 전환
+      role="button"
+      aria-label="프로필 카드 앞/뒤 전환"
+    >
       <div className={`profile-card ${isFlipped ? "is-flipped" : ""}`}>
         {/* 앞면 */}
         <div className="profile-card-front">
@@ -33,6 +36,7 @@ export default function ProfileCard({
                 fill="currentColor"
                 className="profile-card-icon bi bi-person-circle"
                 viewBox="0 0 16 16"
+                aria-hidden
               >
                 <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path>
                 <path
@@ -43,7 +47,7 @@ export default function ProfileCard({
             )}
           </div>
 
-          {/* 하단 흰 패널: 이름 표시 */}
+          {/* 하단 흰 패널: 이름 */}
           <div className="profile-card-down">
             <p className="profile-card-name">{name}</p>
           </div>
@@ -67,9 +71,7 @@ export default function ProfileCard({
             </li>
             <li>
               <span className="label">성별</span>
-              <span className="value">
-                {gender === "MALE" ? "남자" : "여자"}
-              </span>
+              <span className="value">{gender === "MALE" ? "남자" : "여자"}</span>
             </li>
           </ul>
         </div>

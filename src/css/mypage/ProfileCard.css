@@ -4,7 +4,7 @@
   height: 20rem;
   width: 15rem;
   color: black;
-  perspective: 800px;
+  perspective: 800px; /* 3D 효과 */
 }
 
 /* ── 카드 본체 ─────────────────────────── */
@@ -15,13 +15,14 @@
   border-radius: 2rem;
   box-shadow: rgba(0, 0, 0, 0.15) 0px 10px 20px;
   position: relative;
-  transition: transform 1s;  /* 부드럽게 */
+  transition: transform 0.8s ease;  /* 좌우 플립 애니메이션 */
   transform-style: preserve-3d;
+  cursor: pointer;
 }
 
-/* ⬇️ 상태 기반 회전 (hover 제거) */
+/* 상태 기반 회전 (모바일 탭/PC 클릭 공통) */
 .profile-card.is-flipped {
-  transform: rotateX(180deg) rotateZ(-180deg);
+  transform: rotateY(180deg);
 }
 
 /* ── 앞/뒤 공통 레이어 ─────────────────────────── */
@@ -34,11 +35,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  -webkit-backface-visibility: hidden; /* ✅ 사파리 포함 */
-  backface-visibility: hidden; /* ✅ 뒤면 숨기기 */
+
+  /* 겹침 방지 필수 */
+  -webkit-backface-visibility: hidden; /* iOS Safari */
+  backface-visibility: hidden;         /* 표준 */
 }
 
 /* ── 앞면 ─────────────────────────── */
+.profile-card-front {
+  transform: rotateY(0deg);
+}
+
 /* 이미지 영역 */
 .profile-card-image-wrap {
   margin-top: 2.6rem;
@@ -81,7 +88,8 @@
 /* ── 뒷면 ─────────────────────────── */
 .profile-card-back {
   background-color: #ffe3f4;
-  transform: rotateX(180deg) rotateZ(-180deg);
+  transform: rotateY(180deg); /* 좌우 뒤집힘 */
+  padding: 1rem;
 }
 
 /* 뒷면 타이틀 */
