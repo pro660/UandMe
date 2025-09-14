@@ -1,0 +1,184 @@
+/* ============ Mobile-first (rem / vw / vh / clamp) ============ */
+:root{
+  --pink:#FF69C3;
+  --pink-deep:#E8048D;
+  --text:#3d3d3d;
+  --muted:#8F8F8F;
+  --bg:#fff;
+}
+
+/* 화면 전체 컨테이너 */
+.result-page {
+  position: relative;
+  min-height: 100svh;
+  max-width: clamp(22rem, 95vw, 27rem);
+  margin: 0 auto;
+  padding: 1.25rem 1.125rem 2rem;
+  background: radial-gradient(
+    circle at 50% 30%,  
+    #ffffff -10%,
+    #f6b7dd 100%
+  ); 
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+
+.home-btn {
+  position: fixed;   /* 화면 전체 기준으로 고정 */
+  top: 1rem;
+
+  background: transparent;
+  border: 0;
+  font-size: .95rem;
+  color: var(--pink-deep);
+  cursor: pointer;
+
+  left: 70%;
+
+  font-weight: 550;
+}
+
+
+
+
+
+/* 메인 캐릭터 이미지 + 받침 */
+.result-image{
+  margin: 2rem auto 1rem;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.result-image img{
+  width: clamp(11rem, 58vw, 10rem);    /* 176px ~ 256px */
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 .5rem .9rem rgba(0,0,0,.15));
+
+  margin-top: 2rem;
+}
+
+.result-image::after{
+  content:"";
+  position: absolute;
+  bottom: -0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(14rem, 70%, 20rem);
+  height: 2rem;
+  background: radial-gradient(50% 50% at 50% 50%,
+              rgba(0,0,0,.18) 0%, rgba(0,0,0,.06) 60%, rgba(0,0,0,0) 100%);
+  border-radius: 999px;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.arch-box{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  height: clamp(70vh, 55vh, 60vh);
+  background: #fff;
+  z-index: 0;
+  border-top-left-radius: 50% clamp(2.5rem, 4rem, 5rem);
+  border-top-right-radius: 50% clamp(2.5rem, 4rem, 5rem);
+  box-shadow: 0 -0.35rem 1.2rem rgba(0,0,0,.15) ;
+}
+
+.result-page > *:not(.arch-box){
+  position: relative;
+  z-index: 1;
+}
+
+/* 서브카피/타이틀 */
+.result-info{
+  text-align: center;
+  margin-top: .5rem;
+  padding: 0 .5rem;
+  
+}
+
+.result-subtitle{
+  margin: 0 0 1.4rem 0;
+  color: var(--pink);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.result-info h2{
+  margin: .5rem 0 .35rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+
+
+.result-desc{
+  margin: 0;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+/* 카드 섹션 공통 */
+.result-detail,
+.result-partner{
+  padding: 1.125rem 1rem;
+  margin: 1.125rem 0;
+}
+
+/* 섹션 타이틀 */
+.result-detail h3,
+.result-partner h3{
+  margin: 0 0 .3rem;
+  font-size: .7rem;
+  color: var(--pink);
+  font-weight: 800;
+}
+
+/* 본문 */
+.result-detail p,
+.result-partner p{
+  margin: 0;
+  font-size: .7rem;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* 해시태그 */
+.result-tags{
+  margin-top: .6rem;
+  margin-left: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.result-tags .tag{
+  font-size: .6rem;
+  padding: .5rem .75rem;
+  border-radius: 999px;
+  background: #ffe7f5;
+  color: var(--bg);
+  line-height: 1;
+  user-select: none;
+
+  background-color: #FF69C3;
+}
+
+/* 하단 여백 보정 */
+.result-page::after{
+  content:"";
+  display:block;
+  height: 1.5rem;
+}
+
+@media (max-width: 376px) {
+    .arch-box{
+      height: 80vh;
+    }
+}

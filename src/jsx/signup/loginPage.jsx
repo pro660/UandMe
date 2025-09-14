@@ -1,7 +1,7 @@
 // src/pages/LoginOrGate.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../../css/loginPage.css";
+import "../../css/signup/loginPage.css";
 import heartSvg from "../../image/loginPage/heart.svg";
 import logoSvg from "../../image/loginPage/logo.svg";
 import backgroundImage from "../../image/loginPage/background.png";

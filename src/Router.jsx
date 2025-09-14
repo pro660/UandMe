@@ -9,8 +9,10 @@ import ChatList from "./jsx/chat/ChatList";
 import Matching from "./jsx/matching/Matching";
 import MyPage from "./jsx/mypage/MyPage";
 
-import LoginPage from "./jsx/signup/loginPage";
+import LoginPage from "./jsx/signup/LoginPage";
 import InfoForm from "./jsx/signup/InfoForm";
+import QPage from "./jsx/signup/QPage";
+import ResultPage from "./jsx/signup/ResultPage";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -40,9 +42,10 @@ function AppRouter() {
           <Route path="/matching" element={<Matching />} />
           <Route path="/mypage" element={<MyPage />} />
 
-
           {/* 회원가입(정보 입력 페이지) */}
           <Route path="/infoform" element={<InfoForm />} />
+          <Route path="/qpage" element={<QPage />} />
+          <Route path="/result" element={<ResultPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

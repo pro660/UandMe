@@ -1,7 +1,7 @@
 // src/jsx/InfoForm.jsx
 import React, { useMemo, useState } from "react";
 import api from "../../api/axios.js";
-import "../../css/InfoForm.css";
+import "../../css/signup/InfoForm.css";
 import QPage from "./QPage.jsx";
 
 
@@ -30,14 +30,12 @@ export default function InfoForm() {
   const [started, setStarted] = useState(false);
 
   const [nickname, setNickname] = useState("");
-  const [birthYear, setBirthYear] = useState(""); // 출생년도
-  const [year, setYear] = useState(""); // 학번(예: "22")
+  const [birthYear, setBirthYear] = useState(""); // 출생년도 (4자리)
+  const [year, setYear] = useState("");           // 학번 (2자리)
   const [gender, setGender] = useState("남자");
   const [major, setMajor] = useState("");
 
-  const nickLen = nickname.length;
   const nickMax = 8;
-  const nickOver = nickLen > nickMax;
 
   const [dupState, setDupState] = useState("idle"); // idle|checking|ok|taken|error
 
@@ -147,16 +145,21 @@ export default function InfoForm() {
   const BIRTHYEAR_MIN = YEAR_NOW - 36;
   const BIRTHYEAR_MAX = YEAR_NOW - 20;
 
+  // ✅ 학번 유효 범위
+  const HAKBEON_MIN = 15;
+  const HAKBEON_MAX = 25;
+
   const toggleFaculty = (name) =>
     setExpanded((prev) => ({ ...prev, [name]: !prev[name] }));
 
   const onNicknameChange = (v) => {
-    setNickname(v);
+    const next = (v || "").slice(0, nickMax);
+    setNickname(next);
     if (dupState !== "idle") setDupState("idle");
   };
 
   const handleCheckNickname = async () => {
-    if (!nickname || nickOver) return;
+    if (!nickname) return;
     setDupState("checking");
     try {
       const { ok, available } = await checkNicknameAPI(nickname.trim());
@@ -172,11 +175,16 @@ export default function InfoForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (nickOver) return;
 
     const by = Number(birthYear);
+    const y = Number(year);
+
     if (!by || by < BIRTHYEAR_MIN || by > BIRTHYEAR_MAX) {
       alert(`출생년도는 ${BIRTHYEAR_MIN} ~ ${BIRTHYEAR_MAX} 사이여야 합니다.`);
+      return;
+    }
+    if (!y || y < HAKBEON_MIN || y > HAKBEON_MAX) {
+      alert("학번을 확인해주세요.");
       return;
     }
 
@@ -202,6 +210,10 @@ export default function InfoForm() {
     return <QPage onClose={handleCloseQPage} baseInfo={baseInfo} />;
   }
 
+  // ✅ 학번 유효성 플래그
+  const yearNum = Number(year);
+  const isYearInvalid = !!year && (yearNum < HAKBEON_MIN || yearNum > HAKBEON_MAX);
+
   return (
     <main className="profile-root">
       <div className="form-shell">
@@ -214,49 +226,43 @@ export default function InfoForm() {
               닉네임
             </label>
             <div className="nick-row">
-              <div className={`input-wrap ${nickOver ? "is-error" : ""}`}>
+              <div className="input-wrap">
                 <input
                   id="nickname"
                   className="text-input"
                   type="text"
-                  maxLength={24}
+                  maxLength={nickMax}
                   placeholder="닉네임을 입력하세요."
                   value={nickname}
                   onChange={(e) => onNicknameChange(e.target.value)}
                 />
-                <span className="count-badge">
-                  {nickLen}/{nickMax}
-                </span>
+                <span className="count-badge">{nickname.length}/{nickMax}</span>
               </div>
 
               <button
                 type="button"
                 className="pill-btn"
                 onClick={handleCheckNickname}
-                disabled={!nickname || nickOver}
+                disabled={!nickname}
               >
                 {dupState === "checking" ? "확인중..." : "중복확인"}
               </button>
-
-              {dupState === "ok" && <span className="dup-done">확인 완료</span>}
-              {dupState === "taken" && (
-                <span className="dup-done">이미 사용중</span>
-              )}
-              {dupState === "error" && <span className="dup-done">오류</span>}
             </div>
-            {nickOver && (
-              <p className="hint-error">
-                닉네임은 최대 8자까지 입력할 수 있어요.
-              </p>
-            )}
+
+            <div className="hint-box">
+              {nickname.length > 0 && nickname.length < 2 && (
+                <span className="hint-error">최소 두글자 이상 지어주세요.</span>
+              )}
+              {dupState === "taken" && (
+                <span className="hint-error">중복된 닉네임입니다.</span>
+              )}
+            </div>
           </div>
 
           {/* 출생년도 / 학번 / 성별 */}
           <div className="grid-3">
             <div className="field">
-              <label className="field-label" htmlFor="birthYear">
-                출생년도
-              </label>
+              <label className="field-label" htmlFor="birthYear">나이</label>
               <div className="input-wrap">
                 <input
                   id="birthYear"
@@ -265,9 +271,16 @@ export default function InfoForm() {
                   placeholder={`${BIRTHYEAR_MIN}~${BIRTHYEAR_MAX}`}
                   value={birthYear}
                   onChange={(e) =>
-                    setBirthYear(e.target.value.replace(/\D/g, ""))
+                    setBirthYear(e.target.value.replace(/\D/g, "").slice(0, 4))
                   }
                 />
+                <span className="suffix">세</span>
+              </div>
+
+              <div className="hint-box">
+                {birthYear && (Number(birthYear) < BIRTHYEAR_MIN || Number(birthYear) > BIRTHYEAR_MAX) && (
+                  <span className="hint-error">{BIRTHYEAR_MIN} ~ {BIRTHYEAR_MAX} 사이여야 합니다.</span>
+                )}
               </div>
             </div>
 
@@ -280,11 +293,19 @@ export default function InfoForm() {
                   id="year"
                   className="text-input"
                   inputMode="numeric"
-                  placeholder="예: 22"
+                  placeholder="예: 25"
                   value={year}
-                  onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) =>
+                    setYear(e.target.value.replace(/\D/g, "").slice(0, 2))
+                  }
                 />
                 <span className="suffix">학번</span>
+              </div>
+
+              <div className="hint-box1">
+                {isYearInvalid && (
+                  <span className="hint-error">학번을 확인해주세요.</span>
+                )}
               </div>
             </div>
 
@@ -303,6 +324,7 @@ export default function InfoForm() {
                   <option value="여자">여자</option>
                 </select>
               </div>
+              <div className="hint-box" /> {/* 공간 확보용 */}
             </div>
           </div>
 
@@ -334,12 +356,10 @@ export default function InfoForm() {
               className="primary-btn"
               type="submit"
               disabled={
-                !nickname ||
-                nickOver ||
-                !birthYear ||
-                !year ||
-                !gender ||
-                !major ||
+                !nickname || nickname.length < 2 ||
+                !birthYear || birthYear.length !== 4 ||
+                !year || year.length !== 2 || isYearInvalid ||
+                !gender || !major ||
                 dupState !== "ok"
               }
             >
