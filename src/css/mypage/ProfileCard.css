@@ -1,0 +1,123 @@
+/* ── 카드 전체 컨테이너 ─────────────────────────── */
+.profile-card-container {
+  margin: 2rem auto;
+  height: 20rem;
+  width: 15rem;
+  color: black;
+  perspective: 800px;
+}
+
+/* ── 카드 본체 ─────────────────────────── */
+.profile-card {
+  width: 100%;
+  height: 100%;
+  background: #ffe3f4;
+  border-radius: 2rem;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 10px 20px;
+  position: relative;
+  transition: transform 1500ms;
+  transform-style: preserve-3d;
+}
+
+/* hover 시 회전 */
+.profile-card-container:hover > .profile-card {
+  cursor: pointer;
+  transform: rotateX(180deg) rotateZ(-180deg);
+}
+
+/* ── 앞/뒤 공통 레이어 ─────────────────────────── */
+.profile-card-front,
+.profile-card-back {
+  position: absolute;
+  inset: 0; /* top/right/bottom/left:0 */
+  border-radius: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  -webkit-backface-visibility: hidden; /* ✅ 사파리 포함 */
+  backface-visibility: hidden; /* ✅ 뒤면 숨기기 */
+}
+
+/* ── 앞면 ─────────────────────────── */
+/* 이미지 영역 */
+.profile-card-image-wrap {
+  margin-top: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.profile-card-image {
+  width: 72%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* 하단 흰 패널 (이름 영역) */
+.profile-card-down {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  background: #fff;
+
+  border-bottom-left-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  border-top-left-radius: 60% 45%;
+  border-top-right-radius: 60% 45%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.8rem;
+  z-index: 2;
+}
+.profile-card-name {
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+/* ── 뒷면 ─────────────────────────── */
+.profile-card-back {
+  background-color: #ffe3f4;
+  transform: rotateX(180deg) rotateZ(-180deg);
+}
+
+/* 뒷면 타이틀 */
+.profile-card-back-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+  color: #444;
+}
+
+/* 뒷면 리스트 */
+.profile-card-back-list {
+  width: 100%;
+  list-style: none;
+  padding: 0.8rem 0.9rem;
+  margin: 2rem auto;
+  background: transparent;
+  border-radius: 1rem;
+}
+.profile-card-back-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #e7e7e7;
+}
+.profile-card-back-list li:last-child {
+  border-bottom: none;
+}
+.profile-card-back-list .label {
+  color: #888;
+  font-size: 0.9rem;
+}
+.profile-card-back-list .value {
+  color: #444;
+  font-weight: 600;
+}

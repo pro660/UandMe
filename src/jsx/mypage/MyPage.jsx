@@ -1,9 +1,11 @@
+import "../../css/mypage/MyPage.css";
+import ProfileCard from "./ProfileCard";
+
 function Matching() {
   return (
     <>
       <div className="matching-page">
-        <h2>Matching Page</h2>
-        {/* Matching content will be rendered here */}
+        <ProfileCard />
       </div>
     </>
   );
