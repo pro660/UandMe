@@ -41,48 +41,50 @@
   backface-visibility: hidden;         /* 표준 */
 }
 
-/* ── 앞면 ─────────────────────────── */
+/* ── 앞면 배경 그라데이션 ─────────────────────────── */
 .profile-card-front {
   transform: rotateY(0deg);
+  border-radius: 2rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  background-image: url("../../image/home/profilecard.svg");
+  background-size: 130%;     /* 카드 영역에 꽉 채움 */
+  background-repeat: no-repeat;
+  background-position: center;
+  scale: (1.1);
 }
 
-/* 이미지 영역 */
+/* 이미지 영역 (흰색 원 + 그림자) */
 .profile-card-image-wrap {
-  margin-top: 2.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-.profile-card-image {
-  width: 72%;
-  height: auto;
-  object-fit: contain;
-}
-
-/* 하단 흰 패널 (이름 영역) */
-.profile-card-down {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 38%;
+  margin-top: 3rem;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
   background: #fff;
-
-  border-bottom-left-radius: 2rem;
-  border-bottom-right-radius: 2rem;
-  border-top-left-radius: 60% 45%;
-  border-top-right-radius: 60% 45%;
-
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem 0.8rem;
-  z-index: 2;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
+
+.profile-card-image {
+  width: 200%;
+  height: 200%;
+  object-fit: cover;
+}
+
+/* 이름 */
 .profile-card-name {
-  text-align: center;
+  margin-top: 2.6rem;
   font-size: 1.5rem;
+  font-weight: 700;
+  color: #484848;
+  text-align: center;
 }
 
 .profile-card-wrapper {
