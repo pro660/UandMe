@@ -104,7 +104,7 @@ export default function ProfileCard({
               <li>
                 <span className="label">성별</span>
                 <span className="value">
-                  {gender === "MALE" ? "남자" : "여자"}
+                  {gender}
                 </span>
               </li>
             </ul>
