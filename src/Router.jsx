@@ -13,6 +13,7 @@ import LoginPage from "./jsx/signup/LoginPage";
 import InfoForm from "./jsx/signup/InfoForm";
 import QPage from "./jsx/signup/QPage";
 import ResultPage from "./jsx/signup/ResultPage";
+import UProfilePage from "./jsx/UProfilePage";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -34,7 +35,7 @@ function Layout({ children }) {
 function AppRouter() {
   return (
     <BrowserRouter>
-      <Layout>
+      {/* <Layout> */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
@@ -46,8 +47,9 @@ function AppRouter() {
           <Route path="/infoform" element={<InfoForm />} />
           <Route path="/qpage" element={<QPage />} />
           <Route path="/result" element={<ResultPage />} />
+          <Route path="/uprofile" element={<UProfilePage />} />
         </Routes>
-      </Layout>
+      {/* </Layout> */}
     </BrowserRouter>
   );
 }

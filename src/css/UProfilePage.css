@@ -1,0 +1,196 @@
+/* UProfilePage.css */
+
+/* 전체 페이지 컨테이너 */
+.UProfilePage {
+  position: relative;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 1.25rem 1.125rem 2rem;
+  box-sizing: border-box;
+  color: #333;
+  background: radial-gradient(circle at 50% 25%, #ffffff -10%, #f6b7dd 100%);
+  overflow-x: hidden;
+
+  z-index: 0;
+}
+
+/* 접근성용 스크린리더 텍스트 */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* 뒤로가기 버튼 (좌상단) */
+.up-back {
+  position: absolute;
+  left: 0.75rem; top: 0.75rem;
+  width: 2rem; height: 2rem;
+  border-radius: 9999px;
+  border: 0;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  display: grid; place-items: center;
+  cursor: pointer;
+  z-index: 5;
+}
+.up-back-icon {
+  font-size: 1.05rem;
+  color: #5a5f66;
+  transform: translateX(-1px);
+}
+
+/* 말풍선 */
+.up-speech {
+  margin: 3.25rem auto 0;
+  width: 35%;
+  max-width: 80%;
+  padding: 0.55rem 1rem;
+  background: #fff;
+  color: #949494;
+  font-weight: 700;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+  position: relative;
+  z-index: 2;
+
+  text-align: center;
+}
+.up-speech-tail {
+  position: absolute;
+  left: 1.2rem;
+  bottom: -0.55rem;
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 12px solid #fff;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.08));
+}
+
+/* 마스코트 섹션 */
+.up-mascot-wrap {
+  position: relative;
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+}
+.up-mascot-plate {
+  position: relative;
+  width: 72%;
+  max-width: 300px;
+  aspect-ratio: 1/1.05;
+  display: grid;
+  place-items: end center;
+}
+
+.up-mascot {
+  width: 65%;
+  height: auto;
+  object-fit: contain;
+  z-index: 2;
+}
+
+/* 말풍선 태그(핑크 라벨) */
+.up-tag {
+  position: absolute;
+  padding: 0.35rem 0.6rem;
+  border-radius: 9999px;
+  background: #ff69c3;
+  color: #fff;
+  font-weight: 400;
+  font-size: 0.75rem;
+  box-shadow: 0 6px 16px rgba(232, 4, 141, 0.25);
+  z-index: 3;
+  white-space: nowrap;
+}
+.up-tag--left { left: 1rem; top: 50%; }
+.up-tag--right { right: -0.4rem; top: 30%; }
+.up-tag--bottom { right: 15%; bottom: 12%; }
+
+/* 발판 그림자 */
+.up-shadow {
+  position: absolute;
+  left: 50%; bottom: -0.35rem;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 0.9rem;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.35), rgba(0,0,0,0) 70%);
+  border-radius: 50%;
+  filter: blur(2px);
+  z-index: 1;
+}
+
+/* 프로필 정보 */
+.up-profile {
+  position: relative;
+  margin-top: 0.75rem;
+  text-align: center;
+  z-index: 2;
+}
+.up-name {
+  margin: 0.2rem 0 0.25rem;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #2b2f33;
+}
+.up-dept {
+  margin: 0;
+  color: #575757;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.up-brief {
+  margin: 0.5rem auto 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 1.1rem;
+  justify-content: center;
+  color: #575757;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* 연애유형 카드 */
+.up-type-card {
+  margin: 3rem auto 0;
+  padding: 0.3rem 1.5rem;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+  border: 1px solid #e6e6e6;
+  text-align: center;
+  z-index: 2;
+}
+.up-type-card p { color: #4b5259; font-size: 0.9rem;}
+.up-type-strong { font-size: 0.8rem; margin-top: -1.3rem;}
+.up-type-strong b { color: #E8048D; font-size: 1.2rem; }
+
+.up-type-desc { font-size: 0.8rem;}
+/* 하단 아치형 박스 (무대) */
+.arch-box {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  height: clamp(56vh, 58vh, 62vh);
+  background: #fff;
+  z-index: -1;
+  border-top-left-radius: 50% clamp(2.5rem, 4rem, 5rem);
+  border-top-right-radius: 50% clamp(2.5rem, 4rem, 5rem);
+  box-shadow: 0 -0.35rem 1.2rem rgba(0, 0, 0, 0.12);
+}
+
+/* 작은 화면 보정 */
+@media (max-width: 360px) {
+  .up-tag--left { left: -0.25rem; }
+  .up-tag--right { right: -0.25rem; }
+  .up-tag--bottom { right: 8%; }
+  .up-type-card { padding: 0.85rem 0.8rem; }
+}
