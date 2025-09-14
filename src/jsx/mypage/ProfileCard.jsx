@@ -7,7 +7,7 @@ export default function ProfileCard({
   department = "학과",      // 학과
   studentNo = "22",         // 학번
   birthYear = "2003",       // 출생년도
-  gender = "MALE",          // "MALE" | "FEMALE"
+  gender,
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -71,7 +71,7 @@ export default function ProfileCard({
             </li>
             <li>
               <span className="label">성별</span>
-              <span className="value">{gender === "MALE" ? "남자" : "여자"}</span>
+              <span className="value">{gender}</span>
             </li>
           </ul>
         </div>
