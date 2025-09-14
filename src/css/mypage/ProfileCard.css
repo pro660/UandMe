@@ -15,13 +15,12 @@
   border-radius: 2rem;
   box-shadow: rgba(0, 0, 0, 0.15) 0px 10px 20px;
   position: relative;
-  transition: transform 1500ms;
+  transition: transform 1s;  /* 부드럽게 */
   transform-style: preserve-3d;
 }
 
-/* hover 시 회전 */
-.profile-card-container:hover > .profile-card {
-  cursor: pointer;
+/* ⬇️ 상태 기반 회전 (hover 제거) */
+.profile-card.is-flipped {
   transform: rotateX(180deg) rotateZ(-180deg);
 }
 

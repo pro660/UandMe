@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import "../../css/common/CouponSheet.css";
 
 export default function CouponSheet({ open, onClose }) {
@@ -7,6 +7,7 @@ export default function CouponSheet({ open, onClose }) {
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [code, setCode] = useState("");
+  const [closing, setClosing] = useState(false); // ⬅️ 닫힘 애니메이션 상태
 
   const startYRef = useRef(0);
   const lastYRef = useRef(0);
@@ -17,6 +18,11 @@ export default function CouponSheet({ open, onClose }) {
   const GRAB_START_ZONE = 36;   // 드래그 시작 가능한 영역 높이(px)
   const CLOSE_DISTANCE = 120;   // 일정 거리 넘게 내리면 닫기
   const CLOSE_VELOCITY = 0.7;   // px/ms 초과 속도면 닫기
+
+  // ⬇️ 닫기 요청 함수 (useCallback으로 고정)
+  const requestClose = useCallback(() => {
+    if (!closing) setClosing(true);
+  }, [closing]);
 
   // 스크롤 잠금
   useEffect(() => {
@@ -68,7 +74,7 @@ export default function CouponSheet({ open, onClose }) {
 
     if (dragY > CLOSE_DISTANCE || vy > CLOSE_VELOCITY) {
       setDragY(0);
-      onClose?.();
+      requestClose(); // ⬅️ 닫힘 애니메이션 시작
     } else {
       setDragY(0);
       sheetRef.current?.style.setProperty("--dragY", `0px`);
@@ -82,12 +88,20 @@ export default function CouponSheet({ open, onClose }) {
 
   // ESC 키 닫기
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    const onKey = (e) => { if (e.key === "Escape") requestClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [requestClose]); // ✅ 의존성 OK
 
-  if (!open) return null;
+  // 닫힘 애니메이션 끝나면 완전히 제거
+  const handleAnimationEnd = () => {
+    if (closing) {
+      setClosing(false);
+      onClose?.();
+    }
+  };
+
+  if (!open && !closing) return null;
 
   const handleChange = (e) => {
     const onlyDigits = e.target.value.replace(/\D/g, "");
@@ -100,16 +114,20 @@ export default function CouponSheet({ open, onClose }) {
   };
 
   return (
-    <div className="coupon-backdrop" onClick={onClose}>
+    <div
+      className={`coupon-backdrop ${closing ? "closing" : ""}`}
+      onClick={requestClose}
+    >
       <div
         ref={sheetRef}
-        className={`coupon-sheet ${dragY ? "dragging" : ""}`}
+        className={`coupon-sheet ${dragY ? "dragging" : ""} ${closing ? "closing" : ""}`}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         role="dialog"
         aria-modal="true"
+        onAnimationEnd={handleAnimationEnd} // ⬅️ 애니메이션 종료 후 정리
       >
         <div className="coupon-grabber" aria-hidden />
         <h2 className="coupon-title">쿠폰 등록하기</h2>

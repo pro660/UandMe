@@ -1,16 +1,21 @@
+import { useState } from "react";
 import "../../css/mypage/ProfileCard.css";
 
 export default function ProfileCard({
   imageSrc, // 앞면 프로필 이미지 URL
   name = "홍길동", // 이름
   department = "학과", // 학과
-  studentNo = "22", // 학번(두 자리 등)
+  studentNo = "22", // 학번
   birthYear = "2003", // 출생년도
   gender = "MALE", // "MALE" | "FEMALE"
 }) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const toggleFlip = () => setIsFlipped((prev) => !prev);
+
   return (
-    <div className="profile-card-container">
-      <div className="profile-card">
+    <div className="profile-card-container" onClick={toggleFlip}>
+      <div className={`profile-card ${isFlipped ? "is-flipped" : ""}`}>
         {/* 앞면 */}
         <div className="profile-card-front">
           <div className="profile-card-image-wrap">
@@ -32,7 +37,7 @@ export default function ProfileCard({
                 <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path>
                 <path
                   fillRule="evenodd"
-                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
+                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757-1.225 5.468-2.37A7 7 0 0 0 8 1z"
                 ></path>
               </svg>
             )}
