@@ -1,12 +1,12 @@
 // src/pages/LoginOrGate.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../css/loginPage.css";
-import heartSvg from "../image/loginPage/heart.svg";
-import logoSvg from "../image/loginPage/logo.svg";
-import backgroundImage from "../image/loginPage/background.png";
-import api from "../api/axios";
-import useUserStore from "../api/userStore";
+import "../../css/loginPage.css";
+import heartSvg from "../../image/loginPage/heart.svg";
+import logoSvg from "../../image/loginPage/logo.svg";
+import backgroundImage from "../../image/loginPage/background.png";
+import api from "../../api/axios";
+import useUserStore from "../../api/userStore";
 
 const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
 const IS_ABS = /^https?:\/\//i.test(RAW_BASE);

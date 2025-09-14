@@ -1,7 +1,7 @@
 // src/jsx/InfoForm.jsx
 import React, { useMemo, useState } from "react";
-import api from "../api/axios.js";
-import "../css/InfoForm.css";
+import api from "../../api/axios.js";
+import "../../css/InfoForm.css";
 import QPage from "./QPage.jsx";
 
 

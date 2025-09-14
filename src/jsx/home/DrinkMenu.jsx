@@ -52,7 +52,7 @@ export default function DrinkMenu() {
         <div className="drink-info">
           <h3>{selected.name}</h3>
           <span className="drink-price">{selected.price.toLocaleString()} ₩</span>
-          <p>{selected.desc}</p>
+          <p style={{fontSize: "0.7rem"}}>{selected.desc}</p>
         </div>
       </div>
 

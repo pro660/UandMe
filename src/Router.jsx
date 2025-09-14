@@ -9,8 +9,8 @@ import ChatList from "./jsx/chat/ChatList";
 import Matching from "./jsx/matching/Matching";
 import MyPage from "./jsx/mypage/MyPage";
 
-import LoginPage from "./jsx/loginPage";
-import InfoForm from "./jsx/InfoForm";
+import LoginPage from "./jsx/signup/loginPage";
+import InfoForm from "./jsx/signup/InfoForm";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {

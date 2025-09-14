@@ -1,8 +1,8 @@
 // src/pages/QPage.jsx
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios.js";
-import useUserStore from "../api/userStore.js";
+import api from "../../api/axios.js";
+import useUserStore from "../../api/userStore.js";
 
 /** 기본 문항(필요시 외부에서 questions prop으로 대체 가능) */
 const DEFAULT_QUESTIONS = [
