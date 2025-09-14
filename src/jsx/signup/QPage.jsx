@@ -87,7 +87,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
       const dominant = scoreA === scoreB ? "BALANCED" : (scoreA > scoreB ? "A-TYPE" : "B-TYPE");
 
       // 결과 페이지 이동 (라우팅 경로는 프로젝트에 맞춰 사용)
-      navigate("/match/result", {
+      navigate("/result", {
         replace: true,
         state: { profile: profileData, answers: ab, scoreA, scoreB, dominant },
       });
