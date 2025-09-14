@@ -18,7 +18,7 @@ import ResultPage from "./jsx/signup/ResultPage";
 function Layout({ children }) {
   const location = useLocation();
   // 숨기고 싶은 경로들
-  const hiddenPaths = ["/login", "/infoform", "/post-login"];
+  const hiddenPaths = ["/login", "/infoform", "/post-login", "/result"];
 
   const shouldHide = hiddenPaths.includes(location.pathname);
 
