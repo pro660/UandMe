@@ -4,17 +4,29 @@ import { createPortal } from "react-dom";
 import "../../css/mypage/InstaAdd.css";
 
 export default function InstaAdd({ onClose, onSave, defaultId = "" }) {
-  const [instaId, setInstaId] = useState(defaultId);
+  const [instaId, setInstaId] = useState("");
 
-  // 모달이 열릴 때 defaultId가 변경되면 값 반영
+  // URL → ID 추출 함수
+  const extractInstaId = (url) => {
+    if (!url) return "";
+    try {
+      const u = new URL(url);
+      return u.pathname.replace("/", "").trim(); // "/abcd/" → "abcd"
+    } catch {
+      // url이 그냥 아이디만 들어왔을 경우
+      return url.replace("https://instagram.com/", "").replace("/", "").trim();
+    }
+  };
+
+  // 모달 열릴 때 defaultId 처리
   useEffect(() => {
-    setInstaId(defaultId || "");
+    setInstaId(extractInstaId(defaultId));
   }, [defaultId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!instaId.trim()) return;
-    if (onSave) onSave(instaId.trim());
+    if (onSave) onSave(instaId.trim()); // 서버에 아이디만 전달
     if (onClose) onClose(); // 저장 후 닫기
   };
 
