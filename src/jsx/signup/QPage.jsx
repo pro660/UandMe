@@ -70,6 +70,9 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
   const [choice, setChoice] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingTx, setPendingTx] = useState(null);
+
   const q = questions[step];
   const displayNo = useMemo(() => String(step + 1).padStart(2, "0"), [step]);
 
@@ -88,14 +91,22 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
   }, [step, TOTAL, submitting]);
 
   /* -------------------------------
-     2. 내부 라우터 이동 방지
+     2. 내부 라우터 이동 방지 (스와이프 포함)
   --------------------------------*/
-  useBlocker(() => {
+  useBlocker((tx) => {
     if (step < TOTAL && step >= 0 && !submitting) {
-      return !window.confirm("진행상황이 사라질 수 있습니다. 그래도 나가시겠습니까?");
+      setShowLeaveModal(true);
+      setPendingTx(tx);
+      return true; // 이동 차단
     }
     return false;
   }, true);
+
+  const confirmLeave = () => {
+    if (pendingTx) {
+      pendingTx.retry(); // 원래 가려던 라우팅 실행
+    }
+  };
 
   const handleConfirm = async () => {
     if (choice === null) return;
@@ -144,10 +155,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
   const handleBack = () => {
     if (step === 0) {
-      if (window.confirm("진행상황이 사라질 수 있습니다. 그래도 나가시겠습니까?")) {
-        if (onClose) return onClose();
-        window.history.back();
-      }
+      setShowLeaveModal(true);
     } else {
       setStep((s) => s - 1);
       setChoice(answers[step - 1]);
@@ -204,6 +212,19 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
       >
         {step === TOTAL - 1 ? (submitting ? "제출 중..." : "결과 보기") : "확인"}
       </button>
+
+      {/* ✅ 경고 모달 */}
+      {showLeaveModal && (
+        <div className="leave-modal">
+          <div className="leave-modal-content">
+            <p>진행상황이 사라질 수 있습니다.<br />정말 나가시겠습니까?</p>
+            <div className="leave-modal-actions">
+              <button onClick={() => setShowLeaveModal(false)}>취소</button>
+              <button onClick={confirmLeave}>나가기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
