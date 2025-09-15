@@ -13,11 +13,14 @@
   min-height: 100svh;
   margin: 0 auto;
   padding: 1.25rem 1.125rem 2rem;
-  background: radial-gradient(
-    circle at 50% 30%,  
-    #ffffff -10%,
-    #f6b7dd 100%
-  ); 
+  /* 중심부는 더 하얗게, 가장자리는 더 진하게 */
+  background:
+    radial-gradient(
+      circle at 50% 28%,
+      var(--bg-center) -80%,
+      var(--bg-center) 20%,
+      var(--bg-edge) 120%
+    );
   color: var(--text);
   box-sizing: border-box;
 }
