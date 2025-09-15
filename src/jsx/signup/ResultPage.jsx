@@ -40,7 +40,7 @@ export default function ResultPage({ hideHomeButton = false }) {
     gender,
     typeTitle,
     typeContent,
-    typeImageUrl,
+    typeImageUrl2,
     styleSummary,
     recommendedPartner,
     tags,
@@ -63,7 +63,7 @@ export default function ResultPage({ hideHomeButton = false }) {
 
       <div className="profile-with-insta">
         <ProfileCard
-          imageSrc={typeImageUrl}
+          imageSrc={typeImageUrl2}
           name={name}
           department={department}
           studentNo={studentNo}

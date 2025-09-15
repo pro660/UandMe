@@ -171,10 +171,10 @@
 /* 인스타 아이콘을 카드 오른쪽에 겹치게 */
 .insta-icon {
   position: absolute;
-  top: 50%;               /* 세로 중앙 */
+  top: 80%;               /* 세로 중앙 */
   transform: translateY(-50%);
   right: 0;               /* 카드의 오른쪽에 딱 붙음 */
-  margin-right: 3rem;    /* 카드와 간격 조정 (필요시 값 조절) */
+  margin-right: 1.5rem;    /* 카드와 간격 조정 (필요시 값 조절) */
   width: 2rem;
   height: 2rem;
   cursor: pointer;
