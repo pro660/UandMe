@@ -1,3 +1,161 @@
-.card-page{
-    
+:root {
+  --radius: 22px;
+  --shadow: 0 6px 16px rgba(0,0,0,0.15);
+  --pink1: #ffd7ee;
+  --pink2: #f94892;
+}
+
+/* 전체 레이아웃 */
+.match-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100svh;
+  padding: 1.2rem;
+  box-sizing: border-box;
+  background: #f9fafb;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+/* 상단 안내 문구 */
+.match-title {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 1.4rem;
+  text-align: center;
+}
+
+/* ===== 캐러셀 ===== */
+.carousel {
+  --spread: 9rem; /* 👈 좌우 카드 벌어지는 정도 (데스크톱 기본) */
+  position: relative;
+  width: min(92vw, 900px);
+  height: clamp(18rem, 48vw, 22rem);
+  margin-bottom: 2rem;
+}
+
+/* 카드 공통 */
+.match-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14rem;
+  height: 20rem;
+  transform: translate(-50%, -50%);
+  border: none;
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  transition: transform .28s ease, opacity .28s ease, z-index .28s ease, box-shadow .28s ease;
+}
+
+/* 이미지 */
+.img-wrap {
+  background: linear-gradient(135deg, #ffd7ee 0%, #f6b7dd 100%);
+  padding: 1.5rem;
+}
+.img-wrap img {
+  width: 100%;
+  max-width: 120px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* 카드 정보 */
+.card-info { padding: 1rem; }
+.card-info h3 { font-size: 1.1rem; font-weight: 700; margin: 0.3rem 0; }
+.card-info .major { font-size: 0.9rem; color: #666; }
+.card-info .msg { font-size: 0.95rem; font-weight: 500; margin-top: 0.6rem; color: #333; }
+
+/* 포지션: 가운데는 크게, 좌우는 축소 + 반투명 */
+.pos-center {
+  z-index: 4;
+  transform: translate(-50%, -50%) scale(1.06);
+  opacity: 1;
+}
+.pos-left {
+  z-index: 2;
+  transform: translate(calc(-50% - var(--spread)), -50%) scale(0.92);
+  opacity: 0.7;
+}
+.pos-right {
+  z-index: 2;
+  transform: translate(calc(-50% + var(--spread)), -50%) scale(0.92);
+  opacity: 0.7;
+}
+.pos-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 전환 연출 */
+@keyframes fadeOutLeft {
+  from { opacity: 0.7; transform: translate(calc(-50% - var(--spread)), -50%) scale(0.92); }
+  to   { opacity: 0;   transform: translate(calc(-50% - calc(var(--spread) + 3rem)), -50%) scale(0.9); }
+}
+@keyframes fadeInRight {
+  from { opacity: 0;   transform: translate(calc(-50% + calc(var(--spread) + 3rem)), -50%) scale(0.9); }
+  to   { opacity: 0.7; transform: translate(calc(-50% + var(--spread)), -50%) scale(0.92); }
+}
+@keyframes fadeOutRight {
+  from { opacity: 0.7; transform: translate(calc(-50% + var(--spread)), -50%) scale(0.92); }
+  to   { opacity: 0;   transform: translate(calc(-50% + calc(var(--spread) + 3rem)), -50%) scale(0.9); }
+}
+@keyframes fadeInLeft {
+  from { opacity: 0;   transform: translate(calc(-50% - calc(var(--spread) + 3rem)), -50%) scale(0.9); }
+  to   { opacity: 0.7; transform: translate(calc(-50% - var(--spread)), -50%) scale(0.92); }
+}
+.swipe-left  .pos-left  { animation: fadeOutLeft 0.32s ease forwards; }
+.swipe-left  .pos-right { animation: fadeInRight 0.32s ease forwards; }
+.swipe-right .pos-right { animation: fadeOutRight 0.32s ease forwards; }
+.swipe-right .pos-left  { animation: fadeInLeft  0.32s ease forwards; }
+
+/* 네비 버튼 (데스크톱용) */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  box-shadow: var(--shadow);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.nav-btn.left  { left: 4px; }
+.nav-btn.right { right: 4px; }
+.nav-btn::before {
+  content: "";
+  display: block;
+  width: 14px; height: 14px;
+  margin: auto;
+  border-top: 2px solid #555;
+  border-right: 2px solid #555;
+}
+.nav-btn.left::before  { transform: rotate(-135deg) translateY(1px); }
+.nav-btn.right::before { transform: rotate(45deg)  translateY(-1px); }
+
+/* 다시 매칭하기 버튼 */
+.rematch-btn {
+  appearance: none;
+  border: none;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pink1), var(--pink2));
+  color: #fff;
+  cursor: pointer;
+  transition: opacity .2s ease;
+}
+.rematch-btn:hover { opacity: 0.9; }
+
+/* 모바일: spread 줄여서 덜 벌어지게 */
+@media (max-width: 599px) {
+  .carousel { --spread: 6rem; height: clamp(18rem, 64vw, 22rem); }
+  .match-card { width: 12.5rem; height: 18rem; }
+  .pos-center { transform: translate(-50%, -50%) scale(1.03); }
 }
