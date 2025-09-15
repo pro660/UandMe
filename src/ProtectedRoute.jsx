@@ -1,38 +1,21 @@
-// src/App.jsx
-import React, { useEffect } from "react";
-import AppRouter from "./Router";
-import api, { willExpireSoon } from "./api/axios";
+// src/ProtectedRoute.jsx
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import useUserStore from "./api/userStore.js";
 
-function App() {
-  const { isInitialized, setInitialized, clearUser } = useUserStore();
-
-  useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const user = useUserStore.getState().user;
-        const access = user?.accessToken;
-
-        if (access && willExpireSoon(access, 90)) {
-          await api.post("/auth/refresh");
-        }
-      } catch (e) {
-        console.error("초기 부팅 오류:", e);
-        clearUser();
-      } finally {
-        setInitialized(true);
-      }
-    };
-    bootstrap();
-  }, [clearUser, setInitialized]);
+const ProtectedRoute = ({ children }) => {
+  const { user, isInitialized } = useUserStore();
+  const location = useLocation();
 
   if (!isInitialized) return <div>Loading...</div>;
 
-  return (
-    <div className="App">
-      <AppRouter />
-    </div>
-  );
-}
+  const hasToken = !!user?.accessToken;
 
-export default App;
+  if (!hasToken) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;
