@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import useUserStore from "../../api/userStore.js"; // zustand store
 import ProfileCard from "../mypage/ProfileCard.jsx";
 
+import instaIcon from "../../image/home/instagram.svg";
+
 import "../../css/signup/ResultPage.css";
 
 export default function ResultPage({ hideHomeButton = false }) {
@@ -15,7 +17,11 @@ export default function ResultPage({ hideHomeButton = false }) {
       <div className="result-page">
         <div className="arch-box" aria-hidden="true" />
         {!hideHomeButton && (
-          <button className="home-btn" onClick={() => navigate("/")} type="button">
+          <button
+            className="home-btn"
+            onClick={() => navigate("/")}
+            type="button"
+          >
             홈화면 가기 ➔
           </button>
         )}
@@ -46,19 +52,37 @@ export default function ResultPage({ hideHomeButton = false }) {
 
       {/* 홈 버튼 (조건부) */}
       {!hideHomeButton && (
-        <button className="home-btn" onClick={() => navigate("/")} type="button">
+        <button
+          className="home-btn"
+          onClick={() => navigate("/")}
+          type="button"
+        >
           홈화면 가기 ➔
         </button>
       )}
 
-      <ProfileCard
-        imageSrc={typeImageUrl}
-        name={name}
-        department={department}
-        studentNo={studentNo}
-        birthYear={birthYear}
-        gender={gender}
-      />
+      <div className="profile-with-insta">
+        <ProfileCard
+          imageSrc={typeImageUrl}
+          name={name}
+          department={department}
+          studentNo={studentNo}
+          birthYear={birthYear}
+          gender={gender}
+        />
+
+        <a
+          href="https://instagram.com/your_account"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img
+            src={instaIcon}
+            alt="인스타그램"
+            className="insta-icon"
+          />
+        </a>
+      </div>
 
       <div className="result-info">
         <p className="result-subtitle">{name} 님의 연애 유형은...</p>
