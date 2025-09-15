@@ -37,8 +37,8 @@ function App() {
           if (auth.currentUser) await signOut(auth).catch(() => {});
         }
       } catch (e) {
-        console.error("초기 부팅 중 오류:", e);
-        clearUser();
+        console.error("⚠️ Firebase 동기화 실패 (세션은 유지):", e);
+        // clearUser(); ❌ 제거
         try {
           if (auth.currentUser) await signOut(auth);
         } catch {}
