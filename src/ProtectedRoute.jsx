@@ -1,7 +1,6 @@
-// src/ProtectedRoute.jsx
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import useUserStore from "./api/userStore.js";
+import useUserStore from "./userStore";
 
 const ProtectedRoute = ({ children }) => {
   const { user, isInitialized } = useUserStore();

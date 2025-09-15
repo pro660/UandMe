@@ -1,8 +1,7 @@
-// src/App.jsx
 import React, { useEffect } from "react";
 import AppRouter from "./Router";
 import api, { willExpireSoon } from "./api/axios";
-import useUserStore from "./api/userStore.js";
+import useUserStore from "./api/userStore";
 
 function App() {
   const { isInitialized, setInitialized, clearUser } = useUserStore();
@@ -10,22 +9,25 @@ function App() {
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        const access = useUserStore.getState().user?.accessToken;
+        const raw = localStorage.getItem("user-storage");
+        const stored = raw ? JSON.parse(raw).state?.user : null;
+        const access =
+          useUserStore.getState().user?.accessToken || stored?.accessToken;
 
-        // accessToken 곧 만료되면 refresh
         if (access && willExpireSoon(access, 90)) {
           await api.post("/auth/refresh");
         }
       } catch (e) {
-        console.error("초기 부팅 중 오류:", e);
+        console.error("초기 부팅 오류:", e);
         clearUser();
+        localStorage.removeItem("user-storage");
       } finally {
-        setInitialized(true);
+        setInitialized(true); // ✅ 반드시 초기화 완료
       }
     };
 
     bootstrap();
-  }, [clearUser, setInitialized]);
+  }, [setInitialized, clearUser]);
 
   if (!isInitialized) return <div>Loading...</div>;
 
