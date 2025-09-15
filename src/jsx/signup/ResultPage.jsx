@@ -63,9 +63,6 @@ export default function ResultPage({ hideHomeButton = false }) {
       // zustand 상태 업데이트
       setUser(updatedProfile);
 
-      // localStorage 업데이트
-      localStorage.setItem("user", JSON.stringify(updatedProfile));
-
       alert("인스타그램이 저장되었습니다!");
     } catch (err) {
       console.error(err);
