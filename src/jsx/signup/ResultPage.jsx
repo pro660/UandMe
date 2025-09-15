@@ -1,16 +1,20 @@
 // src/jsx/question/ResultPage.jsx
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../api/userStore.js"; // zustand store
 import ProfileCard from "../mypage/ProfileCard.jsx";
-
 import instaIcon from "../../image/home/instagram.svg";
+import api from "../../api/axios.js"; // ✅ axios 인스턴스
+import InstaAdd from "../mypage/InstaAdd.jsx"; // ✅ 방금 만든 모달 컴포넌트
 
 import "../../css/signup/ResultPage.css";
 
 export default function ResultPage({ hideHomeButton = false }) {
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
+  const setUser = useUserStore((s) => s.setUser);
+
+  const [showInstaModal, setShowInstaModal] = useState(false);
 
   if (!user) {
     return (
@@ -46,6 +50,29 @@ export default function ResultPage({ hideHomeButton = false }) {
     tags,
   } = user;
 
+  // ✅ 인스타 저장 핸들러
+  const handleSaveInstagram = async (instaId) => {
+    try {
+      // API 호출
+      await api.put("/users/me/instagram", { instagram: instaId });
+
+      // 최신 프로필 불러오기
+      const resp = await api.get("/users/me/profile");
+      const updatedProfile = resp.data;
+
+      // zustand 상태 업데이트
+      setUser(updatedProfile);
+
+      // localStorage 업데이트
+      localStorage.setItem("user", JSON.stringify(updatedProfile));
+
+      alert("인스타그램이 저장되었습니다!");
+    } catch (err) {
+      console.error(err);
+      alert("인스타그램 저장 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <div className="result-page">
       <div className="arch-box" aria-hidden="true" />
@@ -71,17 +98,13 @@ export default function ResultPage({ hideHomeButton = false }) {
           gender={gender}
         />
 
-        <a
-          href="https://instagram.com/your_account"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          className="insta-btn"
+          onClick={() => setShowInstaModal(true)}
         >
-          <img
-            src={instaIcon}
-            alt="인스타그램"
-            className="insta-icon"
-          />
-        </a>
+          <img src={instaIcon} alt="인스타그램" className="insta-icon" />
+        </button>
       </div>
 
       <div className="result-info">
@@ -107,6 +130,14 @@ export default function ResultPage({ hideHomeButton = false }) {
           </span>
         ))}
       </div>
+
+      {/* ✅ 인스타 추가 모달 */}
+      {showInstaModal && (
+        <InstaAdd
+          onClose={() => setShowInstaModal(false)}
+          onSave={handleSaveInstagram}
+        />
+      )}
     </div>
   );
 }
