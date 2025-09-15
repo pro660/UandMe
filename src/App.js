@@ -3,13 +3,16 @@ import AppRouter from "./Router";
 import api, { willExpireSoon } from "./api/axios";
 import useUserStore from "./api/userStore.js";
 
-import { auth } from "./libs/firebase";
-import { signOut } from "firebase/auth";
-import { loginFirebaseWithCustomToken } from "./services/firebaseAuth";
+// 🔽 Firebase 관련 import 전부 주석 처리
+// import { auth } from "./libs/firebase";
+// import { signOut } from "firebase/auth";
+// import { loginFirebaseWithCustomToken } from "./services/firebaseAuth";
 
 function App() {
-  const { isInitialized, setInitialized, clearUser } = useUserStore();
+  const { isInitialized, setInitialized /*, clearUser */ } = useUserStore();
 
+  // 🔽 Firebase 로그인 동기화 함수도 주석 처리
+  /*
   const ensureFirebaseLogin = async (myUserId) => {
     if (auth.currentUser?.uid === myUserId) return;
     if (auth.currentUser && auth.currentUser.uid !== myUserId) {
@@ -17,6 +20,7 @@ function App() {
     }
     await loginFirebaseWithCustomToken(myUserId);
   };
+  */
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -27,6 +31,8 @@ function App() {
           await api.post("/auth/refresh");
         }
 
+        // 🔽 Firebase 동기화 부분 전부 주석 처리
+        /*
         const myUserId =
           useUserStore.getState().user?.id ||
           useUserStore.getState().user?.userId;
@@ -36,12 +42,10 @@ function App() {
         } else {
           if (auth.currentUser) await signOut(auth).catch(() => {});
         }
+        */
       } catch (e) {
-        console.error("⚠️ Firebase 동기화 실패 (세션은 유지):", e);
-        // clearUser(); ❌ 제거
-        try {
-          if (auth.currentUser) await signOut(auth);
-        } catch {}
+        console.error("초기 부팅 중 오류 (Firebase 제외):", e);
+        // clearUser(); ❌ Firebase 비활성화 상태라 여기선 세션 유지
       } finally {
         setInitialized(true);
       }
@@ -58,6 +62,8 @@ function App() {
           await api.post("/auth/refresh");
         }
 
+        // 🔽 Firebase 동기화 부분 전부 주석 처리
+        /*
         const myUserId =
           useUserStore.getState().user?.id ||
           useUserStore.getState().user?.userId;
@@ -67,11 +73,9 @@ function App() {
         } else if (auth.currentUser) {
           await signOut(auth).catch(() => {});
         }
+        */
       } catch {
         useUserStore.getState().clearUser();
-        try {
-          if (auth.currentUser) await signOut(auth);
-        } catch {}
       }
     };
 
