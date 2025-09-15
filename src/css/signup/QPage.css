@@ -92,7 +92,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 2rem 0 3rem;
+  margin: 2rem 0 2rem;
   position: relative;
 }
 .qpage-heart-no {
@@ -108,7 +108,7 @@
   opacity: 1;
   border-radius: 18px;
   padding: 1.25rem 1.1rem;
-  margin: 0 auto 6rem;
+  margin: 0 auto 4rem;
   opacity: 1;
   border: 3px solid var(--card-accent);
 
@@ -133,7 +133,6 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin: 0 0 1.2rem;
   font-weight: 400;
 }
 
@@ -189,7 +188,7 @@
   letter-spacing: 0.02em;
   box-shadow: 0 12px 24px rgba(232, 4, 141, 0.28);
 
-  margin-top: 18vh;
+  margin-top: 15vh;
 }
 .qpage-confirm:disabled {
   opacity: 0.55;
