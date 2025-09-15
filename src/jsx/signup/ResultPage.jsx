@@ -5,7 +5,7 @@ import useUserStore from "../../api/userStore.js"; // zustand store
 import ProfileCard from "../mypage/ProfileCard.jsx";
 import instaIcon from "../../image/home/instagram.svg";
 import api from "../../api/axios.js"; // ✅ axios 인스턴스
-import InstaAdd from "../mypage/InstaAdd.jsx"; // ✅ 방금 만든 모달 컴포넌트
+import InstaAdd from "../mypage/InstaAdd.jsx"; // ✅ 인스타 추가 모달
 
 import "../../css/signup/ResultPage.css";
 
@@ -50,7 +50,7 @@ export default function ResultPage({ hideHomeButton = false }) {
     tags,
   } = user;
 
-  // ✅ 인스타 저장 핸들러
+  // ✅ 인스타 저장 핸들러 (기존 accessToken 보존)
   const handleSaveInstagram = async (instaId) => {
     try {
       // API 호출
@@ -60,8 +60,9 @@ export default function ResultPage({ hideHomeButton = false }) {
       const resp = await api.get("/users/me/profile");
       const updatedProfile = resp.data;
 
-      // zustand 상태 업데이트
-      setUser(updatedProfile);
+      // 기존 user 상태 가져오기 (accessToken 등 유지)
+      const prev = useUserStore.getState().user || {};
+      setUser({ ...prev, ...updatedProfile });
 
       alert("인스타그램이 저장되었습니다!");
     } catch (err) {
