@@ -27,7 +27,7 @@ const useUserStore = create(
       // 로그아웃 처리 (스토어 + localStorage 정리)
       logout: () => {
         set({ user: null });
-        localStorage.removeItem("user"); // persist가 저장한 데이터 중 user만 제거
+        // ❌ localStorage.removeItem("user") 필요 없음
       },
 
       // 초기화 여부 세팅
@@ -41,4 +41,3 @@ const useUserStore = create(
 );
 
 export default useUserStore;
-
