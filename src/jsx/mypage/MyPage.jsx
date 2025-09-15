@@ -16,7 +16,10 @@ function Matching() {
       console.error("로그아웃 실패:", err);
     } finally {
       clearUser(); // 상태 초기화
+      // ✅ 로컬스토리지 정리
       localStorage.removeItem("user");
+      localStorage.removeItem("user-storage");
+      localStorage.removeItem("accessToken");
       navigate("/login");
     }
   };
@@ -28,7 +31,10 @@ function Matching() {
     try {
       await api.delete("/auth/kakao/unlink"); // ✅ 회원탈퇴 호출
       clearUser();
+      // ✅ 로컬스토리지 정리
       localStorage.removeItem("user");
+      localStorage.removeItem("user-storage");
+      localStorage.removeItem("accessToken");
       alert("회원탈퇴가 완료되었습니다.");
       navigate("/login");
     } catch (err) {
