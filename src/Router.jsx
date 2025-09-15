@@ -18,7 +18,7 @@ import ResultPage from "./jsx/signup/ResultPage";
 function Layout({ children }) {
   const location = useLocation();
   // 숨기고 싶은 경로들
-  const hiddenPaths = ["/login", "/infoform", "/post-login", "/result"];
+  const hiddenPaths = ["/login", "/infoform", "/post-login", "/result", "/qpage"];
 
   const shouldHide = hiddenPaths.includes(location.pathname);
 
@@ -40,8 +40,8 @@ function AppRouter() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/chat" element={<ChatList />} />
           <Route path="/matching" element={<Matching />} />
-          <Route path="/mypage" element={<MyPage />} />
-
+          <Route path="/mypage" element={<MyPage />} /> 
+            
           {/* 회원가입(정보 입력 페이지) */}
           <Route path="/infoform" element={<InfoForm />} />
           <Route path="/qpage" element={<QPage />} />
