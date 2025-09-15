@@ -1,15 +1,14 @@
 // src/pages/QPage.jsx
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState, useEffect, useContext } from "react";
+import { useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
 
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
 
 import "../../css/signup/QPage.css";
-
 import bigheartImg from "../../image/loginPage/bigheart.svg";
 
-/** 기본 문항(필요시 외부에서 questions prop으로 대체 가능) */
+/** 기본 문항 */
 const DEFAULT_QUESTIONS = [
   { id: 1, text: "첫만남에서의 당신, 주로 어떤 상황을 선호하시나요?",
     options: ["사람들과 함께하는 편안하고 시끌벅적한 모임", "조용하고 분위기 있는 카페에서 일대일 대화"] },
@@ -28,23 +27,75 @@ const DEFAULT_QUESTIONS = [
   { id: 8, text: "관계에서 당신이 추구하는 가장 큰 가치는 무엇인가요?",
     options: ["서로에게 새로운 활력을 불어넣는 흥미로움", "편안한 신뢰를 바탕으로 한 안정감"] },
   { id: 9, text: "처음 만난 사람에게 주로 어떤 질문을 하나요?",
-    options: ['취미나 여가활동 등 가볍고 친근한 질문',
-              '가치관 등 깊이 있는 질문'] },
+    options: ["취미나 여가활동 등 가볍고 친근한 질문", "가치관 등 깊이 있는 질문"] },
   { id: 10, text: "데이트 상대와 있을 때, 당신의 모습은?",
     options: ["재미있는 분위기를 주도하고 리드하는 편", "상대방의 이야기에 귀 기울이고 맞춰주는 편"] },
 ];
+
+/* ---------------------------------
+   ✅ react-router v6 이동 차단 Hook
+-----------------------------------*/
+function useBlocker(blocker, when = true) {
+  const { navigator } = useContext(UNSAFE_NavigationContext);
+
+  useEffect(() => {
+    if (!when) return;
+
+    const push = navigator.push;
+    const replace = navigator.replace;
+
+    navigator.push = (...args) => {
+      if (blocker()) return;
+      push(...args);
+    };
+
+    navigator.replace = (...args) => {
+      if (blocker()) return;
+      replace(...args);
+    };
+
+    return () => {
+      navigator.push = push;
+      navigator.replace = replace;
+    };
+  }, [navigator, blocker, when]);
+}
 
 export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS }) {
   const navigate = useNavigate();
 
   const TOTAL = questions.length;
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState(Array(TOTAL).fill(null)); // 0(a)/1(b)
+  const [answers, setAnswers] = useState(Array(TOTAL).fill(null));
   const [choice, setChoice] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const q = questions[step];
   const displayNo = useMemo(() => String(step + 1).padStart(2, "0"), [step]);
+
+  /* -------------------------------
+     1. 브라우저 새로고침/닫기 방지
+  --------------------------------*/
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (step < TOTAL && step >= 0 && !submitting) {
+        e.preventDefault();
+        e.returnValue = ""; // 크롬/사파리에서 기본 경고 표시
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [step, TOTAL, submitting]);
+
+  /* -------------------------------
+     2. 내부 라우터 이동 방지
+  --------------------------------*/
+  useBlocker(() => {
+    if (step < TOTAL && step >= 0 && !submitting) {
+      return !window.confirm("진행상황이 사라질 수 있습니다. 그래도 나가시겠습니까?");
+    }
+    return false;
+  }, true);
 
   const handleConfirm = async () => {
     if (choice === null) return;
@@ -53,44 +104,32 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
     next[step] = choice;
     setAnswers(next);
 
-    // 다음 문항으로
     if (step < TOTAL - 1) {
       setStep((s) => s + 1);
       setChoice(next[step + 1]);
       return;
     }
 
-    // 마지막 문항 → 제출
     try {
       setSubmitting(true);
 
-      // 0 → "a", 1 → "b"
       const ab = next.map((v) => (v === 0 ? "a" : "b"));
       const qPayload = {
         q1: ab[0], q2: ab[1], q3: ab[2], q4: ab[3], q5: ab[4],
         q6: ab[5], q7: ab[6], q8: ab[7], q9: ab[8], q10: ab[9],
       };
 
-      // InfoForm에서 넘겨준 기본 정보 + 문항 응답
-      const payload = {
-        ...baseInfo, // { name, department, studentNo, birthYear, gender: "MALE"/"FEMALE" }
-        ...qPayload,
-      };
-
-      // ✅ 토큰 자동첨부되는 axios 인스턴스로 PUT
+      const payload = { ...baseInfo, ...qPayload };
       await api.put("/users/me/profile", payload);
 
-      // ✅ 최신 프로필 GET 후 전역 상태 & localStorage에 저장
       const resp = await api.get("/users/me/profile");
       const profileData = resp.data;
       useUserStore.getState().setUser(profileData);
 
-      // 간단 결과 계산
       const scoreA = ab.filter((c) => c === "a").length;
       const scoreB = ab.filter((c) => c === "b").length;
       const dominant = scoreA === scoreB ? "BALANCED" : (scoreA > scoreB ? "A-TYPE" : "B-TYPE");
 
-      // 결과 페이지 이동 (라우팅 경로는 프로젝트에 맞춰 사용)
       navigate("/result", {
         replace: true,
         state: { profile: profileData, answers: ab, scoreA, scoreB, dominant },
@@ -105,8 +144,10 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
   const handleBack = () => {
     if (step === 0) {
-      if (onClose) return onClose(); // InfoForm으로 복귀
-      window.history.back();
+      if (window.confirm("진행상황이 사라질 수 있습니다. 그래도 나가시겠습니까?")) {
+        if (onClose) return onClose();
+        window.history.back();
+      }
     } else {
       setStep((s) => s - 1);
       setChoice(answers[step - 1]);
@@ -117,17 +158,13 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
   return (
     <div className="qpage">
-      {/* 상단: 뒤로가기 + 진행도(10칸) */}
+      {/* 상단 */}
       <div className="qpage-top">
         <button className="qpage-back" onClick={handleBack} type="button">←</button>
-        <div
-          className="qpage-progress"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={TOTAL}
-          aria-valuenow={step + 1}
-        >
-          <div className="qpage-progress-fill" style={{ width: `${((step + 1) / TOTAL) * 100}%` }} />
+        <div className="qpage-progress" role="progressbar"
+          aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={step + 1}>
+          <div className="qpage-progress-fill"
+            style={{ width: `${((step + 1) / TOTAL) * 100}%` }} />
         </div>
       </div>
 
