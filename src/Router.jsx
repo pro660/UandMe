@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
+import ProtectedRoute from "./ProtectedRoute";
+
 import Header from "./jsx/common/Header";
 import Menu from "./jsx/common/Menu";
 
@@ -17,9 +19,7 @@ import ResultPage from "./jsx/signup/ResultPage";
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
-  // 숨기고 싶은 경로들
   const hiddenPaths = ["/login", "/infoform", "/post-login", "/result", "/qpage"];
-
   const shouldHide = hiddenPaths.includes(location.pathname);
 
   return (
@@ -41,11 +41,32 @@ function AppRouter() {
           <Route path="/chat" element={<ChatList />} />
           <Route path="/matching" element={<Matching />} />
           <Route path="/mypage" element={<MyPage />} /> 
-            
-          {/* 회원가입(정보 입력 페이지) */}
-          <Route path="/infoform" element={<InfoForm />} />
-          <Route path="/qpage" element={<QPage />} />
-          <Route path="/result" element={<ResultPage />} />
+
+          {/* 회원가입 관련 페이지 - 보호 */}
+          <Route
+            path="/infoform"
+            element={
+              <ProtectedRoute>
+                <InfoForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/qpage"
+            element={
+              <ProtectedRoute>
+                <QPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/result"
+            element={
+              <ProtectedRoute>
+                <ResultPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Layout>
     </BrowserRouter>
