@@ -1,10 +1,15 @@
 // src/components/common/InstaAdd.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import "../../css/mypage/InstaAdd.css";
 
-export default function InstaAdd({ onClose, onSave }) {
-  const [instaId, setInstaId] = useState("");
+export default function InstaAdd({ onClose, onSave, defaultId = "" }) {
+  const [instaId, setInstaId] = useState(defaultId);
+
+  // 모달이 열릴 때 defaultId가 변경되면 값 반영
+  useEffect(() => {
+    setInstaId(defaultId || "");
+  }, [defaultId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -54,6 +59,5 @@ export default function InstaAdd({ onClose, onSave }) {
     </div>
   );
 
-  // ✅ Portal로 body에 붙이기
   return createPortal(modal, document.body);
 }

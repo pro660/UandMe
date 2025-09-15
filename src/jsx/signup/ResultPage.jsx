@@ -134,6 +134,7 @@ export default function ResultPage({ hideHomeButton = false }) {
       {/* ✅ 인스타 추가 모달 */}
       {showInstaModal && (
         <InstaAdd
+          defaultId={user.instagram} // 현재 저장된 아이디 내려주기
           onClose={() => setShowInstaModal(false)}
           onSave={handleSaveInstagram}
         />

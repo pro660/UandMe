@@ -1,0 +1,45 @@
+.matching-page {
+  padding-bottom: 5rem;
+}
+
+.account-actions {
+  display: flex;
+  flex-direction: column; /* 세로 배치 */
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  background-color: #fff;
+}
+
+/* 로그아웃 버튼: pill 스타일 */
+.logout-btn {
+  width: 80%; /* 화면 기준 넓이 */
+  max-width: 400px;
+  padding: 0.9rem;
+  border-radius: 2rem; /* pill 모양 */
+  border: 2px solid #acacac;
+  background: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #acacac;
+  text-align: center;
+  cursor: pointer;
+}
+.logout-btn:hover {
+  background: #f9f9f9;
+}
+
+/* 회원탈퇴: 오른쪽 하단 텍스트 버튼 */
+.delete-btn {
+  align-self: flex-end;
+  margin-right: 10%; /* 로그아웃 버튼 폭과 맞추기 */
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.delete-btn:hover {
+  text-decoration: underline;
+}
