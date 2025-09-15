@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
-import ProtectedRoute from "./api/ProtectedRoute";
+import ProtectedRoute from "./ProtectedRoute";
 
 import Header from "./jsx/common/Header";
 import Menu from "./jsx/common/Menu";
