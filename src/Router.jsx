@@ -1,6 +1,6 @@
 // src/Router.jsx
 import React from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -34,7 +34,6 @@ function Layout({ children }) {
 
 function AppRouter() {
   return (
-    <BrowserRouter>
       <Layout>
         <Routes>
           {/* 🔓 공개 라우트 */}
@@ -99,7 +98,6 @@ function AppRouter() {
           />
         </Routes>
       </Layout>
-    </BrowserRouter>
   );
 }
 
