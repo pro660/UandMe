@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -19,7 +19,13 @@ import ResultPage from "./jsx/signup/ResultPage";
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
-  const hiddenPaths = ["/login", "/infoform", "/post-login", "/result", "/qpage"];
+  const hiddenPaths = [
+    "/login",
+    "/infoform",
+    "/post-login",
+    "/result",
+    "/qpage",
+  ];
   const shouldHide = hiddenPaths.includes(location.pathname);
 
   return (
@@ -33,43 +39,72 @@ function Layout({ children }) {
 
 function AppRouter() {
   return (
-    <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/chat" element={<ChatList />} />
-          <Route path="/matching" element={<Matching />} />
-          <Route path="/mypage" element={<MyPage />} /> 
+    <Layout>
+      <Routes>
+        {/* 공개 페이지 */}
+        <Route path="/login" element={<LoginPage />} />
 
-          {/* 회원가입 관련 페이지 - 보호 */}
-          <Route
-            path="/infoform"
-            element={
-              <ProtectedRoute>
-                <InfoForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/qpage"
-            element={
-              <ProtectedRoute>
-                <QPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/result"
-            element={
-              <ProtectedRoute>
-                <ResultPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+        {/* 보호 페이지 (로그인 필수) */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/matching"
+          element={
+            <ProtectedRoute>
+              <Matching />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mypage"
+          element={
+            <ProtectedRoute>
+              <MyPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 회원가입 관련 페이지 - 보호 */}
+        <Route
+          path="/infoform"
+          element={
+            <ProtectedRoute>
+              <InfoForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/qpage"
+          element={
+            <ProtectedRoute>
+              <QPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/result"
+          element={
+            <ProtectedRoute>
+              <ResultPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Layout>
   );
 }
 
