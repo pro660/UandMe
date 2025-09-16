@@ -11,8 +11,8 @@ import {
   setDoc,
   getDoc,
 } from "firebase/firestore";
-import { db } from "../../firebase";
-import useUserStore from "../../store/userStore";
+import { db } from "../../libs/firebase";
+import useUserStore from "../../api/userStore";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
