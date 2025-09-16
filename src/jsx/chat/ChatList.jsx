@@ -2,20 +2,21 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
-
-// ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
 
 export default function ChatList() {
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
+  // ✅ Firestore 실시간 구독
   useEffect(() => {
-    // ✅ Firestore에서 chatRooms 실시간 구독
     const q = query(collection(db, "chatRooms"), orderBy("lastMessageAt", "desc"));
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ roomId: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((doc) => ({
+        roomId: doc.id,
+        ...doc.data(),
+      }));
       setRooms(data);
     });
 
@@ -49,7 +50,7 @@ export default function ChatList() {
             style={{
               width: "6rem",
               height: "6rem",
-              margin: "0 auto",
+              marginBottom: "1rem",
             }}
           />
           <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>

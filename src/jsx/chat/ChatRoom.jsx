@@ -28,24 +28,20 @@ export default function ChatRoom() {
 
   // ✅ 방 존재 확인 & 없으면 생성
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !userId) return;
 
     const ensureRoom = async () => {
-      try {
-        const roomRef = doc(db, "chatRooms", roomId);
-        const snap = await getDoc(roomRef);
-        if (!snap.exists()) {
-          await setDoc(roomRef, {
-            createdAt: serverTimestamp(),
-            participants: [userId, peer?.userId].filter(Boolean),
-            peerInfo: peer || {}, // ✅ 상대방 정보 저장
-            lastMessage: "",
-            lastMessageAt: serverTimestamp(),
-          });
-          console.log("🟢 Firestore 방 생성:", roomId);
-        }
-      } catch (err) {
-        console.error("❌ Firestore 방 생성 실패:", err);
+      const roomRef = doc(db, "chatRooms", roomId);
+      const snap = await getDoc(roomRef);
+      if (!snap.exists()) {
+        await setDoc(roomRef, {
+          createdAt: serverTimestamp(),
+          participants: [userId, peer?.userId].filter(Boolean),
+          peerInfo: peer || null,
+          lastMessage: "",
+          lastMessageAt: null,
+        });
+        console.log("🟢 Firestore 방 생성:", roomId);
       }
     };
 
@@ -55,7 +51,6 @@ export default function ChatRoom() {
   // ✅ Firestore 메시지 구독
   useEffect(() => {
     if (!roomId) return;
-
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "asc")
@@ -73,15 +68,17 @@ export default function ChatRoom() {
     if (!input.trim() || !userId) return;
 
     try {
-      // 메시지 추가
-      await addDoc(collection(db, "chatRooms", roomId, "messages"), {
+      const roomRef = doc(db, "chatRooms", roomId);
+
+      // 메시지 저장
+      await addDoc(collection(roomRef, "messages"), {
         senderId: userId,
         text: input,
         createdAt: serverTimestamp(),
       });
 
-      // 방의 마지막 메시지 업데이트
-      await updateDoc(doc(db, "chatRooms", roomId), {
+      // lastMessage 갱신
+      await updateDoc(roomRef, {
         lastMessage: input,
         lastMessageAt: serverTimestamp(),
       });
