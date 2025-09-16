@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import useChatStore from "../../api/chatStore";
+import useChatStore from "../../store/chatStore";
 import api from "../../api/axios";
 
 export default function ChatList() {
@@ -29,7 +29,9 @@ export default function ChatList() {
           {rooms.map((room) => (
             <li
               key={room.roomId}
-              onClick={() => navigate(`/chat/${room.roomId}`)}
+              onClick={() =>
+                navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } }) // ✅ peer 같이 전달
+              }
               style={{ cursor: "pointer", padding: "10px 0", borderBottom: "1px solid #ddd" }}
             >
               <div><b>{room.peer.name}</b> ({room.peer.department})</div>

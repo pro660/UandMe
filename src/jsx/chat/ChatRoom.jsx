@@ -1,35 +1,21 @@
-// src/jsx/chat/ChatRoom.jsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { db } from "../../libs/firebase";
-import useUserStore from "../../api/userStore";
-import api from "../../api/axios";
+import { db } from "../../firebase";
+import useUserStore from "../../store/userStore";
 
 export default function ChatRoom() {
-  const { roomId } = useParams();        // 🔑 URL에서 roomId
+  const { roomId } = useParams();
+  const location = useLocation();
+  const peer = location.state?.peer; // ✅ ChatList에서 넘어온 peer
+
   const user = useUserStore((s) => s.user);
   const userId = user?.id;
 
-  const [peer, setPeer] = useState(null);      // 상대방 정보
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // 1. 상대방(peer) 정보 가져오기 (백엔드)
-  useEffect(() => {
-    const fetchRoomInfo = async () => {
-      try {
-        const resp = await api.get(`/chat/rooms/${roomId}`);
-        // API가 { peer, roomId, matchedAt } 구조로 응답한다고 가정
-        setPeer(resp.data.peer);
-      } catch (err) {
-        console.error("❌ 방 정보 불러오기 실패", err);
-      }
-    };
-    if (roomId) fetchRoomInfo();
-  }, [roomId]);
-
-  // 2. Firestore 메시지 구독
+  // Firestore 메시지 구독
   useEffect(() => {
     if (!roomId) return;
 
@@ -45,7 +31,7 @@ export default function ChatRoom() {
     return () => unsub();
   }, [roomId]);
 
-  // 3. 메시지 전송
+  // 메시지 전송
   const sendMessage = async () => {
     if (!input.trim() || !userId) return;
 
@@ -60,7 +46,7 @@ export default function ChatRoom() {
 
   return (
     <div className="chat-room">
-      {/* 🔹 상대방 프로필 영역 */}
+      {/* 🔹 상대방 프로필 표시 */}
       {peer && (
         <div style={{ borderBottom: "1px solid #ddd", paddingBottom: "10px", marginBottom: "10px" }}>
           <h3>{peer.name} ({peer.department})</h3>
