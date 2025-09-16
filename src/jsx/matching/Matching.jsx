@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios"; // ✅ axios 인스턴스
 import useMatchingStore from "../../api/matchingStore"; // ✅ 전역 매칭 스토어
-import { db } from "../../libs/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import useUserStore from "../../api/userStore"; // ✅ 로그인 유저 정보
 
 export default function Matching() {
   const [sentSignals, setSentSignals] = useState([]);
@@ -13,10 +10,6 @@ export default function Matching() {
   // ✅ 전역 매칭 상태
   const peer = useMatchingStore((s) => s.peer);
   const setMatch = useMatchingStore((s) => s.setMatch);
-
-  // ✅ 로그인 유저
-  const user = useUserStore((s) => s.user);
-  const userId = user?.userId;
 
   // 매칭 시작
   const startMatching = async () => {
@@ -53,20 +46,8 @@ export default function Matching() {
   const acceptSignal = async (signalId) => {
     try {
       const resp = await api.post(`/signals/accept/${signalId}`);
-      const data = resp.data; // { roomId, peer }
-
+      const data = resp.data;
       setMessage(`플러팅 수락 완료! roomId=${data.roomId}`);
-      setMatch({ peer: data.peer, roomId: data.roomId }); // ✅ 전역 저장
-
-      // ✅ Firestore에 방 생성
-      const roomRef = doc(db, "chatRooms", data.roomId);
-      await setDoc(roomRef, {
-        createdAt: serverTimestamp(),
-        participants: [userId, data.peer.userId],
-        peerInfo: data.peer,
-        lastMessage: "",
-        lastMessageAt: null,
-      });
     } catch (err) {
       console.error("❌ 신호 수락 실패:", err);
       setMessage("플러팅 수락 실패");
@@ -94,8 +75,17 @@ export default function Matching() {
   };
 
   useEffect(() => {
+    // 처음 로드할 때 한 번 실행
     fetchSentSignals();
     fetchReceivedSignals();
+
+    // ⏰ 5초마다 새로 불러오기 (폴링)
+    const interval = setInterval(() => {
+      fetchSentSignals();
+      fetchReceivedSignals();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
