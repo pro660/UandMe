@@ -67,6 +67,7 @@ export default function ChatRoom() {
   // ✅ 메시지 전송
   const sendMessage = async () => {
     if (!input.trim() || !userId) return;
+    console.log("📨 메시지 전송 시도:", input, "by", userId);
 
     try {
       await addDoc(collection(db, "chatRooms", roomId, "messages"), {
@@ -84,8 +85,16 @@ export default function ChatRoom() {
     <div className="chat-room">
       {/* 🔹 상대방 프로필 표시 */}
       {peer && (
-        <div style={{ borderBottom: "1px solid #ddd", paddingBottom: "10px", marginBottom: "10px" }}>
-          <h3>{peer.name} ({peer.department})</h3>
+        <div
+          style={{
+            borderBottom: "1px solid #ddd",
+            paddingBottom: "10px",
+            marginBottom: "10px",
+          }}
+        >
+          <h3>
+            {peer.name} ({peer.department})
+          </h3>
           {peer.introduce && <p>{peer.introduce}</p>}
           <div>
             <img src={peer.typeImageUrl} alt="type1" width={60} />
@@ -97,7 +106,12 @@ export default function ChatRoom() {
       {/* 🔹 메시지 목록 */}
       <div
         className="chat-messages"
-        style={{ height: "300px", overflowY: "auto", border: "1px solid #ddd", padding: "10px" }}
+        style={{
+          height: "300px",
+          overflowY: "auto",
+          border: "1px solid #ddd",
+          padding: "10px",
+        }}
       >
         {messages.map((m) => (
           <div
@@ -113,7 +127,10 @@ export default function ChatRoom() {
       </div>
 
       {/* 🔹 입력창 */}
-      <div className="chat-input" style={{ marginTop: "10px", display: "flex" }}>
+      <div
+        className="chat-input"
+        style={{ marginTop: "10px", display: "flex" }}
+      >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
