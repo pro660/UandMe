@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import "../../css/common/CouponSheet.css";
 import api from "../../api/axios"; // ✅ axios 인스턴스
+import useUserStore from "../../api/userStore"; // ✅ zustand 스토어
 
 export default function CouponSheet({ open, onClose }) {
   const sheetRef = useRef(null);
@@ -22,6 +23,7 @@ export default function CouponSheet({ open, onClose }) {
   const CLOSE_DISTANCE = 120;
   const CLOSE_VELOCITY = 0.7;
 
+  // 닫기 요청
   const requestClose = useCallback(() => {
     if (!closing) setClosing(true);
   }, [closing]);
@@ -49,6 +51,7 @@ export default function CouponSheet({ open, onClose }) {
     lastTRef.current = performance.now();
   };
 
+  // 터치 이동
   const onTouchMove = (e) => {
     if (!isDragging) return;
     const y = e.touches[0].clientY;
@@ -59,6 +62,7 @@ export default function CouponSheet({ open, onClose }) {
     e.preventDefault();
   };
 
+  // 터치 종료
   const onTouchEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
@@ -73,10 +77,12 @@ export default function CouponSheet({ open, onClose }) {
     }
   };
 
+  // CSS 변수로 이동 반영
   useEffect(() => {
     sheetRef.current?.style.setProperty("--dragY", `${dragY}px`);
   }, [dragY]);
 
+  // ESC 닫기
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") requestClose();
@@ -85,6 +91,7 @@ export default function CouponSheet({ open, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [requestClose]);
 
+  // 애니메이션 종료 후 완전히 닫기
   const handleAnimationEnd = () => {
     if (closing) {
       setClosing(false);
@@ -174,13 +181,7 @@ export default function CouponSheet({ open, onClose }) {
         </ul>
 
         {message && (
-          <p
-            className={`coupon-message ${
-              message.includes("성공") ? "success" : "error"
-            }`}
-          >
-            {message}
-          </p>
+          <p className="coupon-message error">{message}</p>
         )}
 
         <button

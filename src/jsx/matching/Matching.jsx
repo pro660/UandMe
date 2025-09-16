@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios"; // ✅ axios 인스턴스
-import useMatchingStore from "../../store/matchingStore"; // ✅ 전역 매칭 스토어
+import useMatchingStore from "../../api/matchingStore"; // ✅ 전역 매칭 스토어
 
 export default function Matching() {
   const [sentSignals, setSentSignals] = useState([]);
@@ -9,9 +9,7 @@ export default function Matching() {
 
   // ✅ 전역 매칭 상태
   const peer = useMatchingStore((s) => s.peer);
-  const roomId = useMatchingStore((s) => s.roomId);
   const setMatch = useMatchingStore((s) => s.setMatch);
-  const clearMatch = useMatchingStore((s) => s.clearMatch);
 
   // 매칭 시작
   const startMatching = async () => {
