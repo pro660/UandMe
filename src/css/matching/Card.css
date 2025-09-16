@@ -1,178 +1,121 @@
-:root {
-  --radius: 22px;
-  --shadow: 0 6px 16px rgba(0,0,0,0.15);
-  --pink1: #ffd7ee;
-  --pink2: #f94892;
-}
-
-/* 전체 레이아웃 */
-.match-root {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100svh;
-  padding: 1.2rem;
-  box-sizing: border-box;
-  background: #f9fafb;
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-/* 상단 안내 문구 */
-.match-title {
-  font-size: 1rem;
-  color: #444;
-  margin-bottom: 1.4rem;
+/* ===== 제목 ===== */
+.title {
+  background-color: #f9fafb;
   text-align: center;
+  padding-top: 5rem;
+  margin-bottom: -13rem;
 }
 
-/* ===== 캐러셀 컨테이너 ===== */
-.carousel {
-  --spread: 9rem;   /* 좌우 카드 간격 (데스크톱) */
-  --dx: 0px;        /* 실시간 드래그 이동량(px) */
+/* ===== 루트 ===== */
+.card-root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f9fafb;
+}
+
+/* ===== 래퍼 ===== */
+.card-wrap {
   position: relative;
-  width: min(92vw, 900px);
-  height: clamp(18rem, 48vw, 22rem);
-  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 40rem;
+  height: 22rem;
+  touch-action: pan-y;
+  user-select: none;
 }
 
-/* 스냅 중엔 부드럽게(드래그 중엔 즉시 반응을 위해 transition 없음) */
-.carousel.snapping .match-card {
-  transition: transform .28s ease, opacity .28s ease, z-index .28s ease, box-shadow .28s ease;
+/* 스냅 중에만 부드럽게 */
+.card-wrap.snapping .slot {
+  transition: transform .26s ease;
+}
+.card-wrap.snapping .card,
+.card-wrap.snapping .ghost {
+  transition: transform .26s ease, opacity .26s ease;
 }
 
-/* 카드 공통 */
-.match-card {
+/* ===== 슬롯(왼/중/오) ===== */
+.slot {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 14rem;
-  height: 20rem;
-  transform: translate(-50%, -50%);
-  border: none;
-  border-radius: var(--radius);
-  background: #fff;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  cursor: pointer;
-  text-align: center;
+  transform: translate(-50%,-50%);
+  width: 13rem;      /* 중앙 카드 기준 폭 */
+  height: 19.5rem;   /* 중앙 카드 기준 높이 */
+  display: grid;     /* 두 레이어를 겹치기 위해 grid */
+  place-items: center;
+  z-index: 1;        /* 옆 슬롯은 뒤 */
 }
 
-/* 이미지 */
+/* 가운데 슬롯은 항상 위 */
+.slot-center { z-index: 3; }
+
+/* ===== 카드 공통 ===== */
+.card {
+  position: relative;   /* z-index 적용 보장 */
+  width: 100%;
+  height: 100%;
+  background: #FFF5FA;
+  border-radius: 1rem;
+  box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+  padding: 1rem;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  z-index: 1; /* 슬롯 내부 기본 바닥 */
+}
+
+/* 같은 셀에 겹치기 */
+.slot .card { grid-area: 1 / 1; }
+
+/* 중앙 카드는 크기 변화 없이 z-index만 보장 */
+.slot-center .card { z-index: 3; }
+
+/* 좌/우 카드는 뒤에 유지 (크기 조절 없음) */
+.slot-left  .card,
+.slot-right .card { z-index: 1; }
+
+/* ===== 고스트 레이어 (센터 옆에서 페이드 인, 방향 무관) ===== */
+.ghost {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* 위치/불투명도는 inline style에서 제어 */
+  opacity: 0;
+  pointer-events: none;  /* 터치/클릭 방지 */
+  z-index: 2;            /* 슬롯(1)보다 위, 센터(3)보다 아래 */
+}
+
+/* 카드 스타일 재사용 */
+.ghost .ghost-card { }
+
+/* ===== 이미지/텍스트 ===== */
 .img-wrap {
-  background: linear-gradient(135deg, #ffd7ee 0%, #f6b7dd 100%);
-  padding: 1.5rem;
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0.2rem 0.6rem rgba(0,0,0,.08);
 }
 .img-wrap img {
   width: 100%;
-  max-width: 120px;
-  margin: 0 auto;
-  display: block;
+  height: 100%;
+  object-fit: cover;
+  display:block;
 }
+.info h3 { margin: 0; font-size: 1.1rem; }
+.info .major { margin: 0; font-size: .9rem; color: #666; }
+.info .msg { margin: .2rem 0 0; font-size: .95rem; color: #333; }
 
-/* 카드 정보 */
-.card-info { padding: 1rem; }
-.card-info h3 { font-size: 1.1rem; font-weight: 700; margin: 0.3rem 0; }
-.card-info .major { font-size: 0.9rem; color: #666; }
-.card-info .msg { font-size: 0.95rem; font-weight: 500; margin-top: 0.6rem; color: #333; }
-
-/* =========================================
-   기본 배치(방향 클래스 없을 때)
-   - 가운데는 크게, 양옆은 축소/반투명
-   - 가운데만 주로 움직이고 양옆은 아주 약간(0.08배)만 패럴랙스
-========================================= */
-.pos-center {
-  z-index: 4;
-  transform: translate(calc(-50% + var(--dx)), -50%) scale(1.06);
-  opacity: 1;
-}
-.pos-left {
-  z-index: 2;
-  transform: translate(calc(-50% - var(--spread) + calc(var(--dx) * 0.08)), -50%) scale(0.92);
-  opacity: 0.72;
-}
-.pos-right {
-  z-index: 2;
-  transform: translate(calc(-50% + var(--spread) + calc(var(--dx) * 0.08)), -50%) scale(0.92);
-  opacity: 0.72;
-}
-.pos-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* =========================================
-   방향: 왼쪽으로 드래그 중(.dir-left)
-   - 왼쪽 카드는 고정(정지)
-   - 가운데/오른쪽만 실시간 이동
-========================================= */
-.carousel.dir-left .pos-left {
-  transform: translate(calc(-50% - var(--spread)), -50%) scale(0.92);
-}
-.carousel.dir-left .pos-center {
-  transform: translate(calc(-50% + var(--dx)), -50%) scale(1.06);
-}
-.carousel.dir-left .pos-right {
-  transform: translate(calc(-50% + var(--spread) + var(--dx)), -50%) scale(0.92);
-}
-
-/* =========================================
-   방향: 오른쪽으로 드래그 중(.dir-right)
-   - 오른쪽 카드는 고정(정지)
-   - 가운데/왼쪽만 실시간 이동
-========================================= */
-.carousel.dir-right .pos-right {
-  transform: translate(calc(-50% + var(--spread)), -50%) scale(0.92);
-}
-.carousel.dir-right .pos-center {
-  transform: translate(calc(-50% + var(--dx)), -50%) scale(1.06);
-}
-.carousel.dir-right .pos-left {
-  transform: translate(calc(-50% - var(--spread) + var(--dx)), -50%) scale(0.92);
-}
-
-/* 네비 버튼(데스크톱용) */
-.nav-btn {
-  position: absolute;
-  top: 50%;
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.9);
-  box-shadow: var(--shadow);
-  transform: translateY(-50%);
-  cursor: pointer;
-}
-.nav-btn.left  { left: 4px;  }
-.nav-btn.right { right: 4px; }
-.nav-btn::before {
-  content: "";
-  display: block;
-  width: 14px; height: 14px;
-  margin: auto;
-  border-top: 2px solid #555;
-  border-right: 2px solid #555;
-}
-.nav-btn.left::before  { transform: rotate(-135deg) translateY(1px); }
-.nav-btn.right::before { transform: rotate(45deg)  translateY(-1px); }
-
-/* 다시 매칭하기 버튼 */
-.rematch-btn {
-  appearance: none;
-  border: none;
-  padding: 0.9rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--pink1), var(--pink2));
-  color: #fff;
-  cursor: pointer;
-  transition: opacity .2s ease;
-}
-.rematch-btn:hover { opacity: 0.9; }
-
-/* 반응형(모바일): spread/크기 축소 */
-@media (max-width: 599px) {
-  .carousel { --spread: 6rem; height: clamp(18rem, 64vw, 22rem); }
-  .match-card { width: 12.5rem; height: 18rem; }
-  .pos-center { transform: translate(calc(-50% + var(--dx)), -50%) scale(1.03); }
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .card-wrap.snapping .slot,
+  .card-wrap.snapping .card,
+  .card-wrap.snapping .ghost {
+    transition: none;
+  }
 }
