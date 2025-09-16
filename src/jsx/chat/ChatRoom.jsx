@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { db } from "../../firebase";
-import useUserStore from "../../store/userStore";
+import { db } from "../../libs/firebase";
+import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 
 export default function ChatRoom() {
