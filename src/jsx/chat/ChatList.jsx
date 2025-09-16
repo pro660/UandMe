@@ -3,24 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import useChatStore from "../../api/chatStore";
+import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 
 // ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
 
 export default function ChatList() {
-  const { rooms, setRooms, updateRoomLastMessage } = useChatStore();
-  const navigate = useNavigate();
+  const { rooms, setRooms, updateRoomLastMessage, setUnreadCount } = useChatStore();
+  const user = useUserStore((s) => s.user);
+  const userId = user?.userId;
 
-  // ✅ 이미 구독한 roomId를 추적하기 위한 Set
-  const subscribedRef = useRef(new Set());
+  const navigate = useNavigate();
+  const subscribedRef = useRef(new Set()); // ✅ 이미 구독한 roomId 기록
 
   // ✅ 채팅방 목록 불러오기
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const resp = await api.get("/matches");
-        setRooms(resp.data); // [{ peer, roomId, matchedAt }]
+        // 방 초기화 시 unreadCount = 0
+        setRooms(resp.data.map((r) => ({ ...r, unreadCount: 0 })));
       } catch (err) {
         console.error("❌ 채팅방 목록 불러오기 실패", err);
       }
@@ -28,7 +31,7 @@ export default function ChatList() {
     fetchRooms();
   }, [setRooms]);
 
-  // ✅ Firestore 마지막 메시지 구독 (중복 방지)
+  // ✅ Firestore 마지막 메시지 구독
   useEffect(() => {
     if (!rooms || rooms.length === 0) return;
 
@@ -47,23 +50,29 @@ export default function ChatList() {
       const unsub = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const lastMsg = snapshot.docs[0].data();
+
+          // ✅ 마지막 메시지 갱신
           updateRoomLastMessage(room.roomId, {
             text: lastMsg.text,
             createdAt: lastMsg.createdAt?.toDate
               ? lastMsg.createdAt.toDate()
               : new Date(),
           });
+
+          // ✅ 안 읽은 메시지 처리 (상대방이 보낸 경우만)
+          if (lastMsg.senderId && lastMsg.senderId !== userId) {
+            setUnreadCount(room.roomId, (room.unreadCount || 0) + 1);
+          }
         }
       });
 
       unsubscribes.push(unsub);
     });
 
-    // ✅ cleanup
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-  }, [rooms, updateRoomLastMessage]);
+  }, [rooms, updateRoomLastMessage, setUnreadCount, userId]);
 
   // ✅ 시간 포맷
   const formatTime = (date) => {
@@ -94,8 +103,7 @@ export default function ChatList() {
             style={{
               width: "6rem",
               height: "6rem",
-              marginBottom: "1rem",
-              margin: "0 auto",
+              margin: "0 auto 1rem auto",
             }}
           />
           <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>
@@ -110,9 +118,10 @@ export default function ChatList() {
           {rooms.map((room) => (
             <li
               key={room.roomId}
-              onClick={() =>
-                navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } })
-              }
+              onClick={() => {
+                navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } });
+                setUnreadCount(room.roomId, 0); // ✅ 클릭 시 읽음 처리
+              }}
               style={{
                 cursor: "pointer",
                 display: "flex",
@@ -160,18 +169,30 @@ export default function ChatList() {
                 </div>
               </div>
 
-              {/* 마지막 메시지 시간 */}
-              <div
-                style={{
-                  fontSize: "0.8rem",
-                  color: "#888",
-                  marginLeft: "8px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {room.lastMessage?.createdAt
-                  ? formatTime(room.lastMessage.createdAt)
-                  : ""}
+              {/* 오른쪽: 마지막 메시지 시간 + 안읽은 메시지 */}
+              <div style={{ textAlign: "right" }}>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#888",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {room.lastMessage?.createdAt
+                    ? formatTime(room.lastMessage.createdAt)
+                    : ""}
+                </div>
+                {room.unreadCount > 0 && (
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      backgroundColor: "red",
+                      borderRadius: "50%",
+                      marginLeft: "auto",
+                    }}
+                  />
+                )}
               </div>
             </li>
           ))}
