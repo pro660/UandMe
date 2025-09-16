@@ -20,7 +20,7 @@ export default function ChatRoom() {
   const peer = location.state?.peer; // ChatList에서 넘어온 peer 정보
 
   const user = useUserStore((s) => s.user);
-  const userId = user?.id;
+  const userId = user?.userId;
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
