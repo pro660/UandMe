@@ -94,7 +94,7 @@ export default function ChatRoom() {
           }}
         >
           <h3>
-            {peer.name} ({peer.department})
+            {peer.nickname || peer.name} ({peer.department})
           </h3>
           {peer.introduce && <p>{peer.introduce}</p>}
           <div>
@@ -122,7 +122,10 @@ export default function ChatRoom() {
               margin: "5px 0",
             }}
           >
-            <b>{m.senderId}</b>: {m.text}
+            <b>
+              {m.senderId === userId ? "나" : peer?.nickname || peer?.name}
+            </b>
+            : {m.text}
           </div>
         ))}
       </div>
@@ -138,7 +141,9 @@ export default function ChatRoom() {
           placeholder="메시지 입력"
           style={{ flex: 1 }}
         />
-        <button type="button" onClick={sendMessage}>전송</button>
+        <button type="button" onClick={sendMessage}>
+          전송
+        </button>
       </div>
     </div>
   );

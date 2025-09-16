@@ -30,11 +30,18 @@ export default function ChatList() {
             <li
               key={room.roomId}
               onClick={() =>
-                navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } }) // ✅ peer 같이 전달
+                navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } }) // ✅ peer 전달
               }
-              style={{ cursor: "pointer", padding: "10px 0", borderBottom: "1px solid #ddd" }}
+              style={{
+                cursor: "pointer",
+                padding: "10px 0",
+                borderBottom: "1px solid #ddd",
+              }}
             >
-              <div><b>{room.peer.name}</b> ({room.peer.department})</div>
+              <div>
+                <b>{room.peer.nickname || room.peer.name}</b>{" "}
+                ({room.peer.department})
+              </div>
               {room.peer.introduce && (
                 <div style={{ fontSize: "0.9rem", color: "#555" }}>
                   {room.peer.introduce}
