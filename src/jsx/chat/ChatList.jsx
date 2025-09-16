@@ -1,5 +1,4 @@
-// src/jsx/chat/ChatList.jsx
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
@@ -13,12 +12,15 @@ export default function ChatList() {
   const { rooms, setRooms, updateRoomLastMessage } = useChatStore();
   const navigate = useNavigate();
 
-  // ✅ 백엔드에서 채팅방 목록 불러오기
+  // ✅ 이미 구독한 roomId를 추적하기 위한 Set
+  const subscribedRef = useRef(new Set());
+
+  // ✅ 채팅방 목록 불러오기
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const resp = await api.get("/matches");
-        setRooms(resp.data);
+        setRooms(resp.data); // [{ peer, roomId, matchedAt }]
       } catch (err) {
         console.error("❌ 채팅방 목록 불러오기 실패", err);
       }
@@ -26,35 +28,44 @@ export default function ChatList() {
     fetchRooms();
   }, [setRooms]);
 
-  // ✅ Firestore 마지막 메시지 구독
+  // ✅ Firestore 마지막 메시지 구독 (중복 방지)
   useEffect(() => {
     if (!rooms || rooms.length === 0) return;
 
-    const unsubscribes = rooms.map((room) => {
+    const unsubscribes = [];
+
+    rooms.forEach((room) => {
+      if (subscribedRef.current.has(room.roomId)) return; // ✅ 중복 구독 방지
+      subscribedRef.current.add(room.roomId);
+
       const q = query(
         collection(db, "chatRooms", room.roomId, "messages"),
         orderBy("createdAt", "desc"),
         limit(1)
       );
 
-      return onSnapshot(q, (snapshot) => {
+      const unsub = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const lastMsg = snapshot.docs[0].data();
           updateRoomLastMessage(room.roomId, {
             text: lastMsg.text,
             createdAt: lastMsg.createdAt?.toDate
               ? lastMsg.createdAt.toDate()
-              : new Date(), // ✅ timestamp null 방어
+              : new Date(),
           });
         }
       });
+
+      unsubscribes.push(unsub);
     });
 
+    // ✅ cleanup
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
   }, [rooms, updateRoomLastMessage]);
 
+  // ✅ 시간 포맷
   const formatTime = (date) => {
     if (!date) return "";
     return date.toLocaleTimeString("ko-KR", {
@@ -69,6 +80,7 @@ export default function ChatList() {
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
       {rooms.length === 0 ? (
+        // ✅ 빈 상태 표시
         <div
           style={{
             textAlign: "center",
@@ -82,8 +94,8 @@ export default function ChatList() {
             style={{
               width: "6rem",
               height: "6rem",
-              margin: "0 auto 1rem",
-              display: "block",
+              marginBottom: "1rem",
+              margin: "0 auto",
             }}
           />
           <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>
@@ -110,6 +122,7 @@ export default function ChatList() {
                 borderBottom: "1px solid #eee",
               }}
             >
+              {/* 프로필 + 닉네임 + 마지막 메시지 */}
               <div style={{ display: "flex", alignItems: "center" }}>
                 <img
                   src={room.peer.typeImageUrl}
@@ -146,6 +159,8 @@ export default function ChatList() {
                   </div>
                 </div>
               </div>
+
+              {/* 마지막 메시지 시간 */}
               <div
                 style={{
                   fontSize: "0.8rem",
