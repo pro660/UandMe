@@ -32,10 +32,10 @@ export default function Matching() {
     }
   };
 
-  // 신호 수락
+  // 신호 수락 (✅ signalId 사용, POST 유지)
   const acceptSignal = async (signalId) => {
     try {
-      const resp = await api.patch(`/signals/${signalId}`);
+      const resp = await api.post(`/signals/${signalId}`);
       const data = resp.data;
       setMessage(`플러팅 수락 완료! roomId=${data.roomId}`);
     } catch (err) {
@@ -90,8 +90,8 @@ export default function Matching() {
       <h3>보낸 신호 목록</h3>
       <ul>
         {sentSignals.map((s) => (
-          <li key={s.id}>
-            {s.targetId} (상태: {s.status})
+          <li key={s.signalId}>
+            대상 ID: {s.targetId} (상태: {s.status})
           </li>
         ))}
       </ul>
@@ -99,9 +99,9 @@ export default function Matching() {
       <h3>받은 신호 목록</h3>
       <ul>
         {receivedSignals.map((s) => (
-          <li key={s.id}>
-            {s.fromId} → 상태: {s.status}
-            <button onClick={() => acceptSignal(s.id)}>수락하기</button>
+          <li key={s.signalId}>
+            {s.fromUser.name} ({s.fromUser.department}) → 상태: {s.status}
+            <button onClick={() => acceptSignal(s.signalId)}>수락하기</button>
           </li>
         ))}
       </ul>
