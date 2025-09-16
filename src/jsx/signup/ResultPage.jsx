@@ -47,7 +47,7 @@ export default function ResultPage({ hideHomeButton = false }) {
     styleSummary,
     recommendedPartner,
     tags,
-    instagram, // ✅ 필드명 통일
+    instagramUrl, // ✅ 필드명 통일
   } = user;
 
   // ✅ 인스타 저장 핸들러 (기존 accessToken 등 보존)
@@ -131,7 +131,7 @@ export default function ResultPage({ hideHomeButton = false }) {
       {/* ✅ 인스타 추가 모달 */}
       {showInstaModal && (
         <InstaAdd
-          defaultId={instagram} // ✅ 현재 저장된 아이디
+          defaultId={instagramUrl} // ✅ 현재 저장된 아이디
           onClose={() => setShowInstaModal(false)}
           onSave={handleSaveInstagram}
         />
