@@ -35,7 +35,7 @@ export default function Matching() {
   // 신호 수락 (✅ signalId 사용, POST 유지)
   const acceptSignal = async (signalId) => {
     try {
-      const resp = await api.post(`/signals/${signalId}`);
+      const resp = await api.post(`/signals/accept/${signalId}`);
       const data = resp.data;
       setMessage(`플러팅 수락 완료! roomId=${data.roomId}`);
     } catch (err) {
