@@ -163,3 +163,31 @@
 body.modal-open {
   overflow: hidden;
 }
+
+/* 메시지 스타일 */
+.coupon-message {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.coupon-message.success {
+  color: green;
+}
+
+.coupon-message.error {
+  color: red;
+}
+
+/* 버튼 상태 */
+.coupon-submit.is-active {
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.coupon-submit.is-disabled {
+  background-color: #ddd;
+  color: #999;
+  cursor: not-allowed;
+}

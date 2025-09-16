@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios"; // ✅ axios 인스턴스
+import useMatchingStore from "../../store/matchingStore"; // ✅ 전역 매칭 스토어
 
 export default function Matching() {
   const [sentSignals, setSentSignals] = useState([]);
   const [receivedSignals, setReceivedSignals] = useState([]);
-  const [peer, setPeer] = useState(null); // 🔑 매칭 상대 저장
   const [message, setMessage] = useState("");
+
+  // ✅ 전역 매칭 상태
+  const peer = useMatchingStore((s) => s.peer);
+  const roomId = useMatchingStore((s) => s.roomId);
+  const setMatch = useMatchingStore((s) => s.setMatch);
+  const clearMatch = useMatchingStore((s) => s.clearMatch);
 
   // 매칭 시작
   const startMatching = async () => {
     try {
       const resp = await api.post("/match/start");
       const data = resp.data;
-      setPeer(data.peer);
+      setMatch({ peer: data.peer, roomId: data.roomId }); // ✅ 전역 저장
       setMessage(`매칭 성공! type=${data.type}, roomId=${data.roomId}`);
     } catch (err) {
       console.error("❌ 매칭 실패:", err);
@@ -75,7 +81,7 @@ export default function Matching() {
       <button onClick={startMatching}>매칭 시작</button>
       <p>{message}</p>
 
-      {/* 🔑 매칭된 상대 정보 표시 */}
+      {/* 🔑 매칭된 상대 정보 표시 (전역 유지됨) */}
       {peer && (
         <div>
           <h3>상대 정보</h3>

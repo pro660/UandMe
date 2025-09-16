@@ -1,4 +1,3 @@
-// userStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -8,17 +7,31 @@ const useUserStore = create(
       user: null,
       isInitialized: false,
 
-      // ⬇️ 기존 의미 유지: 전체 교체(replace)
+      // ⬇️ 전체 교체(replace)
       setUser: (userInfo) => {
         console.log("🟢 [UserStore] setUser (replace):", userInfo);
         set({ user: userInfo });
       },
 
-      // ⬇️ 신규: 부분 병합(update). 토큰/기타 필드 보존
+      // ⬇️ 부분 병합(update)
       updateUser: (patch) => {
         const prev = get().user || {};
         const next = { ...prev, ...patch };
         console.log("🟢 [UserStore] updateUser (merge):", patch, "=>", next);
+        set({ user: next });
+      },
+
+      // ⬇️ matchCredits / signalCredits 전용 업데이트
+      updateCredits: ({ matchCredits, signalCredits }) => {
+        const prev = get().user || {};
+        const next = {
+          ...prev,
+          matchCredits:
+            matchCredits !== undefined ? matchCredits : prev.matchCredits,
+          signalCredits:
+            signalCredits !== undefined ? signalCredits : prev.signalCredits,
+        };
+        console.log("🟢 [UserStore] updateCredits:", { matchCredits, signalCredits }, "=>", next);
         set({ user: next });
       },
 
