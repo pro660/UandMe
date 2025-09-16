@@ -1,8 +1,9 @@
+// src/jsx/mypage/ProfileCard.jsx
 import { useState } from "react";
 import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 import "../../css/mypage/ProfileCard.css";
-import editIcon from "../../image/home/edit.svg"
+import editIcon from "../../image/home/edit.svg";
 
 export default function ProfileCard({
   imageSrc,
@@ -15,7 +16,6 @@ export default function ProfileCard({
   const [isFlipped, setIsFlipped] = useState(false);
 
   const user = useUserStore((s) => s.user);
-  const setUser = useUserStore((s) => s.setUser);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingIntroduce, setEditingIntroduce] = useState(
@@ -30,8 +30,8 @@ export default function ProfileCard({
         introduce: editingIntroduce,
       });
       if (res.status >= 200 && res.status < 300) {
-        const updated = { ...user, introduce: editingIntroduce };
-        setUser(updated);
+        // ✅ 부분 업데이트만 적용
+        useUserStore.getState().updateUser({ introduce: editingIntroduce });
         setIsEditing(false);
       }
     } catch (err) {
@@ -57,7 +57,7 @@ export default function ProfileCard({
               onClick={() => setIsEditing(true)}
             >
               <img
-                src= {editIcon}
+                src={editIcon}
                 alt="수정하기"
                 className="introduce-edit-img"
               />

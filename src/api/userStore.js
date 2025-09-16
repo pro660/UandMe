@@ -1,50 +1,43 @@
+// userStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-/* =========================================================
-   zustand 기반 전역 사용자 상태 관리
-   👉 로그인 정보(user), 초기화 여부(isInitialized) 같은 걸 저장
-   👉 zustand/middleware 의 persist 덕분에 localStorage에도 저장됨
-   👉 전역 어디서든 useUserStore() 불러서 접근 가능
-========================================================= */
-
 const useUserStore = create(
   persist(
-    (set) => ({
-      // 현재 로그인한 사용자 정보 (없으면 null)
+    (set, get) => ({
       user: null,
-
-      // 앱이 초기화 되었는지 여부 (자동 로그인 시도 등 체크용)
       isInitialized: false,
 
-      // user 객체 저장
+      // ⬇️ 기존 의미 유지: 전체 교체(replace)
       setUser: (userInfo) => {
-        console.log("🟢 [UserStore] setUser 호출:", userInfo);
+        console.log("🟢 [UserStore] setUser (replace):", userInfo);
         set({ user: userInfo });
       },
 
-      // user 비우기
+      // ⬇️ 신규: 부분 병합(update). 토큰/기타 필드 보존
+      updateUser: (patch) => {
+        const prev = get().user || {};
+        const next = { ...prev, ...patch };
+        console.log("🟢 [UserStore] updateUser (merge):", patch, "=>", next);
+        set({ user: next });
+      },
+
       clearUser: () => {
-        console.log("🔴 [UserStore] clearUser 호출됨 (user = null)");
+        console.log("🔴 [UserStore] clearUser");
         set({ user: null });
       },
 
-      // 로그아웃 처리 (스토어 + localStorage 정리)
       logout: () => {
-        console.log("🔴 [UserStore] logout 호출됨 (user = null)");
+        console.log("🔴 [UserStore] logout");
         set({ user: null });
       },
 
-      // 초기화 여부 세팅
       setInitialized: (value) => {
         console.log("⚙️ [UserStore] setInitialized:", value);
         set({ isInitialized: value });
       },
     }),
-    {
-      // localStorage 키 이름
-      name: "user-storage",
-    }
+    { name: "user-storage" }
   )
 );
 

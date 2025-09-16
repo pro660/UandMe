@@ -12,7 +12,6 @@ import "../../css/signup/ResultPage.css";
 export default function ResultPage({ hideHomeButton = false }) {
   const navigate = useNavigate();
   const user = useUserStore((s) => s.user);
-  const setUser = useUserStore((s) => s.setUser);
 
   const [showInstaModal, setShowInstaModal] = useState(false);
 
@@ -48,9 +47,10 @@ export default function ResultPage({ hideHomeButton = false }) {
     styleSummary,
     recommendedPartner,
     tags,
+    instagram, // ✅ 필드명 통일
   } = user;
 
-  // ✅ 인스타 저장 핸들러 (기존 accessToken 보존)
+  // ✅ 인스타 저장 핸들러 (기존 accessToken 등 보존)
   const handleSaveInstagram = async (instaId) => {
     try {
       // API 호출
@@ -60,9 +60,8 @@ export default function ResultPage({ hideHomeButton = false }) {
       const resp = await api.get("/users/me/profile");
       const updatedProfile = resp.data;
 
-      // 기존 user 상태 가져오기 (accessToken 등 유지)
-      const prev = useUserStore.getState().user || {};
-      setUser({ ...prev, ...updatedProfile });
+      // ✅ 병합 업데이트
+      useUserStore.getState().updateUser(updatedProfile);
 
       alert("인스타그램이 저장되었습니다!");
     } catch (err) {
@@ -132,7 +131,7 @@ export default function ResultPage({ hideHomeButton = false }) {
       {/* ✅ 인스타 추가 모달 */}
       {showInstaModal && (
         <InstaAdd
-          defaultId={user.instagramUrl} // 현재 저장된 아이디 내려주기
+          defaultId={instagram} // ✅ 현재 저장된 아이디
           onClose={() => setShowInstaModal(false)}
           onSave={handleSaveInstagram}
         />

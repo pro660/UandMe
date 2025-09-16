@@ -33,7 +33,7 @@ const DEFAULT_QUESTIONS = [
 ];
 
 /* ---------------------------------
-   ✅ react-router v6 이동 차단 Hook
+   ✅ react-router v6 이동 차단 Hook (tx.retry 지원)
 -----------------------------------*/
 function useBlocker(blocker, when = true) {
   const { navigator } = useContext(UNSAFE_NavigationContext);
@@ -45,12 +45,14 @@ function useBlocker(blocker, when = true) {
     const replace = navigator.replace;
 
     navigator.push = (...args) => {
-      if (blocker()) return;
+      const tx = { action: "push", args, retry: () => push(...args) };
+      if (blocker(tx)) return; // 차단
       push(...args);
     };
 
     navigator.replace = (...args) => {
-      if (blocker()) return;
+      const tx = { action: "replace", args, retry: () => replace(...args) };
+      if (blocker(tx)) return; // 차단
       replace(...args);
     };
 
@@ -83,7 +85,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
     const handleBeforeUnload = (e) => {
       if (step < TOTAL && step >= 0 && !submitting) {
         e.preventDefault();
-        e.returnValue = ""; // 크롬/사파리에서 기본 경고 표시
+        e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -104,10 +106,21 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
   const confirmLeave = () => {
     if (pendingTx) {
-      pendingTx.retry(); // 원래 가려던 라우팅 실행
+      setShowLeaveModal(false);
+      const retry = pendingTx.retry;
+      setPendingTx(null);
+      retry(); // 원래 가려던 라우팅 실행
     }
   };
 
+  const cancelLeave = () => {
+    setShowLeaveModal(false);
+    setPendingTx(null);
+  };
+
+  /* -------------------------------
+     3. 진행/제출 로직
+  --------------------------------*/
   const handleConfirm = async () => {
     if (choice === null) return;
 
@@ -117,7 +130,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
     if (step < TOTAL - 1) {
       setStep((s) => s + 1);
-      setChoice(next[step + 1]);
+      setChoice(next[step + 1] ?? null);
       return;
     }
 
@@ -131,16 +144,31 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
       };
 
       const payload = { ...baseInfo, ...qPayload };
+
+      // 1) 서버 저장
       await api.put("/users/me/profile", payload);
 
+      // 2) 최신 프로필 조회
       const resp = await api.get("/users/me/profile");
       const profileData = resp.data;
-      useUserStore.getState().setUser(profileData);
 
+      // 3) ✅ 토큰/기타 필드 유지하며 user 병합 업데이트
+      const prev = useUserStore.getState().user || {};
+      useUserStore.getState().setUser({ ...prev, ...profileData });
+
+      // 4) 점수 계산
       const scoreA = ab.filter((c) => c === "a").length;
       const scoreB = ab.filter((c) => c === "b").length;
       const dominant = scoreA === scoreB ? "BALANCED" : (scoreA > scoreB ? "A-TYPE" : "B-TYPE");
 
+      // 5) 복구용 백업 저장 (새로고침 대비)
+      sessionStorage.setItem("q_answers", JSON.stringify(ab));
+      sessionStorage.setItem("q_profile", JSON.stringify(profileData));
+      sessionStorage.setItem("q_scoreA", String(scoreA));
+      sessionStorage.setItem("q_scoreB", String(scoreB));
+      sessionStorage.setItem("q_dominant", dominant);
+
+      // 6) 결과 페이지 이동
       navigate("/result", {
         replace: true,
         state: { profile: profileData, answers: ab, scoreA, scoreB, dominant },
@@ -213,14 +241,14 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
         {step === TOTAL - 1 ? (submitting ? "제출 중..." : "결과 보기") : "확인"}
       </button>
 
-      {/* ✅ 경고 모달 */}
+      {/* ✅ 이탈 경고 모달 */}
       {showLeaveModal && (
         <div className="leave-modal">
           <div className="leave-modal-content">
             <p>진행상황이 사라질 수 있습니다.<br />정말 나가시겠습니까?</p>
             <div className="leave-modal-actions">
-              <button onClick={() => setShowLeaveModal(false)}>취소</button>
-              <button onClick={confirmLeave}>나가기</button>
+              <button onClick={cancelLeave} type="button">취소</button>
+              <button onClick={confirmLeave} type="button">나가기</button>
             </div>
           </div>
         </div>
