@@ -141,8 +141,8 @@ export default function InfoForm() {
   );
 
   const YEAR_NOW = new Date().getFullYear();
-  const BIRTHYEAR_MIN = YEAR_NOW - 36;
-  const BIRTHYEAR_MAX = YEAR_NOW - 20;
+  const BIRTHYEAR_MIN = YEAR_NOW - 35;
+  const BIRTHYEAR_MAX = YEAR_NOW - 19;
 
   // ✅ 학번 유효 범위
   const HAKBEON_MIN = 15;
