@@ -134,15 +134,3 @@
     opacity: 1;
   }
 }
-
-/* 반응형 미세 조정 */
-@media (max-width: 420px) {
-  .quitform__headline {
-    font-size: 2.6rem;
-  }
-  .quitform__btn {
-    min-width: 13.6rem;
-    height: 5.2rem;
-    font-size: 1.7rem;
-  }
-}
