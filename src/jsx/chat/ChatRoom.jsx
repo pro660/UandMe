@@ -10,6 +10,8 @@ import {
   doc,
   setDoc,
   getDoc,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import useUserStore from "../../api/userStore";
@@ -20,7 +22,7 @@ export default function ChatRoom() {
   const peer = location.state?.peer; // ChatList에서 넘어온 peer 정보
 
   const user = useUserStore((s) => s.user);
-  const userId = user?.userId; // ✅ userStore 구조에 맞게 수정됨
+  const userId = user?.userId;
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -48,9 +50,9 @@ export default function ChatRoom() {
     ensureRoom();
   }, [roomId, userId, peer]);
 
-  // ✅ Firestore 메시지 구독
+  // ✅ Firestore 메시지 구독 + 읽음 처리
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !userId) return;
 
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
@@ -58,15 +60,27 @@ export default function ChatRoom() {
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      const newMessages = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      setMessages(newMessages);
+
+      // ✅ 안 읽은 메시지 readBy에 내 userId 추가
+      newMessages.forEach((msg) => {
+        if (msg.senderId !== userId && !(msg.readBy || []).includes(userId)) {
+          const msgRef = doc(db, "chatRooms", roomId, "messages", msg.id);
+          updateDoc(msgRef, { readBy: arrayUnion(userId) });
+        }
+      });
     });
 
     return () => unsub();
-  }, [roomId]);
+  }, [roomId, userId]);
 
   // ✅ 메시지 전송
   const sendMessage = async () => {
-    console.log("DEBUG → input:", input, "userId:", userId, "roomId:", roomId);
     if (!input.trim() || !userId) return;
 
     try {
@@ -74,9 +88,9 @@ export default function ChatRoom() {
         senderId: userId,
         text: input,
         createdAt: serverTimestamp(),
+        readBy: [userId], // ✅ 내가 보낸 건 자동 읽음 처리
       });
       setInput("");
-      console.log("✅ 메시지 저장 성공");
     } catch (err) {
       console.error("❌ 메시지 전송 실패:", err);
     }
@@ -99,7 +113,9 @@ export default function ChatRoom() {
           {peer.introduce && <p>{peer.introduce}</p>}
           <div>
             <img src={peer.typeImageUrl} alt="type1" width={60} />
-            <img src={peer.typeImageUrl2} alt="type2" width={60} />
+            {peer.typeImageUrl2 && (
+              <img src={peer.typeImageUrl2} alt="type2" width={60} />
+            )}
           </div>
         </div>
       )}
