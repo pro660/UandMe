@@ -1,29 +1,22 @@
 // src/components/common/Header.jsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../../image/loginPage/logo.svg";
 import TicketLogo from "../../image/home/ticket.svg";
 import CouponSheet from "./CouponSheet";
+import useUserStore from "../../api/userStore.js";   // ✅ zustand 스토어
 import "../../css/common/Header.css";
 
 function Header() {
   const [openCoupon, setOpenCoupon] = useState(false);
 
-  // ✅ 남은 횟수 상태
-  const [matchCredits, setMatchCredits] = useState(0);
-  const [signalCredits, setSignalCredits] = useState(0);
-  const [nickname, setNickname] = useState(""); // ✅ 이름 상태 추가
+  // ✅ zustand에서 user 가져오기
+  const user = useUserStore((s) => s.user);
 
-  // ✅ 로컬스토리지에서 값 불러오기
-  useEffect(() => {
-    const storedMatch = localStorage.getItem("matchCredits");
-    const storedSignal = localStorage.getItem("signalCredits");
-    const storedName = localStorage.getItem("name");
-
-    setMatchCredits(storedMatch ? parseInt(storedMatch, 10) : 0);
-    setSignalCredits(storedSignal ? parseInt(storedSignal, 10) : 0);
-    setNickname(storedName || ""); // ✅ 값 없으면 빈 문자열
-  }, []);
+  // ✅ 필요한 값 추출
+  const matchCredits = user?.matchCredits ?? 0;
+  const signalCredits = user?.signalCredits ?? 0;
+  const nickname = user?.name || user?.nickname || "";
 
   return (
     <>
@@ -33,14 +26,14 @@ function Header() {
         </Link>
 
         <div className="header-ticket-area">
-          {/* ✅ 남은 횟수 표시 */}
+          {/* 남은 횟수 표시 */}
           <div className="ticket-count-box">
             <p className="ticket-label">
               {nickname ? `${nickname}님 남은 횟수` : "남은 횟수"}
             </p>
             <p className="ticket-values">
               매칭:<span className="highlight">{matchCredits}회</span>
-              <span style={{ marginRight: "0.1rem" }} /> {/* 간격 */}
+              <span style={{ marginRight: "0.1rem" }} />
               플러팅:<span className="highlight">{signalCredits}회</span>
             </p>
           </div>
