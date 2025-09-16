@@ -10,7 +10,7 @@ export default function ChatList() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const resp = await api.get("/chat/rooms");
+        const resp = await api.get("/matches");
         setRooms(resp.data); // [{ peer, roomId, matchedAt }]
       } catch (err) {
         console.error("❌ 채팅방 목록 불러오기 실패", err);
