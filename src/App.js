@@ -52,7 +52,7 @@ function App() {
     };
 
     bootstrap();
-  }, []);
+  }, [setInitialized]);
 
   useEffect(() => {
     const onWake = async () => {

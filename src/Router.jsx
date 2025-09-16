@@ -50,25 +50,25 @@ function AppRouter() {
           <Route
             path="/chat"
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <ChatList />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />{" "}
           <Route
             path="/matching"
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <Matching />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />
           <Route
             path="/mypage"
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <MyPage />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />
           {/* 회원가입(정보 입력 페이지) */}

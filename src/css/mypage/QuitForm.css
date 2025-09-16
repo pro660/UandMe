@@ -1,0 +1,148 @@
+/* src/components/QuitForm.css */
+/* 10px = 1rem 기준 */
+
+.quitform-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 99000;
+  padding: 2rem; /* 모바일에서 좌우 여백 */
+}
+
+.quitform {
+  width: 80%;
+  height: 43%;
+  max-width: 44rem; /* 440px */
+  background: #ffffff;
+  border-radius: 2.4rem; /* 큰 라운드 */
+  box-shadow: 0 1.2rem 4rem rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: qf-pop 180ms ease-out;
+}
+
+/* 상단 헤더바 */
+.quitform__header {
+  position: relative;
+  background: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+  color: #333;
+  padding: 1rem 2rem;
+  border-bottom: 0.1rem solid rgba(0, 0, 0, 0.01);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* ✅ 가로 중앙 정렬 */
+  text-align: center;
+}
+
+
+/* 본문 */
+.quitform__body {
+  padding: 2.2rem 2.8rem 0;
+  text-align: center;
+}
+
+.quitform__headline {
+  margin: 0 0 1.2rem;
+  font-weight: 800;
+  font-size: 1.3rem; /* 큰 타이틀 */
+  color: #575757;
+  letter-spacing: -0.02em;
+}
+
+.quitform__headline-em {
+  display: inline-block;
+  margin-bottom: 0.3rem;
+}
+
+.quitform__sub {
+  margin: 0;
+  color: #575757;
+  font-size: 0.8rem;
+}
+
+.quitform__notes {
+  margin: 3.4rem 0 0;
+  padding-left: 1rem;
+  text-align: left;
+  color: #575757;
+  font-size: 0.7rem;
+}
+.quitform__notes li {
+  line-height: 1.6;
+}
+
+/* 푸터 버튼영역 */
+.quitform__footer {
+  display: flex;
+  gap: 1.6rem;
+  justify-content: center;
+  padding: 1rem 3rem 3rem;
+}
+
+/* 버튼 공통 */
+.quitform__btn {
+  min-width: 8rem;
+  height: 3.5rem;
+  border-radius: 3.2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 0.2rem solid transparent;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease, background 120ms ease,
+    color 120ms ease, border-color 120ms ease;
+}
+
+/* 왼쪽(확인) - 회색 아웃라인 */
+.quitform__btn--outline {
+  background: #fff;
+  color: #C1C1C1;
+  border-color: #C1C1C1;
+}
+.quitform__btn--outline:hover {
+  transform: translateY(-1px);
+  border-color: #d6d6d6;
+}
+.quitform__btn--outline:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+/* 오른쪽(취소) - 레드 필드 */
+.quitform__btn--danger {
+  background: #F54944; /* 메인 레드 */
+  color: #fff;
+}
+.quitform__btn--danger:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+/* 모션 */
+@keyframes qf-pop {
+  from {
+    transform: translateY(0.6rem) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 반응형 미세 조정 */
+@media (max-width: 420px) {
+  .quitform__headline {
+    font-size: 2.6rem;
+  }
+  .quitform__btn {
+    min-width: 13.6rem;
+    height: 5.2rem;
+    font-size: 1.7rem;
+  }
+}
