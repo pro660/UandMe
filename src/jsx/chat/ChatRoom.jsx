@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { db } from "../../libs/firebase";
-import useUserStore from "../../api/userStore";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+  doc,
+  setDoc,
+  getDoc,
+} from "firebase/firestore";
+import { db } from "../../firebase";
+import useUserStore from "../../store/userStore";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
   const location = useLocation();
-  const peer = location.state?.peer; // ✅ ChatList에서 넘어온 peer
+  const peer = location.state?.peer; // ChatList에서 넘어온 peer 정보
 
   const user = useUserStore((s) => s.user);
   const userId = user?.id;
@@ -15,7 +25,30 @@ export default function ChatRoom() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // Firestore 메시지 구독
+  // ✅ 방 존재 확인 & 없으면 생성
+  useEffect(() => {
+    if (!roomId) return;
+
+    const ensureRoom = async () => {
+      try {
+        const roomRef = doc(db, "chatRooms", roomId);
+        const snap = await getDoc(roomRef);
+        if (!snap.exists()) {
+          await setDoc(roomRef, {
+            createdAt: serverTimestamp(),
+            participants: [userId, peer?.userId].filter(Boolean), // 상대방 ID까지 저장
+          });
+          console.log("🟢 Firestore 방 생성:", roomId);
+        }
+      } catch (err) {
+        console.error("❌ Firestore 방 생성 실패:", err);
+      }
+    };
+
+    ensureRoom();
+  }, [roomId, userId, peer]);
+
+  // ✅ Firestore 메시지 구독
   useEffect(() => {
     if (!roomId) return;
 
@@ -31,17 +64,20 @@ export default function ChatRoom() {
     return () => unsub();
   }, [roomId]);
 
-  // 메시지 전송
+  // ✅ 메시지 전송
   const sendMessage = async () => {
     if (!input.trim() || !userId) return;
 
-    await addDoc(collection(db, "chatRooms", roomId, "messages"), {
-      senderId: userId,
-      text: input,
-      createdAt: serverTimestamp(),
-    });
-
-    setInput("");
+    try {
+      await addDoc(collection(db, "chatRooms", roomId, "messages"), {
+        senderId: userId,
+        text: input,
+        createdAt: serverTimestamp(),
+      });
+      setInput("");
+    } catch (err) {
+      console.error("❌ 메시지 전송 실패:", err);
+    }
   };
 
   return (
