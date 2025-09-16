@@ -16,8 +16,14 @@ export default function Matching() {
     try {
       const resp = await api.post("/match/start");
       const data = resp.data;
-      setMatch({ peer: data.peer, roomId: data.roomId }); // ✅ 전역 저장
-      setMessage(`매칭 성공! type=${data.type}, roomId=${data.roomId}`);
+
+      if (data.candidates && data.candidates.length > 0) {
+        const candidate = data.candidates[0];
+        setMatch({ peer: candidate }); // ✅ 전역 저장
+        setMessage(`매칭 성공! 상대: ${candidate.name}`);
+      } else {
+        setMessage("매칭된 상대가 없습니다.");
+      }
     } catch (err) {
       console.error("❌ 매칭 실패:", err);
       setMessage("매칭 중 오류 발생");
@@ -36,7 +42,7 @@ export default function Matching() {
     }
   };
 
-  // 신호 수락 (✅ signalId 사용, POST 유지)
+  // 신호 수락
   const acceptSignal = async (signalId) => {
     try {
       const resp = await api.post(`/signals/accept/${signalId}`);
@@ -79,7 +85,7 @@ export default function Matching() {
       <button onClick={startMatching}>매칭 시작</button>
       <p>{message}</p>
 
-      {/* 🔑 매칭된 상대 정보 표시 (전역 유지됨) */}
+      {/* 🔑 매칭된 상대 정보 표시 */}
       {peer && (
         <div>
           <h3>상대 정보</h3>
@@ -87,7 +93,9 @@ export default function Matching() {
           <p>학과: {peer.department}</p>
           <p>소개: {peer.introduce || "소개 없음"}</p>
           <img src={peer.typeImageUrl} alt="type1" width={100} />
-          <img src={peer.typeImageUrl2} alt="type2" width={100} />
+          {peer.typeImageUrl2 && (
+            <img src={peer.typeImageUrl2} alt="type2" width={100} />
+          )}
         </div>
       )}
 
