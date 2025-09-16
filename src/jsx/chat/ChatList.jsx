@@ -16,7 +16,7 @@ export default function ChatList() {
 
     const fetchRooms = async () => {
       try {
-        const resp = await api.get("/chat/rooms", {
+        const resp = await api.get("/matches", {
           headers: { Authorization: `Bearer ${user.accessToken}` }, // 토큰 포함
         });
         setRooms(resp.data); // [{ roomId, participants, lastMessage }]
