@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import useChatStore from "../../store/chatStore";
+import useChatStore from "../../api/chatStore";
 import api from "../../api/axios";
 
 export default function ChatList() {

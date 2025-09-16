@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { db } from "../../firebase";
-import useUserStore from "../../store/userStore";
+import { db } from "../../libs/firebase";
+import useUserStore from "../../api/userStore";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
