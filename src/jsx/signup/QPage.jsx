@@ -4,7 +4,7 @@ import { useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
 
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
-
+import Loader from "../common/Loader.jsx"; // ✅ 추가
 import "../../css/signup/QPage.css";
 import bigheartImg from "../../image/loginPage/bigheart.svg";
 
@@ -194,6 +194,9 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
 
   return (
     <div className="qpage">
+      {/* ✅ 진행중일 때 Loader 표시 */}
+      {submitting && <Loader />}
+
       {/* 상단 */}
       <div className="qpage-top">
         <button className="qpage-back" onClick={handleBack} type="button">←</button>
@@ -231,7 +234,7 @@ export default function QPage({ onClose, baseInfo, questions = DEFAULT_QUESTIONS
         ))}
       </div>
 
-      {/* 확인 */}
+      {/* 확인 버튼 */}
       <button
         className="qpage-confirm"
         onClick={handleConfirm}

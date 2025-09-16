@@ -16,6 +16,8 @@ import InfoForm from "./jsx/signup/InfoForm";
 import QPage from "./jsx/signup/QPage";
 import ResultPage from "./jsx/signup/ResultPage";
 
+import Loader from "./jsx/common/Loader";
+
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
@@ -51,7 +53,7 @@ function AppRouter() {
             path="/chat"
             element={
               // <ProtectedRoute>
-                <ChatList />
+              <ChatList />
               // </ProtectedRoute>
             }
           />{" "}
@@ -59,7 +61,7 @@ function AppRouter() {
             path="/matching"
             element={
               // <ProtectedRoute>
-                <Matching />
+              <Matching />
               // </ProtectedRoute>
             }
           />
@@ -67,7 +69,7 @@ function AppRouter() {
             path="/mypage"
             element={
               // <ProtectedRoute>
-                <MyPage />
+              <MyPage />
               // </ProtectedRoute>
             }
           />
@@ -96,6 +98,7 @@ function AppRouter() {
               </ProtectedRoute>
             }
           />
+          <Route path="/loading" element={<Loader />} />
         </Routes>
       </Layout>
     </BrowserRouter>
