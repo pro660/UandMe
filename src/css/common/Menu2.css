@@ -1,0 +1,73 @@
+/* src/css/common/Menu2.css */
+
+.menu2 {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid #eee;
+  padding: 0.4rem 0;
+  z-index: 100;
+}
+
+.menu2-item {
+  flex: 1; /* 가로 길이 동일하게 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #ACACAC;
+  font-size: 0.75rem;
+  position: relative; /* indicator 위치 기준 */
+}
+
+.menu2-icon {
+  font-size: 1.6rem; /* 아이콘 크기 */
+  margin-bottom: 0.2rem;
+  color: #8f8f8f;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.menu2-item span {
+  font-size: 0.75rem;
+  color: #ACACAC;
+  transition: color 0.25s ease;
+}
+
+/* 활성화 효과 */
+.menu2-icon.active,
+.menu2-item span.active {
+  color: #E8048D; /* 활성화 색상 */
+  font-weight: 600;
+}
+
+.menu2-icon.active {
+  transform: translateY(-3px) scale(1.15); /* 살짝 점프 + 확대 */
+}
+
+/* ✅ 활성 메뉴 밑에 점 indicator */
+.menu2-item.active-indicator::after {
+  content: "";
+  display: block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-top: 0.2rem;
+  border-radius: 50%;
+  background-color: #E8048D;
+  animation: bubble 0.3s ease;
+}
+
+@keyframes bubble {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

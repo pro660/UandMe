@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 import Header from "./jsx/common/Header";
-import Menu from "./jsx/common/Menu";
+import Menu from "./jsx/common/Menu2";
 
 import Home from "./jsx/home/Home";
 import ChatList from "./jsx/chat/ChatList";
