@@ -11,7 +11,6 @@ import {
   setDoc,
   getDoc,
   updateDoc,
-  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import useUserStore from "../../api/userStore";
@@ -39,6 +38,9 @@ export default function ChatRoom() {
           await setDoc(roomRef, {
             createdAt: serverTimestamp(),
             participants: [userId, peer?.userId].filter(Boolean),
+            peerInfo: peer || {}, // ✅ 상대방 정보 저장
+            lastMessage: "",
+            lastMessageAt: serverTimestamp(),
           });
           console.log("🟢 Firestore 방 생성:", roomId);
         }
@@ -50,9 +52,9 @@ export default function ChatRoom() {
     ensureRoom();
   }, [roomId, userId, peer]);
 
-  // ✅ Firestore 메시지 구독 + 읽음 처리
+  // ✅ Firestore 메시지 구독
   useEffect(() => {
-    if (!roomId || !userId) return;
+    if (!roomId) return;
 
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
@@ -60,36 +62,30 @@ export default function ChatRoom() {
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const newMessages = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
-
-      setMessages(newMessages);
-
-      // ✅ 안 읽은 메시지 readBy에 내 userId 추가
-      newMessages.forEach((msg) => {
-        if (msg.senderId !== userId && !(msg.readBy || []).includes(userId)) {
-          const msgRef = doc(db, "chatRooms", roomId, "messages", msg.id);
-          updateDoc(msgRef, { readBy: arrayUnion(userId) });
-        }
-      });
+      setMessages(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
     return () => unsub();
-  }, [roomId, userId]);
+  }, [roomId]);
 
   // ✅ 메시지 전송
   const sendMessage = async () => {
     if (!input.trim() || !userId) return;
 
     try {
+      // 메시지 추가
       await addDoc(collection(db, "chatRooms", roomId, "messages"), {
         senderId: userId,
         text: input,
         createdAt: serverTimestamp(),
-        readBy: [userId], // ✅ 내가 보낸 건 자동 읽음 처리
       });
+
+      // 방의 마지막 메시지 업데이트
+      await updateDoc(doc(db, "chatRooms", roomId), {
+        lastMessage: input,
+        lastMessageAt: serverTimestamp(),
+      });
+
       setInput("");
     } catch (err) {
       console.error("❌ 메시지 전송 실패:", err);
@@ -138,9 +134,7 @@ export default function ChatRoom() {
               margin: "5px 0",
             }}
           >
-            <b>
-              {m.senderId === userId ? "나" : peer?.nickname || peer?.name}
-            </b>
+            <b>{m.senderId === userId ? "나" : peer?.nickname || peer?.name}</b>
             : {m.text}
           </div>
         ))}

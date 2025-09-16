@@ -1,79 +1,30 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
-import useChatStore from "../../api/chatStore";
-import useUserStore from "../../api/userStore";
-import api from "../../api/axios";
+
+// ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
 
 export default function ChatList() {
-  const { rooms, mergeRooms, updateRoomLastMessage, setUnreadCount } = useChatStore();
-  const user = useUserStore((s) => s.user);
-  const userId = user?.userId;
-
+  const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
-  const subscribedRef = useRef(new Set());
 
-  // ✅ 초기 방 목록 가져오기
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const resp = await api.get("/matches");
-        mergeRooms(resp.data); // ✅ 병합 방식
-      } catch (err) {
-        console.error("❌ 채팅방 목록 불러오기 실패", err);
-      }
-    };
-    fetchRooms();
-  }, [mergeRooms]);
+    // ✅ Firestore에서 chatRooms 실시간 구독
+    const q = query(collection(db, "chatRooms"), orderBy("lastMessageAt", "desc"));
 
-  // ✅ Firestore 마지막 메시지 구독
-  useEffect(() => {
-    if (!rooms || rooms.length === 0) return;
-
-    const unsubscribes = [];
-
-    rooms.forEach((room) => {
-      if (subscribedRef.current.has(room.roomId)) return;
-      subscribedRef.current.add(room.roomId);
-
-      const q = query(
-        collection(db, "chatRooms", room.roomId, "messages"),
-        orderBy("createdAt", "desc"),
-        limit(1)
-      );
-
-      const unsub = onSnapshot(q, (snapshot) => {
-        if (!snapshot.empty) {
-          const lastMsg = snapshot.docs[0].data();
-
-          updateRoomLastMessage(room.roomId, {
-            text: lastMsg.text,
-            createdAt: lastMsg.createdAt?.toDate
-              ? lastMsg.createdAt.toDate()
-              : new Date(),
-          });
-
-          // ✅ 안읽은 메시지 (상대방이 보낸 경우만)
-          if (lastMsg.senderId && lastMsg.senderId !== userId) {
-            setUnreadCount(room.roomId, (room.unreadCount || 0) + 1);
-          }
-        }
-      });
-
-      unsubscribes.push(unsub);
+    const unsub = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ roomId: doc.id, ...doc.data() }));
+      setRooms(data);
     });
 
-    return () => {
-      unsubscribes.forEach((unsub) => unsub());
-    };
-  }, [rooms, updateRoomLastMessage, setUnreadCount, userId]);
+    return () => unsub();
+  }, []);
 
-  // ✅ 시간 포맷
-  const formatTime = (date) => {
-    if (!date) return "";
-    return date.toLocaleTimeString("ko-KR", {
+  const formatTime = (ts) => {
+    if (!ts?.toDate) return "";
+    return ts.toDate().toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -85,7 +36,6 @@ export default function ChatList() {
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
       {rooms.length === 0 ? (
-        // ✅ 빈 상태 표시
         <div
           style={{
             textAlign: "center",
@@ -99,7 +49,7 @@ export default function ChatList() {
             style={{
               width: "6rem",
               height: "6rem",
-              margin: "0 auto 1rem auto",
+              margin: "0 auto",
             }}
           />
           <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>
@@ -114,10 +64,9 @@ export default function ChatList() {
           {rooms.map((room) => (
             <li
               key={room.roomId}
-              onClick={() => {
-                navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } });
-                setUnreadCount(room.roomId, 0); // ✅ 읽음 처리
-              }}
+              onClick={() =>
+                navigate(`/chat/${room.roomId}`, { state: { peer: room.peerInfo } })
+              }
               style={{
                 cursor: "pointer",
                 display: "flex",
@@ -129,7 +78,7 @@ export default function ChatList() {
             >
               <div style={{ display: "flex", alignItems: "center" }}>
                 <img
-                  src={room.peer.typeImageUrl}
+                  src={room.peerInfo?.typeImageUrl}
                   alt="프로필"
                   style={{
                     width: "48px",
@@ -147,7 +96,7 @@ export default function ChatList() {
                       marginBottom: "4px",
                     }}
                   >
-                    {room.peer.nickname || room.peer.name}
+                    {room.peerInfo?.nickname || room.peerInfo?.name}
                   </div>
                   <div
                     style={{
@@ -159,34 +108,19 @@ export default function ChatList() {
                       maxWidth: "200px",
                     }}
                   >
-                    {room.lastMessage?.text || "대화를 시작해보세요!"}
+                    {room.lastMessage || "대화를 시작해보세요!"}
                   </div>
                 </div>
               </div>
-
-              <div style={{ textAlign: "right" }}>
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "#888",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {room.lastMessage?.createdAt
-                    ? formatTime(room.lastMessage.createdAt)
-                    : ""}
-                </div>
-                {room.unreadCount > 0 && (
-                  <div
-                    style={{
-                      width: "8px",
-                      height: "8px",
-                      backgroundColor: "red",
-                      borderRadius: "50%",
-                      marginLeft: "auto",
-                    }}
-                  />
-                )}
+              <div
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#888",
+                  marginLeft: "8px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {formatTime(room.lastMessageAt)}
               </div>
             </li>
           ))}
