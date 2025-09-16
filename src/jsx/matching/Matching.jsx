@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "../../api/axios"; // ✅ axios 인스턴스
 
 export default function Matching() {
   const [sentSignals, setSentSignals] = useState([]);
@@ -9,16 +10,12 @@ export default function Matching() {
   // 매칭 시작
   const startMatching = async () => {
     try {
-      const resp = await fetch("https://api.likelionhsu.co.kr/api/match/start", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!resp.ok) throw new Error("매칭 실패");
-      const data = await resp.json();
-      setPeer(data.peer); // 🔑 상대 정보 저장
+      const resp = await api.post("/match/start");
+      const data = resp.data;
+      setPeer(data.peer);
       setMessage(`매칭 성공! type=${data.type}, roomId=${data.roomId}`);
     } catch (err) {
-      console.error(err);
+      console.error("❌ 매칭 실패:", err);
       setMessage("매칭 중 오류 발생");
     }
   };
@@ -26,15 +23,11 @@ export default function Matching() {
   // 신호 보내기
   const sendSignal = async (targetId) => {
     try {
-      const resp = await fetch(`https://api.likelionhsu.co.kr/api/signals/${targetId}`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!resp.ok) throw new Error("신호 보내기 실패");
+      await api.post(`/signals/${targetId}`);
       setMessage(`플러팅을 보냈습니다 → ${targetId}`);
       fetchSentSignals();
     } catch (err) {
-      console.error(err);
+      console.error("❌ 신호 보내기 실패:", err);
       setMessage("플러팅 실패");
     }
   };
@@ -42,15 +35,11 @@ export default function Matching() {
   // 신호 수락
   const acceptSignal = async (signalId) => {
     try {
-      const resp = await fetch(`https://api.likelionhsu.co.kr/api/signals/${signalId}`, {
-        method: "PATCH",
-        credentials: "include",
-      });
-      if (!resp.ok) throw new Error("신호 수락 실패");
-      const data = await resp.json();
+      const resp = await api.patch(`/signals/${signalId}`);
+      const data = resp.data;
       setMessage(`플러팅 수락 완료! roomId=${data.roomId}`);
     } catch (err) {
-      console.error(err);
+      console.error("❌ 신호 수락 실패:", err);
       setMessage("플러팅 수락 실패");
     }
   };
@@ -58,28 +47,20 @@ export default function Matching() {
   // 보낸 신호 목록
   const fetchSentSignals = async () => {
     try {
-      const resp = await fetch("https://api.likelionhsu.co.kr/api/signals/sent", {
-        credentials: "include",
-      });
-      if (!resp.ok) throw new Error("보낸 신호 목록 조회 실패");
-      const data = await resp.json();
-      setSentSignals(data);
+      const resp = await api.get("/signals/sent");
+      setSentSignals(resp.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ 보낸 신호 목록 조회 실패:", err);
     }
   };
 
   // 받은 신호 목록
   const fetchReceivedSignals = async () => {
     try {
-      const resp = await fetch("https://api.likelionhsu.co.kr/api/signals/received", {
-        credentials: "include",
-      });
-      if (!resp.ok) throw new Error("받은 신호 목록 조회 실패");
-      const data = await resp.json();
-      setReceivedSignals(data);
+      const resp = await api.get("/signals/received");
+      setReceivedSignals(resp.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ 받은 신호 목록 조회 실패:", err);
     }
   };
 
