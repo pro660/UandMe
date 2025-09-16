@@ -2,18 +2,34 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { db } from "../../libs/firebase";
-import useUserStore from "../../api/userStore";
+import { db } from "../../firebase";
+import useUserStore from "../../store/userStore";
+import api from "../../api/axios";
 
 export default function ChatRoom() {
-  const { roomId } = useParams(); // 🔑 URL에서 roomId 읽기
-  const user = useUserStore((s) => s.user); // 🔑 로그인 유저 정보
+  const { roomId } = useParams();        // 🔑 URL에서 roomId
+  const user = useUserStore((s) => s.user);
   const userId = user?.id;
 
+  const [peer, setPeer] = useState(null);      // 상대방 정보
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // Firestore 메시지 구독
+  // 1. 상대방(peer) 정보 가져오기 (백엔드)
+  useEffect(() => {
+    const fetchRoomInfo = async () => {
+      try {
+        const resp = await api.get(`/chat/rooms/${roomId}`);
+        // API가 { peer, roomId, matchedAt } 구조로 응답한다고 가정
+        setPeer(resp.data.peer);
+      } catch (err) {
+        console.error("❌ 방 정보 불러오기 실패", err);
+      }
+    };
+    if (roomId) fetchRoomInfo();
+  }, [roomId]);
+
+  // 2. Firestore 메시지 구독
   useEffect(() => {
     if (!roomId) return;
 
@@ -29,7 +45,7 @@ export default function ChatRoom() {
     return () => unsub();
   }, [roomId]);
 
-  // 메시지 전송
+  // 3. 메시지 전송
   const sendMessage = async () => {
     if (!input.trim() || !userId) return;
 
@@ -44,8 +60,19 @@ export default function ChatRoom() {
 
   return (
     <div className="chat-room">
-      <h2>채팅방: {roomId}</h2>
+      {/* 🔹 상대방 프로필 영역 */}
+      {peer && (
+        <div style={{ borderBottom: "1px solid #ddd", paddingBottom: "10px", marginBottom: "10px" }}>
+          <h3>{peer.name} ({peer.department})</h3>
+          {peer.introduce && <p>{peer.introduce}</p>}
+          <div>
+            <img src={peer.typeImageUrl} alt="type1" width={60} />
+            <img src={peer.typeImageUrl2} alt="type2" width={60} />
+          </div>
+        </div>
+      )}
 
+      {/* 🔹 메시지 목록 */}
       <div
         className="chat-messages"
         style={{ height: "300px", overflowY: "auto", border: "1px solid #ddd", padding: "10px" }}
@@ -63,6 +90,7 @@ export default function ChatRoom() {
         ))}
       </div>
 
+      {/* 🔹 입력창 */}
       <div className="chat-input" style={{ marginTop: "10px", display: "flex" }}>
         <input
           value={input}
