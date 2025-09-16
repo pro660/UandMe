@@ -38,6 +38,7 @@ function AppRouter() {
     <BrowserRouter>
       <Layout>
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/"
             element={
@@ -46,7 +47,6 @@ function AppRouter() {
               </ProtectedRoute>
             }
           />
-          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/chat"
             element={
@@ -55,12 +55,47 @@ function AppRouter() {
               </ProtectedRoute>
             }
           />{" "}
-          <Route path="/matching" element={<Matching />} />
-          <Route path="/mypage" element={<MyPage />} />
+          <Route
+            path="/matching"
+            element={
+              <ProtectedRoute>
+                <Matching />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mypage"
+            element={
+              <ProtectedRoute>
+                <MyPage />
+              </ProtectedRoute>
+            }
+          />
           {/* 회원가입(정보 입력 페이지) */}
-          <Route path="/infoform" element={<InfoForm />} />
-          <Route path="/qpage" element={<QPage />} />
-          <Route path="/result" element={<ResultPage />} />
+          <Route
+            path="/infoform"
+            element={
+              <ProtectedRoute>
+                <InfoForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/qpage"
+            element={
+              <ProtectedRoute>
+                <QPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/result"
+            element={
+              <ProtectedRoute>
+                <ResultPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Layout>
     </BrowserRouter>
