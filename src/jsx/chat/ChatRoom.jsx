@@ -20,7 +20,7 @@ export default function ChatRoom() {
   const peer = location.state?.peer; // ChatList에서 넘어온 peer 정보
 
   const user = useUserStore((s) => s.user);
-  const userId = user?.userId;
+  const userId = user?.userId; // ✅ userStore 구조에 맞게 수정됨
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -36,7 +36,7 @@ export default function ChatRoom() {
         if (!snap.exists()) {
           await setDoc(roomRef, {
             createdAt: serverTimestamp(),
-            participants: [userId, peer?.userId].filter(Boolean), // 상대방 ID까지 저장
+            participants: [userId, peer?.userId].filter(Boolean),
           });
           console.log("🟢 Firestore 방 생성:", roomId);
         }
@@ -66,8 +66,8 @@ export default function ChatRoom() {
 
   // ✅ 메시지 전송
   const sendMessage = async () => {
+    console.log("DEBUG → input:", input, "userId:", userId, "roomId:", roomId);
     if (!input.trim() || !userId) return;
-    console.log("📨 메시지 전송 시도:", input, "by", userId);
 
     try {
       await addDoc(collection(db, "chatRooms", roomId, "messages"), {
@@ -76,6 +76,7 @@ export default function ChatRoom() {
         createdAt: serverTimestamp(),
       });
       setInput("");
+      console.log("✅ 메시지 저장 성공");
     } catch (err) {
       console.error("❌ 메시지 전송 실패:", err);
     }
@@ -137,7 +138,7 @@ export default function ChatRoom() {
           placeholder="메시지 입력"
           style={{ flex: 1 }}
         />
-        <button onClick={sendMessage}>전송</button>
+        <button type="button" onClick={sendMessage}>전송</button>
       </div>
     </div>
   );
