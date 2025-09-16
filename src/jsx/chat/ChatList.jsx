@@ -5,31 +5,28 @@ import { db } from "../../libs/firebase";
 import useChatStore from "../../api/chatStore";
 import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
-
-// ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
 
 export default function ChatList() {
-  const { rooms, setRooms, updateRoomLastMessage, setUnreadCount } = useChatStore();
+  const { rooms, mergeRooms, updateRoomLastMessage, setUnreadCount } = useChatStore();
   const user = useUserStore((s) => s.user);
   const userId = user?.userId;
 
   const navigate = useNavigate();
-  const subscribedRef = useRef(new Set()); // ✅ 이미 구독한 roomId 기록
+  const subscribedRef = useRef(new Set());
 
-  // ✅ 채팅방 목록 불러오기
+  // ✅ 초기 방 목록 가져오기
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const resp = await api.get("/matches");
-        // 방 초기화 시 unreadCount = 0
-        setRooms(resp.data.map((r) => ({ ...r, unreadCount: 0 })));
+        mergeRooms(resp.data); // ✅ 병합 방식
       } catch (err) {
         console.error("❌ 채팅방 목록 불러오기 실패", err);
       }
     };
     fetchRooms();
-  }, [setRooms]);
+  }, [mergeRooms]);
 
   // ✅ Firestore 마지막 메시지 구독
   useEffect(() => {
@@ -38,7 +35,7 @@ export default function ChatList() {
     const unsubscribes = [];
 
     rooms.forEach((room) => {
-      if (subscribedRef.current.has(room.roomId)) return; // ✅ 중복 구독 방지
+      if (subscribedRef.current.has(room.roomId)) return;
       subscribedRef.current.add(room.roomId);
 
       const q = query(
@@ -51,7 +48,6 @@ export default function ChatList() {
         if (!snapshot.empty) {
           const lastMsg = snapshot.docs[0].data();
 
-          // ✅ 마지막 메시지 갱신
           updateRoomLastMessage(room.roomId, {
             text: lastMsg.text,
             createdAt: lastMsg.createdAt?.toDate
@@ -59,7 +55,7 @@ export default function ChatList() {
               : new Date(),
           });
 
-          // ✅ 안 읽은 메시지 처리 (상대방이 보낸 경우만)
+          // ✅ 안읽은 메시지 (상대방이 보낸 경우만)
           if (lastMsg.senderId && lastMsg.senderId !== userId) {
             setUnreadCount(room.roomId, (room.unreadCount || 0) + 1);
           }
@@ -120,7 +116,7 @@ export default function ChatList() {
               key={room.roomId}
               onClick={() => {
                 navigate(`/chat/${room.roomId}`, { state: { peer: room.peer } });
-                setUnreadCount(room.roomId, 0); // ✅ 클릭 시 읽음 처리
+                setUnreadCount(room.roomId, 0); // ✅ 읽음 처리
               }}
               style={{
                 cursor: "pointer",
@@ -131,7 +127,6 @@ export default function ChatList() {
                 borderBottom: "1px solid #eee",
               }}
             >
-              {/* 프로필 + 닉네임 + 마지막 메시지 */}
               <div style={{ display: "flex", alignItems: "center" }}>
                 <img
                   src={room.peer.typeImageUrl}
@@ -169,7 +164,6 @@ export default function ChatList() {
                 </div>
               </div>
 
-              {/* 오른쪽: 마지막 메시지 시간 + 안읽은 메시지 */}
               <div style={{ textAlign: "right" }}>
                 <div
                   style={{

@@ -7,33 +7,47 @@ const useChatStore = create(
     (set) => ({
       rooms: [],
 
-      // ✅ 전체 채팅방 목록 세팅
-      setRooms: (rooms) => {
-        console.log("🟢 [ChatStore] setRooms:", rooms);
-        set({ rooms });
-      },
+      // ✅ 방 목록 병합 (덮어쓰기 아님)
+      mergeRooms: (newRooms) =>
+        set((state) => {
+          const merged = newRooms.map((newRoom) => {
+            const existing = state.rooms.find((r) => r.roomId === newRoom.roomId);
+            return existing
+              ? {
+                  ...newRoom,
+                  lastMessage: existing.lastMessage, // 유지
+                  unreadCount: existing.unreadCount ?? 0, // 유지
+                }
+              : { ...newRoom, lastMessage: null, unreadCount: 0 };
+          });
+          return { rooms: merged };
+        }),
 
-      // ✅ 특정 채팅방 마지막 메시지 업데이트
-      updateRoomLastMessage: (roomId, lastMessage) => {
-        console.log("🟢 [ChatStore] updateRoomLastMessage:", roomId, lastMessage);
+      // ✅ 마지막 메시지 업데이트
+      updateRoomLastMessage: (roomId, lastMessage) =>
         set((state) => {
           const updated = state.rooms.map((room) =>
             room.roomId === roomId
               ? { ...room, lastMessage: { ...lastMessage } }
               : room
           );
-          return { rooms: [...updated] }; // ✅ 새로운 배열로 교체 → React rerender 강제
-        });
-      },
+          return { rooms: [...updated] };
+        }),
 
-      // ✅ 모든 방 초기화
-      clearRooms: () => {
-        console.log("🔴 [ChatStore] clearRooms");
-        set({ rooms: [] });
-      },
+      // ✅ 안읽은 메시지 카운트 세팅
+      setUnreadCount: (roomId, count) =>
+        set((state) => {
+          const updated = state.rooms.map((room) =>
+            room.roomId === roomId ? { ...room, unreadCount: count } : room
+          );
+          return { rooms: [...updated] };
+        }),
+
+      // ✅ 방 전체 초기화
+      clearRooms: () => set({ rooms: [] }),
     }),
     {
-      name: "chat-storage", // localStorage key
+      name: "chat-storage",
     }
   )
 );
