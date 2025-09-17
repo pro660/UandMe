@@ -19,7 +19,7 @@ export default function ChatList() {
 
     const q = query(
       collection(db, "chatRooms"),
-      where("participants", "array-contains", user.userId)
+      where("participants", "array-contains", String(user.userId)) // 🔑 문자열 변환
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
@@ -67,11 +67,11 @@ export default function ChatList() {
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {rooms.map((room) => {
             // 내 userId 기준으로 상대방 정보 꺼내기
-            const peer = room.peers?.[user.userId];
+            const peer = room.peers?.[String(user.userId)]; // 🔑 문자열 키 접근
             return (
               <li
                 key={room.roomId}
-                onClick={() => navigate(`/chat/${room.roomId}`)} // ✅ peer 안 넘김
+                onClick={() => navigate(`/chat/${room.roomId}`)}
                 style={{
                   cursor: "pointer",
                   display: "flex",
