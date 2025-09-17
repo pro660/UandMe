@@ -5,8 +5,8 @@ const useUserStore = create(
   persist(
     (set, get) => ({
       user: null,
-      jwt: null,            // ✅ 우리 서버 JWT
-      firebaseToken: null,  // ✅ Firebase Custom Token
+      jwt: null,                   // ✅ 우리 서버 JWT
+      firebaseCustomToken: null,   // ✅ Firebase Custom Token
       isInitialized: false,
 
       // ⬇️ 전체 교체 (replace)
@@ -43,20 +43,20 @@ const useUserStore = create(
         set({ jwt });
       },
 
-      // Firebase Token 저장
-      setFirebaseToken: (firebaseToken) => {
-        console.log("🟢 [UserStore] setFirebaseToken:", firebaseToken);
-        set({ firebaseToken });
+      // Firebase Custom Token 저장
+      setFirebaseCustomToken: (firebaseCustomToken) => {
+        console.log("🟢 [UserStore] setFirebaseCustomToken:", firebaseCustomToken);
+        set({ firebaseCustomToken });
       },
 
       clearUser: () => {
         console.log("🔴 [UserStore] clearUser");
-        set({ user: null, jwt: null, firebaseToken: null });
+        set({ user: null, jwt: null, firebaseCustomToken: null });
       },
 
       logout: () => {
         console.log("🔴 [UserStore] logout");
-        set({ user: null, jwt: null, firebaseToken: null });
+        set({ user: null, jwt: null, firebaseCustomToken: null });
       },
 
       setInitialized: (value) => {

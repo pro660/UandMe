@@ -72,21 +72,21 @@ export default function LoginOrGate() {
         if (status >= 200 && status < 300 && data) {
           const prev = useUserStore.getState().user || {};
 
-          // 🔑 서버 응답에 jwt, firebaseToken, user 정보가 있다고 가정
-          const { jwt, firebaseToken, user: userData } = data;
+          // 🔑 서버 응답: jwt, firebaseCustomToken, user
+          const { jwt, firebaseCustomToken, user: userData } = data;
 
           // zustand 저장
           setUser({
             ...prev,
             ...userData,
             accessToken: jwt,
-            firebaseToken,
+            firebaseCustomToken, // ✅ 필드명 수정
           });
 
-          // Firebase Auth 로그인 시도
-          if (firebaseToken) {
+          // Firebase Auth 로그인
+          if (firebaseCustomToken) {
             try {
-              await signInWithCustomToken(auth, firebaseToken);
+              await signInWithCustomToken(auth, firebaseCustomToken);
               console.log("✅ Firebase Auth 로그인 성공");
             } catch (err) {
               console.error("❌ Firebase 로그인 실패:", err);
