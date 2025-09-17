@@ -7,6 +7,10 @@ import backgroundImage from "../../image/loginPage/background.png";
 import api from "../../api/axios";
 import useUserStore from "../../api/userStore";
 
+// 🔑 Firebase Auth
+import { signInWithCustomToken } from "firebase/auth";
+import { auth } from "../../libs/firebase";
+
 const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
 const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
 const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
@@ -50,11 +54,14 @@ export default function LoginOrGate() {
           const qs = new URLSearchParams(location.search);
           qs.delete("accessToken");
           qs.delete("access");
-          const cleanUrl = location.pathname + (qs.toString() ? `?${qs.toString()}` : "");
+          const cleanUrl =
+            location.pathname + (qs.toString() ? `?${qs.toString()}` : "");
           window.history.replaceState({}, "", cleanUrl);
         }
 
-        const { data, status } = await api.get(ME_URL, { validateStatus: () => true });
+        const { data, status } = await api.get(ME_URL, {
+          validateStatus: () => true,
+        });
 
         if (status === 401 || status === 419) {
           if (!mounted) return;
@@ -64,22 +71,43 @@ export default function LoginOrGate() {
 
         if (status >= 200 && status < 300 && data) {
           const prev = useUserStore.getState().user || {};
-          setUser({ ...prev, ...data });
+
+          // 🔑 서버 응답에 jwt, firebaseToken, user 정보가 있다고 가정
+          const { jwt, firebaseToken, user: userData } = data;
+
+          // zustand 저장
+          setUser({
+            ...prev,
+            ...userData,
+            accessToken: jwt,
+            firebaseToken,
+          });
+
+          // Firebase Auth 로그인 시도
+          if (firebaseToken) {
+            try {
+              await signInWithCustomToken(auth, firebaseToken);
+              console.log("✅ Firebase Auth 로그인 성공");
+            } catch (err) {
+              console.error("❌ Firebase 로그인 실패:", err);
+            }
+          }
 
           const flag =
-            data?.isRegistered ??
-            data?.registered ??
-            data?.profileCompleted;
+            userData?.isRegistered ??
+            userData?.registered ??
+            userData?.profileCompleted;
 
           const isRegistered =
             typeof flag === "boolean"
               ? flag
               : !!(
-                  data?.name &&
-                  data?.studentNo &&
-                  data?.gender &&
-                  data?.department &&
-                  (typeof data?.birthYear === "number" || data?.birthYear)
+                  userData?.name &&
+                  userData?.studentNo &&
+                  userData?.gender &&
+                  userData?.department &&
+                  (typeof userData?.birthYear === "number" ||
+                    userData?.birthYear)
                 );
 
           if (!mounted) return;
@@ -108,11 +136,20 @@ export default function LoginOrGate() {
     return () => {
       mounted = false;
     };
-  }, [incomingAccessToken, location.pathname, location.hash, navigate, setUser, location.search]);
+  }, [
+    incomingAccessToken,
+    location.pathname,
+    location.hash,
+    navigate,
+    setUser,
+    location.search,
+  ]);
 
   const handleKakao = () => {
     const nextRel = "/login";
-    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(nextRel)}`;
+    const url = `${API_BASE}${KAKAO_LOGIN_PATH}?next=${encodeURIComponent(
+      nextRel
+    )}`;
     window.location.assign(url);
   };
 
@@ -125,7 +162,11 @@ export default function LoginOrGate() {
   }
 
   return (
-    <main className="login-root" role="main" style={{ backgroundImage: `url(${backgroundImage})` }}>
+    <main
+      className="login-root"
+      role="main"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    >
       <section className="arch-card" aria-label="너랑 나랑 소개 및 로그인">
         <div className="brand">
           <img src={heartSvg} alt="" className="heart-img" aria-hidden="true" />
@@ -137,7 +178,8 @@ export default function LoginOrGate() {
             평범한 축제가 <span className="em">특별</span>해지는 순간!
           </p>
           <p className="sub">
-            당신의 옆자리를 채울 <span className="em-strong">한 사람</span>을 찾아보세요.
+            당신의 옆자리를 채울 <span className="em-strong">한 사람</span>을
+            찾아보세요.
           </p>
         </div>
 

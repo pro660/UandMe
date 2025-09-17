@@ -5,15 +5,17 @@ const useUserStore = create(
   persist(
     (set, get) => ({
       user: null,
+      jwt: null,            // ✅ 우리 서버 JWT
+      firebaseToken: null,  // ✅ Firebase Custom Token
       isInitialized: false,
 
-      // ⬇️ 전체 교체(replace)
+      // ⬇️ 전체 교체 (replace)
       setUser: (userInfo) => {
         console.log("🟢 [UserStore] setUser (replace):", userInfo);
         set({ user: userInfo });
       },
 
-      // ⬇️ 부분 병합(update)
+      // ⬇️ 부분 병합 (update)
       updateUser: (patch) => {
         const prev = get().user || {};
         const next = { ...prev, ...patch };
@@ -35,14 +37,26 @@ const useUserStore = create(
         set({ user: next });
       },
 
+      // JWT 저장
+      setJwt: (jwt) => {
+        console.log("🟢 [UserStore] setJwt:", jwt);
+        set({ jwt });
+      },
+
+      // Firebase Token 저장
+      setFirebaseToken: (firebaseToken) => {
+        console.log("🟢 [UserStore] setFirebaseToken:", firebaseToken);
+        set({ firebaseToken });
+      },
+
       clearUser: () => {
         console.log("🔴 [UserStore] clearUser");
-        set({ user: null });
+        set({ user: null, jwt: null, firebaseToken: null });
       },
 
       logout: () => {
         console.log("🔴 [UserStore] logout");
-        set({ user: null });
+        set({ user: null, jwt: null, firebaseToken: null });
       },
 
       setInitialized: (value) => {
