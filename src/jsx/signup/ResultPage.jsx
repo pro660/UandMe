@@ -29,7 +29,8 @@ export default function ResultPage({ hideHomeButton = false }) {
           </button>
         )}
         <div style={{ marginTop: "5rem", textAlign: "center" }}>
-          사용자 정보를 불러올 수 없어요. 다시 로그인해 주세요.
+          사용자 정보를 불러올 수 없어요. <br />
+          다시 로그인해 주세요.
         </div>
       </div>
     );

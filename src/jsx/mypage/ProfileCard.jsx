@@ -4,6 +4,7 @@ import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 import "../../css/mypage/ProfileCard.css";
 import editIcon from "../../image/home/edit.svg";
+import instaIcon from "../../image/home/instagram.svg";
 
 export default function ProfileCard({
   imageSrc,
@@ -12,6 +13,9 @@ export default function ProfileCard({
   studentNo = "22",
   birthYear = "2003",
   gender,
+  readOnly = false, // ✅ 읽기 전용 모드
+  introduce,        // ✅ 외부 소개 (상대방 프로필용)
+  instagramUrl,     // ✅ 인스타 URL
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -30,7 +34,6 @@ export default function ProfileCard({
         introduce: editingIntroduce,
       });
       if (res.status >= 200 && res.status < 300) {
-        // ✅ 부분 업데이트만 적용
         useUserStore.getState().updateUser({ introduce: editingIntroduce });
         setIsEditing(false);
       }
@@ -46,7 +49,11 @@ export default function ProfileCard({
     <div className="profile-card-wrapper">
       {/* === 말풍선 소개 영역 === */}
       <div className="introduce-bubble">
-        {!isEditing ? (
+        {readOnly ? (
+          <span className="introduce-text">
+            {introduce || "한줄 소개가 없습니다."}
+          </span>
+        ) : !isEditing ? (
           <>
             <span className="introduce-text">
               {user?.introduce || "한줄 소개가 없습니다."}
@@ -56,11 +63,7 @@ export default function ProfileCard({
               className="introduce-edit-icon"
               onClick={() => setIsEditing(true)}
             >
-              <img
-                src={editIcon}
-                alt="수정하기"
-                className="introduce-edit-img"
-              />
+              <img src={editIcon} alt="수정하기" className="introduce-edit-img" />
             </button>
           </>
         ) : (
@@ -134,6 +137,23 @@ export default function ProfileCard({
             <div className="profile-card-down">
               <p className="profile-card-name">{name}</p>
             </div>
+
+            {/* ✅ 인스타 버튼 (읽기 전용 모드에서만 표시) */}
+            {readOnly && instagramUrl && (
+              <a
+                href={
+                  instagramUrl.startsWith("http")
+                    ? instagramUrl
+                    : `https://instagram.com/${instagramUrl}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="insta-btn-inside"
+                onClick={(e) => e.stopPropagation()} // 카드 뒤집힘 방지
+              >
+                <img src={instaIcon} alt="인스타그램" className="insta-icon" />
+              </a>
+            )}
           </div>
 
           {/* 뒷면 */}

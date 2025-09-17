@@ -65,19 +65,6 @@
   pointer-events: none;
 }
 
-.arch-box {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0;
-  width: 100%;
-  height: clamp(70vh, 55vh, 60vh);
-  background: #fff;
-  z-index: 0;
-  border-top-left-radius: 50% clamp(2.5rem, 4rem, 5rem);
-  border-top-right-radius: 50% clamp(2.5rem, 4rem, 5rem);
-  box-shadow: 0 -0.35rem 1.2rem rgba(0,0,0,.15);
-}
 .result-page > *:not(.arch-box) {
   position: relative;
   z-index: 1;

@@ -43,6 +43,7 @@
 
 /* ── 앞면 배경 그라데이션 ─────────────────────────── */
 .profile-card-front {
+  position: relative;
   transform: rotateY(0deg);
   border-radius: 2rem;
   overflow: hidden;
@@ -218,4 +219,24 @@
 .profile-card-back-list .value {
   color: #444;
   font-weight: 600;
+}
+
+/* 카드 내부 인스타 버튼 */
+.insta-btn-inside {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insta-btn-inside img {
+  width: 20px;
+  height: 20px;
 }

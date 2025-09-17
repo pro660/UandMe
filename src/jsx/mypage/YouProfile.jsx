@@ -75,6 +75,9 @@ export default function YouProfile({ userId }) {
           studentNo={studentNo}
           birthYear={birthYear}
           gender={gender}
+          readOnly={true}
+          introduce={introduce}
+          instagramUrl={instagramUrl}
         />
 
         {instagramUrl && (
