@@ -16,7 +16,7 @@ const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
 const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
 
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
-const ME_URL = `${API_BASE}/users/me`; // ✅ /auth/me → /users/me 로 변경
+const ME_URL = `${API_BASE}/auth/me`;
 
 export default function LoginOrGate() {
   const navigate = useNavigate();
