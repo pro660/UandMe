@@ -67,7 +67,9 @@ export default function ChatList() {
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {rooms.map((room) => {
             // 내 userId 기준으로 상대방 정보 꺼내기
-            const peer = room.peers?.[String(user.userId)]; // 🔑 문자열 키 접근
+            const peer = room.peers?.[String(user.userId)];
+            const unreadCount = room.unread?.[String(user.userId)] || 0; // 🔑 안읽음 개수
+
             return (
               <li
                 key={room.roomId}
@@ -81,6 +83,7 @@ export default function ChatList() {
                   borderBottom: "1px solid #eee",
                 }}
               >
+                {/* 왼쪽: 프로필 + 이름 + 마지막 메시지 */}
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <img
                     src={peer?.typeImageUrl}
@@ -117,23 +120,45 @@ export default function ChatList() {
                     </div>
                   </div>
                 </div>
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "#888",
-                    marginLeft: "8px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {room.lastMessage?.createdAt
-                    ? new Date(
-                        room.lastMessage.createdAt.seconds * 1000
-                      ).toLocaleTimeString("ko-KR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : ""}
+
+                {/* 오른쪽: 시간 + 안읽음 뱃지 */}
+                <div style={{ textAlign: "right", marginLeft: "8px" }}>
+                  <div
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "#888",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {room.lastMessage?.createdAt
+                      ? new Date(
+                          room.lastMessage.createdAt.seconds * 1000
+                        ).toLocaleTimeString("ko-KR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : ""}
+                  </div>
+
+                  {unreadCount > 0 && (
+                    <div
+                      style={{
+                        marginTop: "4px",
+                        background: "#ff4d4f",
+                        color: "white",
+                        borderRadius: "12px",
+                        padding: "2px 8px",
+                        fontSize: "0.8rem",
+                        fontWeight: "bold",
+                        display: "inline-block",
+                        minWidth: "20px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {unreadCount}
+                    </div>
+                  )}
                 </div>
               </li>
             );
