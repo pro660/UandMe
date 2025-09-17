@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
+import ChatRoomGuard from "./jsx/chat/ChatRoomGuard";
 
 import Header from "./jsx/common/Header";
 import Menu from "./jsx/common/Menu2";
@@ -19,8 +20,6 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
-import useUserStore from "./api/userStore"; // ✅ 유저 스토어 불러오기
-
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
@@ -37,8 +36,6 @@ function Layout({ children }) {
 }
 
 function AppRouter() {
-  const user = useUserStore((s) => s.user); // ✅ 로그인 유저 가져오기
-
   return (
     <BrowserRouter>
       <Layout>
@@ -48,14 +45,14 @@ function AppRouter() {
             path="/"
             element={
               // <ProtectedRoute>
-                <Home />
+              <Home />
               /* </ProtectedRoute> */
             }
           />
           <Route path="/chat" element={<ChatList />} />
           <Route path="/matching" element={<Matching />} />
           <Route path="/mypage" element={<MyPage />} />
-          
+
           {/* 회원가입(정보 입력 페이지) */}
           <Route
             path="/infoform"
@@ -86,7 +83,11 @@ function AppRouter() {
           {/* ✅ 채팅방 라우트: URL에서 roomId 추출 + 현재 로그인 유저 ID 전달 */}
           <Route
             path="/chat/:roomId"
-            element={<ChatRoom userId={user?.id} />}
+            element={
+              <ChatRoomGuard>
+                <ChatRoom />
+              </ChatRoomGuard>
+            }
           />
         </Routes>
       </Layout>
