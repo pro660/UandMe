@@ -1,0 +1,146 @@
+.empty-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;          /* 부모 높이 기준 */
+  text-align: center;
+  color: #999;
+  font-size: 0.95rem;
+  padding: 2rem 1rem;
+}
+
+.receive-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.receive-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* 모바일에 맞게 줄임 */
+  flex: 1;
+  min-width: 0; /* 긴 이름 줄바꿈 처리 */
+}
+
+.receive-profile-placeholder {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: #f3f3f3;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.receive-text-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.receive-text-info strong {
+  font-size: 0.95rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 긴 이름 ... 처리 */
+}
+
+.receive-department {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.receive-status-badge {
+  display: inline-block;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.5rem;
+  background: #ffe6f2;
+  color: #ff4da6;
+  font-size: 0.75rem;
+  border-radius: 0.4rem;
+  font-weight: 500;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.receive-created-at {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.receive-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto; /* 오른쪽 끝으로 밀기 */
+}
+
+.receive-accept-btn,
+.receive-reject-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.receive-accept-btn {
+  color: #ff69c3;
+}
+
+.receive-reject-btn {
+  color: #ff4081;
+}
+
+/* DECLINED 상태 */
+.receive-declined {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+
+/* -----------------------------------
+   📌 반응형 (큰 화면일 때만 살짝 키우기)
+----------------------------------- */
+@media (min-width: 768px) {
+  .receive-profile-placeholder {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .receive-text-info strong {
+    font-size: 1rem;
+  }
+
+  .receive-status-badge {
+    font-size: 0.85rem;
+  }
+
+  .receive-accept-btn,
+  .receive-reject-btn {
+    font-size: 1.5rem;
+  }
+}
+
+.receive-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  cursor: pointer; /* ✅ 기본: 클릭 가능 */
+}
+
+.receive-card.receive-declined .receive-info {
+  cursor: default; /* DECLINED 상태 → 클릭 불가 */
+}
+

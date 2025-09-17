@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   collection,
   addDoc,
@@ -8,49 +8,46 @@ import {
   orderBy,
   serverTimestamp,
   doc,
-  setDoc,
   getDoc,
-  updateDoc,
 } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import useUserStore from "../../api/userStore";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
-  const location = useLocation();
-  const peer = location.state?.peer; // ChatList에서 넘어온 peer 정보
-
-  const user = useUserStore((s) => s.user);
+  const { user } = useUserStore();
   const userId = user?.userId;
 
+  const [peer, setPeer] = useState(null); // ✅ 상대방 정보 Firestore에서 가져옴
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // ✅ 방 존재 확인 & 없으면 생성
+  // ✅ Firestore 방 정보 읽기 (peers에서 상대방 꺼내기)
   useEffect(() => {
     if (!roomId || !userId) return;
 
-    const ensureRoom = async () => {
-      const roomRef = doc(db, "chatRooms", roomId);
-      const snap = await getDoc(roomRef);
-      if (!snap.exists()) {
-        await setDoc(roomRef, {
-          createdAt: serverTimestamp(),
-          participants: [userId, peer?.userId].filter(Boolean),
-          peerInfo: peer || null,
-          lastMessage: "",
-          lastMessageAt: null,
-        });
-        console.log("🟢 Firestore 방 생성:", roomId);
+    const fetchRoomInfo = async () => {
+      try {
+        const roomRef = doc(db, "chatRooms", roomId);
+        const snap = await getDoc(roomRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          // 내 ID 기준으로 상대방 정보 꺼내기
+          const peerInfo = data.peers?.[userId];
+          setPeer(peerInfo || null);
+        }
+      } catch (err) {
+        console.error("❌ Firestore 방 정보 불러오기 실패:", err);
       }
     };
 
-    ensureRoom();
-  }, [roomId, userId, peer]);
+    fetchRoomInfo();
+  }, [roomId, userId]);
 
   // ✅ Firestore 메시지 구독
   useEffect(() => {
     if (!roomId) return;
+
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "asc")
@@ -68,21 +65,11 @@ export default function ChatRoom() {
     if (!input.trim() || !userId) return;
 
     try {
-      const roomRef = doc(db, "chatRooms", roomId);
-
-      // 메시지 저장
-      await addDoc(collection(roomRef, "messages"), {
+      await addDoc(collection(db, "chatRooms", roomId, "messages"), {
         senderId: userId,
         text: input,
         createdAt: serverTimestamp(),
       });
-
-      // lastMessage 갱신
-      await updateDoc(roomRef, {
-        lastMessage: input,
-        lastMessageAt: serverTimestamp(),
-      });
-
       setInput("");
     } catch (err) {
       console.error("❌ 메시지 전송 실패:", err);
@@ -103,13 +90,10 @@ export default function ChatRoom() {
           <h3>
             {peer.nickname || peer.name} ({peer.department})
           </h3>
-          {peer.introduce && <p>{peer.introduce}</p>}
-          <div>
-            <img src={peer.typeImageUrl} alt="type1" width={60} />
-            {peer.typeImageUrl2 && (
-              <img src={peer.typeImageUrl2} alt="type2" width={60} />
-            )}
-          </div>
+          <img src={peer.typeImageUrl} alt="type1" width={60} />
+          {peer.typeImageUrl2 && (
+            <img src={peer.typeImageUrl2} alt="type2" width={60} />
+          )}
         </div>
       )}
 

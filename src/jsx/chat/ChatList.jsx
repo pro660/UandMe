@@ -1,42 +1,44 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
+import useUserStore from "../../api/userStore";
+import useChatStore from "../../api/chatStore";
+
+// ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
 
 export default function ChatList() {
-  const [rooms, setRooms] = useState([]);
+  const { rooms, setRooms } = useChatStore();
+  const { user } = useUserStore();
   const navigate = useNavigate();
 
-  // ✅ Firestore 실시간 구독
+  // ✅ Firestore에서 내가 속한 채팅방 불러오기
   useEffect(() => {
-    const q = query(collection(db, "chatRooms"), orderBy("lastMessageAt", "desc"));
+    if (!user?.userId) return;
+
+    const q = query(
+      collection(db, "chatRooms"),
+      where("participants", "array-contains", user.userId)
+    );
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
+      const roomList = snapshot.docs.map((doc) => ({
         roomId: doc.id,
         ...doc.data(),
       }));
-      setRooms(data);
+      setRooms(roomList);
     });
 
     return () => unsub();
-  }, []);
-
-  const formatTime = (ts) => {
-    if (!ts?.toDate) return "";
-    return ts.toDate().toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  }, [user?.userId, setRooms]);
 
   return (
     <div style={{ padding: "10px" }}>
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
       {rooms.length === 0 ? (
+        // ✅ 빈 상태
         <div
           style={{
             textAlign: "center",
@@ -50,7 +52,8 @@ export default function ChatList() {
             style={{
               width: "6rem",
               height: "6rem",
-              marginBottom: "1rem",
+              display: "block",
+              margin: "0 auto 1rem",
             }}
           />
           <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>
@@ -62,69 +65,79 @@ export default function ChatList() {
         </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {rooms.map((room) => (
-            <li
-              key={room.roomId}
-              onClick={() =>
-                navigate(`/chat/${room.roomId}`, { state: { peer: room.peerInfo } })
-              }
-              style={{
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 8px",
-                borderBottom: "1px solid #eee",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <img
-                  src={room.peerInfo?.typeImageUrl}
-                  alt="프로필"
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    marginRight: "12px",
-                  }}
-                />
-                <div>
-                  <div
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "1rem",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {room.peerInfo?.nickname || room.peerInfo?.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.9rem",
-                      color: "#555",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      maxWidth: "200px",
-                    }}
-                  >
-                    {room.lastMessage || "대화를 시작해보세요!"}
-                  </div>
-                </div>
-              </div>
-              <div
+          {rooms.map((room) => {
+            // 내 userId 기준으로 상대방 정보 꺼내기
+            const peer = room.peers?.[user.userId];
+            return (
+              <li
+                key={room.roomId}
+                onClick={() => navigate(`/chat/${room.roomId}`)} // ✅ peer 안 넘김
                 style={{
-                  fontSize: "0.8rem",
-                  color: "#888",
-                  marginLeft: "8px",
-                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "12px 8px",
+                  borderBottom: "1px solid #eee",
                 }}
               >
-                {formatTime(room.lastMessageAt)}
-              </div>
-            </li>
-          ))}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <img
+                    src={peer?.typeImageUrl}
+                    alt="프로필"
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      marginRight: "12px",
+                    }}
+                  />
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "1rem",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {peer?.nickname || peer?.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "#555",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: "200px",
+                      }}
+                    >
+                      {room.lastMessage?.text || "대화를 시작해보세요!"}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#888",
+                    marginLeft: "8px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {room.lastMessage?.createdAt
+                    ? new Date(
+                        room.lastMessage.createdAt.seconds * 1000
+                      ).toLocaleTimeString("ko-KR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
+                    : ""}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

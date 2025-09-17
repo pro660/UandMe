@@ -1,0 +1,49 @@
+/* src/css/FlirtingTabs.css */
+.flirting-tabs {
+  margin: 0 auto;
+  margin-bottom: 2rem;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 1.7rem;
+  overflow: hidden;
+  width: 85%;
+  
+  /* 🔹 고정 높이 */
+  height: 23rem; /* max-height 대신 height로 고정 */
+  
+  /* 🔹 flex 레이아웃 */
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-header {
+  display: flex;
+  flex-shrink: 0; /* 헤더는 고정 */
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  border-top-left-radius: 1.7rem;
+  border-top-right-radius: 1.7rem;
+  transition: 0.2s;
+
+  box-shadow: inset 0 -4px 6px rgba(0, 0, 0, 0.1),
+    0 -2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.tab-btn.active {
+  background: linear-gradient(90deg, #ff69c3, #ff69c3);
+  color: white;
+}
+
+.tab-content {
+  flex: 1;             /* 🔹 남은 공간 모두 채움 */
+  overflow-y: auto;    /* 🔹 내용 길면 스크롤 */
+  padding: 1rem;
+}

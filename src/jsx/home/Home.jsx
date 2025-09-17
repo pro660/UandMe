@@ -1,4 +1,5 @@
 import "../../css/home/Home.css";
+import FlirtingTabs from "./FlirtingTabs";
 import Logo from "../../image/loginPage/logo.svg"; // 로고 import
 import MatchingBanner from "../../image/home/match.svg";
 
@@ -37,6 +38,8 @@ function Home() {
           <p>당신의 인연을 찾아보세요</p>
         </div>
       </Link>
+
+      <FlirtingTabs />
 
       {/* 음료 메뉴 + 부스 위치 섹션 */}
       <section className="drink-and-map">

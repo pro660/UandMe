@@ -1,0 +1,116 @@
+.empty-message {
+  display: flex;
+  align-items: flex-start;   /* 위쪽 정렬 */
+  justify-content: center;   /* 가로 중앙 */
+  height: 100%;
+  padding-top: 14rem;         /* 위에서 조금 내려오기 */
+  text-align: center;
+  color: #999;
+  font-size: 0.95rem;
+}
+
+
+.sent-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.sent-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* 모바일 기준 좁게 */
+  flex: 1;
+  min-width: 0;
+}
+
+.sent-profile-placeholder {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: #f3f3f3; /* 나중에 이미지 채울 자리 */
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sent-text-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.sent-text-info strong {
+  font-size: 0.95rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 긴 이름 ... 처리 */
+}
+
+.sent-department {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.sent-status-badge {
+  display: inline-block;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.5rem;
+  background: #ffe6f2;
+  color: #ff4da6;
+  font-size: 0.75rem;
+  border-radius: 0.4rem;
+  font-weight: 500;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sent-created-at {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.sent-declined {
+  filter: grayscale(1);
+  opacity: 0.7;
+}
+
+/* -----------------------------------
+   📌 반응형 (768px 이상 → 살짝 키우기)
+----------------------------------- */
+@media (min-width: 768px) {
+  .sent-profile-placeholder {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .sent-text-info strong {
+    font-size: 1rem;
+  }
+
+  .sent-status-badge {
+    font-size: 0.85rem;
+  }
+}
+
+.sent-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  cursor: pointer; /* ✅ pointer 커서 CSS에서 관리 */
+}
+
+.sent-card.sent-declined .sent-info {
+  cursor: default; /* DECLINED 상태일 때는 커서 일반 화살표 */
+}
