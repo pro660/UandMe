@@ -60,7 +60,7 @@ export default function LoginOrGate() {
           window.history.replaceState({}, "", cleanUrl);
         }
 
-        // 🔹 2. /users/me 호출
+        // 🔹 2. /auth/me 호출
         const { data, status } = await api.get(ME_URL, {
           validateStatus: () => true,
         });
@@ -74,13 +74,15 @@ export default function LoginOrGate() {
         if (status >= 200 && status < 300 && data) {
           const prev = useUserStore.getState().user || {};
 
-          // ✅ 응답 구조 맞게 수정
-          const { firebaseCustomToken, user: userData } = data;
+          // ✅ firebaseCustomToken은 user 안에 있음
+          const userData = data.user || {};
+          const firebaseCustomToken = userData.firebaseCustomToken;
 
           // zustand 저장
           setUser({
             ...prev,
             ...userData,
+            accessToken: incomingAccessToken || prev.accessToken,
             firebaseCustomToken,
           });
 
