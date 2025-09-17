@@ -1,3 +1,4 @@
+// src/api/userStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -33,7 +34,12 @@ const useUserStore = create(
           signalCredits:
             signalCredits !== undefined ? signalCredits : prev.signalCredits,
         };
-        console.log("🟢 [UserStore] updateCredits:", { matchCredits, signalCredits }, "=>", next);
+        console.log(
+          "🟢 [UserStore] updateCredits:",
+          { matchCredits, signalCredits },
+          "=>",
+          next
+        );
         set({ user: next });
       },
 

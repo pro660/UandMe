@@ -16,7 +16,7 @@ const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
 const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
 
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
-const ME_URL = `${API_BASE}/auth/me`;
+const ME_URL = `${API_BASE}/users/me`; // ✅ /auth/me → /users/me 로 변경
 
 export default function LoginOrGate() {
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ export default function LoginOrGate() {
     const gate = async () => {
       setBusy(true);
       try {
+        // 🔹 1. accessToken 있으면 axios 헤더에 저장
         if (incomingAccessToken) {
           const prev = useUserStore.getState().user || {};
           setUser({ ...prev, accessToken: incomingAccessToken });
@@ -59,6 +60,7 @@ export default function LoginOrGate() {
           window.history.replaceState({}, "", cleanUrl);
         }
 
+        // 🔹 2. /users/me 호출
         const { data, status } = await api.get(ME_URL, {
           validateStatus: () => true,
         });
@@ -72,18 +74,17 @@ export default function LoginOrGate() {
         if (status >= 200 && status < 300 && data) {
           const prev = useUserStore.getState().user || {};
 
-          // 🔑 서버 응답: jwt, firebaseCustomToken, user
-          const { jwt, firebaseCustomToken, user: userData } = data;
+          // ✅ 응답 구조 맞게 수정
+          const { firebaseCustomToken, user: userData } = data;
 
           // zustand 저장
           setUser({
             ...prev,
             ...userData,
-            accessToken: jwt,
-            firebaseCustomToken, // ✅ 필드명 수정
+            firebaseCustomToken,
           });
 
-          // Firebase Auth 로그인
+          // 🔑 Firebase Auth 로그인 시도
           if (firebaseCustomToken) {
             try {
               await signInWithCustomToken(auth, firebaseCustomToken);
@@ -93,10 +94,12 @@ export default function LoginOrGate() {
             }
           }
 
+          // 🔹 3. 가입 여부 판단
           const flag =
             userData?.isRegistered ??
             userData?.registered ??
-            userData?.profileCompleted;
+            userData?.profileCompleted ??
+            userData?.profileComplete;
 
           const isRegistered =
             typeof flag === "boolean"
