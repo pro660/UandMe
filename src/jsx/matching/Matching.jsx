@@ -3,7 +3,6 @@ import api from "../../api/axios"; // ✅ axios 인스턴스
 import useMatchingStore from "../../api/matchingStore"; // ✅ 전역 매칭 스토어
 
 export default function Matching() {
-
   const [message, setMessage] = useState("");
 
   // ✅ 전역 매칭 상태
@@ -29,7 +28,21 @@ export default function Matching() {
     }
   };
 
+  // ✅ 플러팅 보내기
+  const sendFlirting = async () => {
+    if (!peer) {
+      setMessage("상대가 없습니다. 먼저 매칭을 시작하세요.");
+      return;
+    }
 
+    try {
+      await api.post(`/signals/${peer.userId}`);
+      setMessage(`플러팅을 보냈습니다 → ${peer.name}`);
+    } catch (err) {
+      console.error("❌ 플러팅 실패:", err);
+      setMessage("플러팅 실패");
+    }
+  };
 
   return (
     <div>
@@ -48,6 +61,9 @@ export default function Matching() {
           {peer.typeImageUrl2 && (
             <img src={peer.typeImageUrl2} alt="type2" width={100} />
           )}
+
+          {/* ✅ 임시 플러팅 버튼 */}
+          <button onClick={sendFlirting}>플러팅 보내기</button>
         </div>
       )}
     </div>
