@@ -25,6 +25,7 @@ export default function LoginOrGate() {
 
   const [busy, setBusy] = useState(false);
 
+  // 🔹 쿼리/해시에서 accessToken 추출
   const tokenFromQuery = useMemo(() => {
     const sp = new URLSearchParams(location.search);
     return sp.get("accessToken") || sp.get("access");
@@ -74,9 +75,10 @@ export default function LoginOrGate() {
         if (status >= 200 && status < 300 && data) {
           const prev = useUserStore.getState().user || {};
 
-          // ✅ firebaseCustomToken은 user 안에 있음
+          // ✅ firebaseCustomToken 위치 통합 처리
           const userData = data.user || {};
-          const firebaseCustomToken = userData.firebaseCustomToken;
+          const firebaseCustomToken =
+            data.firebaseCustomToken || userData.firebaseCustomToken || null;
 
           // zustand 저장
           setUser({
