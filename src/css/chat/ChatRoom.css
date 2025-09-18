@@ -25,6 +25,8 @@
 
   /* iOS에서 내부 스크롤만 바운스되게 */
   overscroll-behavior: contain;
+
+  overflow: hidden;
 }
 
 /* 상단 헤더 */
