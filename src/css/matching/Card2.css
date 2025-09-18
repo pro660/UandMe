@@ -21,38 +21,41 @@
   width: 100%;
   max-width: 40rem;
   height: 22rem;
-  touch-action: pan-y;
+  touch-action: pan-y; /* 세로 스크롤 유지, 가로 드래그는 우리가 처리 */
   user-select: none;
+
+  /* 화면 밖 카드는 잘라내서 가장자리에 일찍 등장시키되 넘친 부분은 숨김 */
+  overflow: hidden;
+
+  /* (선택) 미관 */
+  border-radius: 1rem;
+  /* border: 1px solid #ddd; */
 }
 
-/* 스냅 중에만 부드럽게 */
+/* 스냅(손 뗄 때만) 부드럽게 */
 .card-wrap.snapping .slot {
   transition: transform .26s ease;
 }
-.card-wrap.snapping .card,
-.card-wrap.snapping .ghost {
-  transition: transform .26s ease, opacity .26s ease;
-}
 
-/* ===== 슬롯(왼/중/오) ===== */
+/* 드래그 방향별로 약간 다른 이징을 주고 싶다면 클래스 활용 가능 */
+.card-wrap.snapping.dir-left  .slot { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
+.card-wrap.snapping.dir-right .slot { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
+
+/* ===== 슬롯(–2, –1, 0, +1, +2) ===== */
 .slot {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%,-50%);
-  width: 13rem;      /* 중앙 카드 기준 폭 */
-  height: 19.5rem;   /* 중앙 카드 기준 높이 */
-  display: grid;     /* 두 레이어를 겹치기 위해 grid */
+  width: 13rem;      /* 카드 폭 */
+  height: 19.5rem;   /* 카드 높이 */
+  display: grid;
   place-items: center;
-  z-index: 1;        /* 옆 슬롯은 뒤 */
+  will-change: transform;
 }
-
-/* 가운데 슬롯은 항상 위 */
-.slot-center { z-index: 3; }
 
 /* ===== 카드 공통 ===== */
 .card {
-  position: relative;   /* z-index 적용 보장 */
   width: 100%;
   height: 100%;
   background: #FFF5FA;
@@ -63,30 +66,8 @@
   align-items: center;
   gap: .6rem;
   padding: 1rem;
-  will-change: transform, opacity;
   backface-visibility: hidden;
-  z-index: 1; /* 슬롯 내부 기본 바닥 */
-}
-
-/* 같은 셀에 겹치기 */
-.slot .card { grid-area: 1 / 1; }
-
-/* 중앙 카드는 크기 변화 없이 z-index만 보장 */
-.slot-center .card { z-index: 3; }
-
-/* 좌/우 카드는 뒤에 유지 (크기 조절 없음) */
-.slot-left  .card,
-.slot-right .card { z-index: 1; }
-
-/* ===== 고스트 레이어 (센터 옆에서 페이드 인, 방향 무관) ===== */
-.ghost {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  /* 위치/불투명도는 inline style에서 제어 */
-  opacity: 0;
-  pointer-events: none;  /* 터치/클릭 방지 */
-  z-index: 2;            /* 슬롯(1)보다 위, 센터(3)보다 아래 */
+  will-change: transform;
 }
 
 /* ===== 이미지/텍스트 ===== */
@@ -110,9 +91,7 @@
 
 /* 접근성 */
 @media (prefers-reduced-motion: reduce) {
-  .card-wrap.snapping .slot,
-  .card-wrap.snapping .card,
-  .card-wrap.snapping .ghost {
+  .card-wrap.snapping .slot {
     transition: none;
   }
 }

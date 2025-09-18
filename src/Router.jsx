@@ -19,6 +19,9 @@ import ResultPage from "./jsx/signup/ResultPage";
 
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
+// import Card from "./jsx/matching/Card"; // 기존 카드 컴포넌트
+import Card2 from "./jsx/matching/Card2"; // 새 카드 컴포넌트
+import Nohuman from "./jsx/matching/Nohuman";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -53,8 +56,11 @@ function AppRouter() {
           />
           <Route path="/chat" element={<ChatList />} />
           <Route path="/matching" element={<Matching />} />
-          <Route path="/mypage" element={<MyPage />} />
+          <Route path="/mypage" element={<MyPage />} /> 
+          <Route path="/card" element={<Card />} />
+          <Route path="/nohuman" element={<Nohuman />} /> 
 
+            
           {/* 회원가입(정보 입력 페이지) */}
           <Route
             path="/infoform"
