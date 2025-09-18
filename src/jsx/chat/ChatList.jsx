@@ -10,6 +10,8 @@ import useChatStore from "../../api/chatStore";
 import WarningIcon from "../../image/home/warning.svg";
 import Loader from "../common/Loader"; // ✅ 로더 컴포넌트
 
+const DEBUG = true; // ← 필요 시 false로 꺼도 됨
+
 export default function ChatList() {
   const { rooms, setRooms } = useChatStore();
   const { user } = useUserStore();
@@ -24,7 +26,7 @@ export default function ChatList() {
       const d =
         typeof ts.toDate === "function"
           ? ts.toDate()
-          : ts.seconds
+          : ts?.seconds
           ? new Date(ts.seconds * 1000)
           : new Date(ts); // 혹시 숫자(ms)로 들어오는 경우 대비
       if (Number.isNaN(d.getTime())) return "";
@@ -41,7 +43,10 @@ export default function ChatList() {
   // ✅ Firestore에서 내가 속한 채팅방 불러오기 (구버전/신규 호환)
   useEffect(() => {
     const uidNum = Number(user?.userId);
-    if (!Number.isFinite(uidNum)) return;
+    if (!Number.isFinite(uidNum)) {
+      DEBUG && console.warn("[ChatList] invalid uid → skip subscribe", { uid: user?.userId });
+      return;
+    }
 
     const uidStr = String(uidNum);
 
@@ -52,14 +57,65 @@ export default function ChatList() {
       where("participants", "array-contains-any", [uidNum, uidStr])
     );
 
+    DEBUG && console.info("[ChatList] subscribe query", {
+      uidNum,
+      uidStr,
+      where: 'array-contains-any',
+    });
+
     setLoading(true);
     const unsub = onSnapshot(
       q,
       (snapshot) => {
-        const list = snapshot.docs.map((doc) => ({
-          roomId: doc.id,
-          ...doc.data(),
-        }));
+        const ids = snapshot.docs.map((d) => d.id);
+        DEBUG && console.log(`[ChatList] snapshot size=${snapshot.size}`, ids);
+
+        const list = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          const room = { roomId: docSnap.id, ...data };
+
+          // ── 디버깅: 방별 상세 로그 ─────────────────────────────────────────
+          if (DEBUG) {
+            console.groupCollapsed(`[Room] ${room.roomId}`);
+            const rawParts = room.participants || [];
+            const parts = rawParts.map((v) => Number(v));
+            const types = rawParts.map((v) => typeof v);
+            const myIdNumLog = uidNum;
+
+            const peerIdNum = parts.find((id) => id !== myIdNumLog);
+            const peerIdStr = peerIdNum != null ? String(peerIdNum) : undefined;
+
+            let peer = undefined;
+            let peerPath = "none";
+            if (peerIdStr && room.peers?.[peerIdStr]) {
+              peer = room.peers[peerIdStr];
+              peerPath = `peers["${peerIdStr}"]`;
+            } else {
+              const fallback = Object.values(room.peers || {}).find(
+                (p) => Number(p?.userId) === peerIdNum
+              );
+              if (fallback) {
+                peer = fallback;
+                peerPath = 'peers[userId==peerIdNum] (fallback)';
+              }
+            }
+
+            const unreadKeys = Object.keys(room.unread || {});
+            const unreadMine = (room.unread || {})[String(myIdNumLog)] ?? 0;
+
+            console.log("participants (raw)", rawParts);
+            console.log("participants (Number)", parts);
+            console.log("participants types", types);
+            console.log("myIdNum", myIdNumLog, "peerIdNum", peerIdNum, "peerPath", peerPath);
+            console.log("peer", peer);
+            console.log("unread keys", unreadKeys, "unreadMine", unreadMine);
+            console.log("lastMessage", room.lastMessage);
+            console.groupEnd();
+          }
+          // ────────────────────────────────────────────────────────────────────
+
+          return room;
+        });
 
         // 최근 메시지 순 정렬(없으면 뒤로)
         list.sort((a, b) => {
@@ -73,16 +129,23 @@ export default function ChatList() {
             (b?.lastMessage?.createdAt?.toDate
               ? b.lastMessage.createdAt.toDate().getTime() / 1000
               : 0);
-          return (bt || 0) - (at || 0);
+        return (bt || 0) - (at || 0);
         });
 
         setRooms(list);
         setLoading(false);
+        DEBUG && console.info("[ChatList] rooms set", { count: list.length });
       },
-      () => setLoading(false)
+      (err) => {
+        setLoading(false);
+        console.error("[ChatList] onSnapshot error", err);
+      }
     );
 
-    return () => unsub();
+    return () => {
+      DEBUG && console.info("[ChatList] unsubscribe");
+      unsub();
+    };
   }, [user?.userId, setRooms]);
 
   if (loading) {
@@ -149,6 +212,16 @@ export default function ChatList() {
             // 마지막 메시지 텍스트/시간
             const lastText = room.lastMessage?.text || "대화를 시작해보세요!";
             const lastTime = formatTime(room.lastMessage?.createdAt);
+
+            // (선택) 렌더 타임 로그
+            DEBUG &&
+              console.debug("[ChatList] render row", {
+                roomId: room.roomId,
+                myIdNum,
+                peerIdNum,
+                peerFound: Boolean(peer),
+                unreadCount,
+              });
 
             return (
               <li
