@@ -146,3 +146,27 @@ html, body {
   align-items: center;
   justify-content: center;
 }
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;        /* ✅ 화면의 90%까지만 */
+  overflow-y: auto;        /* ✅ 내부 스크롤 허용 */
+  -webkit-overflow-scrolling: touch; /* ✅ 모바일 부드러운 스크롤 */
+  background: #fff;
+  border-radius: 12px;
+}
