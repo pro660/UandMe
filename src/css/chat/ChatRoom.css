@@ -1,30 +1,47 @@
+/* ===== ChatRoom.css — 최종 안정판 ===== */
+
+:root {
+  /* 입력바의 최소 높이(버튼 40px + 상하 패딩 합산). 필요시 72~92px 사이에서 조정 */
+  --inputbar-h: 84px;
+}
+
+/* 전체 컨테이너 */
 .chatroom {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  max-height: 100dvh;
+
+  /* 모바일 뷰포트 안전 대응: svh 우선, dvh 폴백 */
+  height: 100svh;
+  min-height: 100dvh;
+
+  /* 헤더가 fixed라서 상단 여백 확보 */
   padding-top: 5rem;
+
   background: radial-gradient(
     circle at 70% 20%,
     rgba(255, 105, 195, 0.15),
     rgba(255, 255, 255, 1) 70%
   );
+
+  /* iOS에서 내부 스크롤만 바운스되게 */
+  overscroll-behavior: contain;
 }
 
 /* 상단 헤더 */
 .chatroom-header {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  background: white;
-  border-bottom: 1px solid #eee;
-  font-weight: bold;
-
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  font-weight: bold;
+
+  z-index: 1100; /* 입력바보다 낮게 */
 }
 
 .chatroom-header .back-btn {
@@ -33,6 +50,7 @@
   background: none;
   font-size: 18px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* 메시지 영역 */
@@ -40,8 +58,14 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+
   padding: 16px;
-  padding-bottom: 6rem; /* 입력창 영역 확보 */
+
+  /* ✅ 입력바 높이 + 안전영역만큼 하단 여백 확보 */
+  padding-bottom: calc(var(--inputbar-h) + env(safe-area-inset-bottom));
+
+  /* 오래된 iOS용 fallback */
+  padding-bottom: calc(var(--inputbar-h) + constant(safe-area-inset-bottom));
 }
 
 /* 메시지 */
@@ -87,7 +111,7 @@
 }
 
 .other .bubble {
-  background: white;
+  background: #fff;
   border-radius: 0 18px 18px 18px;
 }
 
@@ -101,38 +125,54 @@
   color: #575757;
 }
 
-/* 입력창 */
+/* 입력창 — ✅ fixed 로 전환 */
 .chatroom-input {
-  display: flex;
-  padding: 8px;
-  border-top: 1px solid #eee;
-  background: white;
-
-  position: absolute; /* ✅ iOS Safari 대응 */
-  bottom: 0;
+  position: fixed; /* was: absolute */
   left: 0;
   right: 0;
+  bottom: 0;
 
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  /* fallback */
+  padding-bottom: calc(8px + constant(safe-area-inset-bottom));
+
+  background: #fff;
+  border-top: 1px solid #eee;
+
+  /* ✅ 헤더보다 위, 모달보단 아래 */
+  z-index: 1200;
+
+  /* 입력바 최소 높이를 명시해서 메시지 영역 패딩과 일치시킴 */
+  min-height: var(--inputbar-h);
+
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
 }
 
 .chatroom-input input {
   flex: 1;
   border: 1px solid #ddd;
   border-radius: 20px;
-  padding: 8px 12px;
+  padding: 12px 14px; /* 살짝 키워서 터치 정확도↑ */
   outline: none;
+  font-size: 16px; /* iOS 줌 방지 */
+  line-height: 1.2;
+  pointer-events: auto;
 }
 
 .send-btn {
-  margin-left: 8px;
-  width: 40px;
-  height: 40px;
+  margin-left: 0;
+  width: 44px;
+  height: 44px;
   background: #FF69C3;
   border: none;
   border-radius: 50%;
-  color: white;
+  color: #fff;
   font-size: 18px;
   cursor: pointer;
 
@@ -140,22 +180,28 @@
   align-items: center;
   justify-content: center;
 
+  -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  pointer-events: auto;
+}
+
+.send-btn[disabled] {
+  opacity: 0.6;
+  cursor: default;
 }
 
 /* 모달 */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.4);
+
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+
+  z-index: 2000; /* 입력바 위로 */
 }
 
 .modal-content {
