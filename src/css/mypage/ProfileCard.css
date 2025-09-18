@@ -224,10 +224,10 @@
 /* 카드 내부 인스타 버튼 */
 .insta-btn-inside {
   position: absolute;
-  bottom: 1rem;
-  right: 0rem;
-  width: 36px;   /* 아이콘 크기 */
-  height: 36px;
+  bottom: 1.5rem;
+  right: 1rem;
+  width: 59px;   /* 아이콘 크기 */
+  height: 50px;
   border-radius: 8px;
   background: transparent;
   display: flex;
