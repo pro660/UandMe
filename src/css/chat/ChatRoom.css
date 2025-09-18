@@ -15,7 +15,6 @@ html, body {
     rgba(255, 105, 195, 0.15), /* FF69C3, 투명도 15% */
     rgba(255, 255, 255, 1) 70% /* 바깥쪽은 흰색 */
   );
-  padding-top: 4.5rem; /* ✅ 헤더 높이만큼 공간 확보 */
 }
 
 /* 상단 헤더 */
@@ -116,7 +115,6 @@ html, body {
   background: white;
 
   position: fixed; /* ✅ 화면 하단 고정 */
-  bottom: 4rem; /* ✅ 네비게이션 높이만큼 띄우기 (상황에 맞게 조절) */
   left: 0;
   right: 0;
 

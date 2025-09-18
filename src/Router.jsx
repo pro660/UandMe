@@ -23,8 +23,10 @@ import ChatRoom from "./jsx/chat/ChatRoom";
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
-  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage", "/chat/:roomId"];
-  const shouldHide = hiddenPaths.includes(location.pathname);
+  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage"];
+  const shouldHide =
+    hiddenPaths.includes(location.pathname) ||
+    location.pathname.startsWith("/chat/");
 
   return (
     <>
@@ -89,7 +91,6 @@ function AppRouter() {
               </ChatRoomGuard>
             }
           />
-
         </Routes>
       </Layout>
     </BrowserRouter>
