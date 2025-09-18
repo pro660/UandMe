@@ -20,6 +20,8 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
+import ChatRoomMock from "./jsx/chat/ChatRoomMock";
+
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
@@ -89,6 +91,10 @@ function AppRouter() {
               </ChatRoomGuard>
             }
           />
+
+        <Route path="/chat/mock" element={<ChatRoomMock />} />
+
+
         </Routes>
       </Layout>
     </BrowserRouter>

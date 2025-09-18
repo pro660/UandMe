@@ -10,9 +10,14 @@ import {
   updateDoc,
   serverTimestamp,
   increment,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import useUserStore from "../../api/userStore";
+
+import { FaArrowUp } from "react-icons/fa";
+import "../../css/chat/ChatRoom.css";
+import YouProfile from "../mypage/YouProfile.jsx";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
@@ -20,6 +25,21 @@ export default function ChatRoom() {
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [roomInfo, setRoomInfo] = useState(null);
+
+  // ✅ 모달 상태
+  const [showProfile, setShowProfile] = useState(false);
+
+  // ✅ 방 정보 불러오기
+  useEffect(() => {
+    if (!roomId) return;
+    const roomRef = doc(db, "chatRooms", roomId);
+    getDoc(roomRef).then((snap) => {
+      if (snap.exists()) {
+        setRoomInfo(snap.data());
+      }
+    });
+  }, [roomId]);
 
   // ✅ 메시지 실시간 구독
   useEffect(() => {
@@ -37,7 +57,6 @@ export default function ChatRoom() {
       }));
       setMessages(newMessages);
 
-      // 👉 새로운 메시지가 들어왔는데 내가 보낸 게 아니면 → 읽음 처리
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const msg = change.doc.data();
@@ -51,22 +70,18 @@ export default function ChatRoom() {
     return () => unsub();
   }, [roomId, user?.userId]);
 
-  // ✅ 방에 입장할 때 내 unread 초기화
+  // ✅ 방 입장 시 unread 초기화
   useEffect(() => {
     if (roomId && user?.userId) {
       markAsRead(roomId, user.userId);
     }
   }, [roomId, user?.userId]);
 
-  // ✅ 읽음 처리 함수
   async function markAsRead(roomId, userId) {
     const roomRef = doc(db, "chatRooms", roomId);
-    await updateDoc(roomRef, {
-      [`unread.${String(userId)}`]: 0,
-    });
+    await updateDoc(roomRef, { [`unread.${String(userId)}`]: 0 });
   }
 
-  // ✅ 메시지 전송
   async function sendMessage() {
     if (!input.trim()) return;
     const senderId = String(user.userId);
@@ -78,12 +93,11 @@ export default function ChatRoom() {
       createdAt: serverTimestamp(),
     });
 
-    // 방 메타데이터 업데이트 (lastMessage + unread 증가)
+    // 방 메타데이터 업데이트
     const roomRef = doc(db, "chatRooms", roomId);
-    // peerId 찾기 (현재 참여자 중 내가 아닌 사람)
-    // ⚠️ 여기서는 participants 배열이 room 문서에 있다고 가정
-    const peerId = (await (await import("firebase/firestore")).getDoc(roomRef)).data()
-      .participants.find((id) => id !== senderId);
+    const roomSnap = await getDoc(roomRef);
+    const participants = roomSnap.data()?.participants || [];
+    const peerId = participants.find((id) => id !== senderId);
 
     await updateDoc(roomRef, {
       lastMessage: {
@@ -97,53 +111,107 @@ export default function ChatRoom() {
     setInput("");
   }
 
+  // ✅ 상대방 정보 추출
+  const peerId =
+    roomInfo?.participants?.find((id) => String(id) !== String(user.userId)) ||
+    null;
+  const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
+
   return (
-    <div style={{ padding: "16px" }}>
-      <h2>채팅방</h2>
-      <div
-        style={{
-          border: "1px solid #ccc",
-          padding: "8px",
-          height: "400px",
-          overflowY: "auto",
-          marginBottom: "8px",
-        }}
-      >
-        {messages.map((msg) => (
+    <div className="chatroom">
+      {/* 상단 헤더 */}
+      <div className="chatroom-header">
+        <button className="back-btn">←</button>
+        {peerData ? (
           <div
-            key={msg.id}
             style={{
-              textAlign: msg.senderId === String(user.userId) ? "right" : "left",
-              marginBottom: "6px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
             }}
+            onClick={() => setShowProfile(true)}
           >
-            <span
+            <img
+              src={peerData.typeImageUrl}
+              alt="avatar"
               style={{
-                display: "inline-block",
-                padding: "6px 10px",
-                borderRadius: "12px",
-                background:
-                  msg.senderId === String(user.userId) ? "#4caf50" : "#eee",
-                color: msg.senderId === String(user.userId) ? "white" : "black",
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                objectFit: "cover",
               }}
-            >
-              {msg.text}
-            </span>
+            />
+            <div>
+              <div style={{ fontWeight: "bold" }}>{peerData.name}</div>
+              <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                {peerData.department}
+              </div>
+            </div>
           </div>
-        ))}
+        ) : (
+          <span className="title">채팅방</span>
+        )}
       </div>
 
-      <div style={{ display: "flex" }}>
+      {/* 메시지 영역 */}
+      <div className="chatroom-messages">
+        {messages.map((msg) => {
+          const isMe = msg.senderId === String(user.userId);
+          const senderData = roomInfo?.peers?.[msg.senderId] || {};
+          return (
+            <div key={msg.id} className={`chat-msg ${isMe ? "me" : "other"}`}>
+              {!isMe && (
+                <img
+                  src={senderData.typeImageUrl}
+                  alt="avatar"
+                  className="avatar"
+                  onClick={() => setShowProfile(true)} // ✅ 메시지 아바타 클릭도 모달 오픈
+                  style={{ cursor: "pointer" }}
+                />
+              )}
+              <div className="bubble-wrap">
+                {!isMe && senderData.name && (
+                  <div className="name">{senderData.name}</div>
+                )}
+                <div className="bubble">{msg.text}</div>
+                <div className="time">
+                  {msg.createdAt?.toDate
+                    ? msg.createdAt.toDate().toLocaleTimeString("ko-KR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 입력창 */}
+      <div className="chatroom-input">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          style={{ flex: 1, padding: "8px" }}
-          placeholder="메시지를 입력하세요..."
+          placeholder="메세지를 입력해주세요."
         />
-        <button onClick={sendMessage} style={{ marginLeft: "8px" }}>
-          전송
+        <button className="send-btn" onClick={sendMessage}>
+          <FaArrowUp size={20} color="white" />
         </button>
       </div>
+
+      {/* 상대방 프로필 모달 */}
+      {showProfile && peerId && (
+        <div className="modal-overlay" onClick={() => setShowProfile(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()} // 배경 클릭 시 닫히고, 내부 클릭은 유지
+          >
+            <YouProfile userId={peerId} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
