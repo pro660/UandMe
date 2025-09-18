@@ -41,7 +41,6 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch; /* ✅ iOS 부드러운 스크롤 */
   padding: 16px;
-  padding-bottom: 8rem; /* ✅ 입력창 + 네비게이션 여유 공간 */
 }
 
 /* 메시지 아이템 */
