@@ -1,10 +1,11 @@
+// src/jsx/mypage/ProfileCard.jsx
 import { useState } from "react";
 import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 import "../../css/mypage/ProfileCard.css";
 import editIcon from "../../image/home/edit.svg";
 import instaIcon from "../../image/home/instagram.svg";
-import InstaAdd from "../mypage/InstaAdd.jsx"; // ✅ 모달 컴포넌트 불러오기
+import InstaAdd from "../mypage/InstaAdd.jsx"; // ✅ 인스타 모달 불러오기
 
 export default function ProfileCard({
   imageSrc,
@@ -13,12 +14,11 @@ export default function ProfileCard({
   studentNo = "22",
   birthYear = "2003",
   gender,
-  readOnly = false, // ✅ 읽기 전용 모드
+  readOnly = false,
   introduce,
   instagramUrl,
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
-
   const user = useUserStore((s) => s.user);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -30,7 +30,7 @@ export default function ProfileCard({
   // ✅ 인스타 수정 모달 상태
   const [showInstaModal, setShowInstaModal] = useState(false);
 
-  const handleSave = async () => {
+  const handleSaveIntroduce = async () => {
     try {
       setSaving(true);
       const res = await api.put("/users/me/introduce", {
@@ -45,6 +45,26 @@ export default function ProfileCard({
       alert("소개를 저장하지 못했습니다.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ✅ 인스타 저장 핸들러
+  const handleSaveInstagram = async (instaId) => {
+    try {
+      // 1) 서버에 저장
+      await api.put("/users/me/instagram", { instagram: instaId });
+
+      // 2) 최신 프로필 불러오기
+      const resp = await api.get("/users/me/profile");
+      const updatedProfile = resp.data;
+
+      // 3) zustand 업데이트
+      useUserStore.getState().updateUser(updatedProfile);
+
+      alert("인스타그램이 저장되었습니다!");
+    } catch (err) {
+      console.error("❌ 인스타그램 저장 실패:", err);
+      alert("저장 중 오류가 발생했습니다.");
     }
   };
 
@@ -82,7 +102,7 @@ export default function ProfileCard({
             <button
               type="button"
               className="introduce-save-btn"
-              onClick={handleSave}
+              onClick={handleSaveIntroduce}
               disabled={saving}
             >
               {saving ? "..." : "✔"}
@@ -153,7 +173,7 @@ export default function ProfileCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="insta-btn-inside"
-                  onClick={(e) => e.stopPropagation()} // 카드 뒤집힘 방지
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <img src={instaIcon} alt="인스타그램" className="insta-icon" />
                 </a>
@@ -163,7 +183,7 @@ export default function ProfileCard({
                 type="button"
                 className="insta-btn-inside"
                 onClick={(e) => {
-                  e.stopPropagation(); // 카드 뒤집힘 방지
+                  e.stopPropagation();
                   setShowInstaModal(true); // 모달 열기
                 }}
               >
@@ -200,16 +220,9 @@ export default function ProfileCard({
       {/* ✅ 인스타 수정 모달 */}
       {showInstaModal && (
         <InstaAdd
+          defaultId={instagramUrl}
           onClose={() => setShowInstaModal(false)}
-          onSave={(instaId) => {
-            setShowInstaModal(false);
-            // 저장 API 호출
-            api.put("/users/me/instagram", { instagram: instaId })
-              .then(() => {
-                alert("인스타그램이 저장되었습니다!");
-              })
-              .catch(() => alert("저장 실패"));
-          }}
+          onSave={handleSaveInstagram} // 여기서 서버 저장 + zustand 업데이트
         />
       )}
     </div>

@@ -1,7 +1,6 @@
 // src/jsx/mypage/YouProfile.jsx
 import React, { useEffect, useState } from "react";
 import ProfileCard from "../mypage/ProfileCard.jsx";
-import instaIcon from "../../image/home/instagram.svg";
 import api from "../../api/axios.js"; // ✅ axios 인스턴스
 import "../../css/signup/ResultPage.css"; // 기존 스타일 재활용
 
@@ -68,6 +67,7 @@ export default function YouProfile({ userId }) {
       <div className="arch-box" aria-hidden="true" />
 
       <div className="profile-with-insta">
+        {/* ✅ readOnly 모드 → ProfileCard가 인스타 버튼을 알아서 렌더링 */}
         <ProfileCard
           imageSrc={typeImageUrl2}
           name={name}
@@ -79,21 +79,6 @@ export default function YouProfile({ userId }) {
           introduce={introduce}
           instagramUrl={instagramUrl}
         />
-
-        {instagramUrl && (
-          <a
-            href={
-              instagramUrl.startsWith("http")
-                ? instagramUrl
-                : `https://instagram.com/${instagramUrl}`
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            className="insta-btn"
-          >
-            <img src={instaIcon} alt="인스타그램" className="insta-icon" />
-          </a>
-        )}
       </div>
 
       <div className="result-info">
