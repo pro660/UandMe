@@ -5,13 +5,12 @@ import { getAuth } from "firebase/auth";
 
 // ✅ .env에서 Firebase 설정 가져오기
 const firebaseConfig = {
-  apiKey: "AIzaSyDrqAqjF9EYptFsoZP9MHKs2wLWn4UA8vM",
-  authDomain: "youandme-6c0c3.firebaseapp.com",
-  projectId: "youandme-6c0c3",
-  storageBucket: "youandme-6c0c3.firebasestorage.app",
-  messagingSenderId: "458618570969",
-  appId: "1:458618570969:web:fe7fb194d548f2c569d6c8",
-  measurementId: "G-QLJKWSHSSN"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
 // Firebase 앱 초기화
