@@ -214,8 +214,11 @@ export default function ChatRoom() {
       {/* 상대방 프로필 모달 */}
       {showProfile && peerId && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <YouProfile userId={peerId} />
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()} // 배경 클릭 시 닫기, 내부 클릭 유지
+          >
+            <YouProfile userId={peerId} onClose={() => setShowProfile(false)} />
           </div>
         </div>
       )}

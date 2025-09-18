@@ -4,7 +4,7 @@ import ProfileCard from "../mypage/ProfileCard.jsx";
 import api from "../../api/axios.js"; // ✅ axios 인스턴스
 import "../../css/signup/ResultPage.css"; // 기존 스타일 재활용
 
-export default function YouProfile({ userId }) {
+export default function YouProfile({ userId, onClose }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,9 @@ export default function YouProfile({ userId }) {
     return (
       <div className="result-page">
         <div className="arch-box" aria-hidden="true" />
-        <div style={{ marginTop: "5rem", textAlign: "center" }}>불러오는 중...</div>
+        <div style={{ marginTop: "5rem", textAlign: "center" }}>
+          불러오는 중...
+        </div>
       </div>
     );
   }
@@ -63,11 +65,29 @@ export default function YouProfile({ userId }) {
   } = user;
 
   return (
-    <div className="result-page">
+    <div className="result-page" style={{ position: "relative" }}>
       <div className="arch-box" aria-hidden="true" />
 
+      {/* ✅ 닫기 버튼 */}
+      {onClose && (
+        <button
+          className="close-btn"
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            fontSize: "1.5rem",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          ✕
+        </button>
+      )}
+
       <div className="profile-with-insta">
-        {/* ✅ readOnly 모드 → ProfileCard가 인스타 버튼을 알아서 렌더링 */}
         <ProfileCard
           imageSrc={typeImageUrl2}
           name={name}
