@@ -225,7 +225,7 @@
 .insta-btn-inside {
   position: absolute;
   bottom: 1rem;
-  right: 1rem;
+  right: 2rem;
   width: 44px;   /* 원 크기 */
   height: 44px;
   border-radius: 50%;
