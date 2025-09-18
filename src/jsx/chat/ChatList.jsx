@@ -1,4 +1,3 @@
-// src/jsx/chat/ChatList.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -10,144 +9,36 @@ import useChatStore from "../../api/chatStore";
 import WarningIcon from "../../image/home/warning.svg";
 import Loader from "../common/Loader"; // ✅ 로더 컴포넌트
 
-const DEBUG = true; // ← 필요 시 false로 꺼도 됨
-
 export default function ChatList() {
   const { rooms, setRooms } = useChatStore();
   const { user } = useUserStore();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // ✅ 로딩 상태
 
-  // ✅ Timestamp 안전 포맷터
-  function formatTime(ts) {
-    if (!ts) return "";
-    try {
-      const d =
-        typeof ts.toDate === "function"
-          ? ts.toDate()
-          : ts?.seconds
-          ? new Date(ts.seconds * 1000)
-          : new Date(ts); // 혹시 숫자(ms)로 들어오는 경우 대비
-      if (Number.isNaN(d.getTime())) return "";
-      return d.toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return "";
-    }
-  }
-
-  // ✅ Firestore에서 내가 속한 채팅방 불러오기 (구버전/신규 호환)
+  // ✅ Firestore에서 내가 속한 채팅방 불러오기
   useEffect(() => {
-    const uidNum = Number(user?.userId);
-    if (!Number.isFinite(uidNum)) {
-      DEBUG && console.warn("[ChatList] invalid uid → skip subscribe", { uid: user?.userId });
-      return;
-    }
+    if (!user?.userId) return;
 
-    const uidStr = String(uidNum);
-
-    // 과거: participants가 ["8","9"] (문자열)
-    // 현재: participants가 [8,9] (숫자)
     const q = query(
       collection(db, "chatRooms"),
-      where("participants", "array-contains-any", [uidNum, uidStr])
+      where("participants", "array-contains", String(user.userId))
     );
 
-    DEBUG && console.info("[ChatList] subscribe query", {
-      uidNum,
-      uidStr,
-      where: 'array-contains-any',
+    setLoading(true); // 구독 시작 시 로딩 켜기
+    const unsub = onSnapshot(q, (snapshot) => {
+      const roomList = snapshot.docs.map((doc) => ({
+        roomId: doc.id,
+        ...doc.data(),
+      }));
+      setRooms(roomList);
+      setLoading(false); // 데이터 들어오면 로딩 끄기
     });
 
-    setLoading(true);
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const ids = snapshot.docs.map((d) => d.id);
-        DEBUG && console.log(`[ChatList] snapshot size=${snapshot.size}`, ids);
-
-        const list = snapshot.docs.map((docSnap) => {
-          const data = docSnap.data();
-          const room = { roomId: docSnap.id, ...data };
-
-          // ── 디버깅: 방별 상세 로그 ─────────────────────────────────────────
-          if (DEBUG) {
-            console.groupCollapsed(`[Room] ${room.roomId}`);
-            const rawParts = room.participants || [];
-            const parts = rawParts.map((v) => Number(v));
-            const types = rawParts.map((v) => typeof v);
-            const myIdNumLog = uidNum;
-
-            const peerIdNum = parts.find((id) => id !== myIdNumLog);
-            const peerIdStr = peerIdNum != null ? String(peerIdNum) : undefined;
-
-            let peer = undefined;
-            let peerPath = "none";
-            if (peerIdStr && room.peers?.[peerIdStr]) {
-              peer = room.peers[peerIdStr];
-              peerPath = `peers["${peerIdStr}"]`;
-            } else {
-              const fallback = Object.values(room.peers || {}).find(
-                (p) => Number(p?.userId) === peerIdNum
-              );
-              if (fallback) {
-                peer = fallback;
-                peerPath = 'peers[userId==peerIdNum] (fallback)';
-              }
-            }
-
-            const unreadKeys = Object.keys(room.unread || {});
-            const unreadMine = (room.unread || {})[String(myIdNumLog)] ?? 0;
-
-            console.log("participants (raw)", rawParts);
-            console.log("participants (Number)", parts);
-            console.log("participants types", types);
-            console.log("myIdNum", myIdNumLog, "peerIdNum", peerIdNum, "peerPath", peerPath);
-            console.log("peer", peer);
-            console.log("unread keys", unreadKeys, "unreadMine", unreadMine);
-            console.log("lastMessage", room.lastMessage);
-            console.groupEnd();
-          }
-          // ────────────────────────────────────────────────────────────────────
-
-          return room;
-        });
-
-        // 최근 메시지 순 정렬(없으면 뒤로)
-        list.sort((a, b) => {
-          const at =
-            a?.lastMessage?.createdAt?.seconds ??
-            (a?.lastMessage?.createdAt?.toDate
-              ? a.lastMessage.createdAt.toDate().getTime() / 1000
-              : 0);
-          const bt =
-            b?.lastMessage?.createdAt?.seconds ??
-            (b?.lastMessage?.createdAt?.toDate
-              ? b.lastMessage.createdAt.toDate().getTime() / 1000
-              : 0);
-        return (bt || 0) - (at || 0);
-        });
-
-        setRooms(list);
-        setLoading(false);
-        DEBUG && console.info("[ChatList] rooms set", { count: list.length });
-      },
-      (err) => {
-        setLoading(false);
-        console.error("[ChatList] onSnapshot error", err);
-      }
-    );
-
-    return () => {
-      DEBUG && console.info("[ChatList] unsubscribe");
-      unsub();
-    };
+    return () => unsub();
   }, [user?.userId, setRooms]);
 
+  // ✅ 로딩 중에는 로더만 보여주기
   if (loading) {
     return (
       <div style={{ padding: "10px", textAlign: "center", marginTop: "5rem" }}>
@@ -189,39 +80,9 @@ export default function ChatList() {
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {rooms.map((room) => {
-            const myIdNum = Number(user.userId);
-            const myIdStr = String(myIdNum);
-
-            // participants는 문자열/숫자 혼재 가능 → 숫자화
-            const parts = (room.participants || []).map((v) => Number(v));
-            const peerIdNum = parts.find((id) => id !== myIdNum);
-            const peerIdStr = peerIdNum != null ? String(peerIdNum) : undefined;
-
-            // ✅ 상대 프로필 안전 접근
-            // 1순위: 정상 키 접근
-            // 2순위: 값의 userId가 peerIdNum과 일치하는 항목 탐색(구데이터 보정)
-            const peer =
-              (peerIdStr && room.peers?.[peerIdStr]) ||
-              Object.values(room.peers || {}).find(
-                (p) => Number(p?.userId) === peerIdNum
-              );
-
-            // ✅ 내 unread 카운트 (키는 항상 문자열)
-            const unreadCount = room.unread?.[myIdStr] || 0;
-
-            // 마지막 메시지 텍스트/시간
-            const lastText = room.lastMessage?.text || "대화를 시작해보세요!";
-            const lastTime = formatTime(room.lastMessage?.createdAt);
-
-            // (선택) 렌더 타임 로그
-            DEBUG &&
-              console.debug("[ChatList] render row", {
-                roomId: room.roomId,
-                myIdNum,
-                peerIdNum,
-                peerFound: Boolean(peer),
-                unreadCount,
-              });
+            // 내 userId 기준으로 상대방 정보 꺼내기
+            const peer = room.peers?.[String(user.userId)];
+            const unreadCount = room.unread?.[String(user.userId)] || 0;
 
             return (
               <li
@@ -247,7 +108,6 @@ export default function ChatList() {
                       borderRadius: "50%",
                       objectFit: "cover",
                       marginRight: "12px",
-                      background: "#f2f2f2",
                     }}
                   />
                   <div>
@@ -258,7 +118,7 @@ export default function ChatList() {
                         marginBottom: "4px",
                       }}
                     >
-                      {peer?.nickname || peer?.name || "상대방"}
+                      {peer?.nickname || peer?.name}
                     </div>
                     <div
                       style={{
@@ -270,7 +130,7 @@ export default function ChatList() {
                         maxWidth: "200px",
                       }}
                     >
-                      {lastText}
+                      {room.lastMessage?.text || "대화를 시작해보세요!"}
                     </div>
                   </div>
                 </div>
@@ -284,7 +144,15 @@ export default function ChatList() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {lastTime}
+                    {room.lastMessage?.createdAt
+                      ? new Date(
+                          room.lastMessage.createdAt.seconds * 1000
+                        ).toLocaleTimeString("ko-KR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : ""}
                   </div>
 
                   {unreadCount > 0 && (
@@ -314,3 +182,4 @@ export default function ChatList() {
     </div>
   );
 }
+
