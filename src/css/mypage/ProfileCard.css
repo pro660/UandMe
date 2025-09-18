@@ -224,18 +224,19 @@
 /* 카드 내부 인스타 버튼 */
 .insta-btn-inside {
   position: absolute;
-  bottom: 1rem;
-  right: 1rem;
+  top: 1.5rem;    /* ✅ 위에서 1.5rem 내려오기 */
+  right: 1rem;    /* ✅ 오른쪽에서 1rem */
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .insta-btn-inside img {
-  width: 25px;
-  height: 25px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
