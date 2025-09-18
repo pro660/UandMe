@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
@@ -7,11 +7,14 @@ import useChatStore from "../../api/chatStore";
 
 // ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
+import Loader from "../common/Loader"; // ✅ 로더 컴포넌트
 
 export default function ChatList() {
   const { rooms, setRooms } = useChatStore();
   const { user } = useUserStore();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true); // ✅ 로딩 상태
 
   // ✅ Firestore에서 내가 속한 채팅방 불러오기
   useEffect(() => {
@@ -19,19 +22,30 @@ export default function ChatList() {
 
     const q = query(
       collection(db, "chatRooms"),
-      where("participants", "array-contains", String(user.userId)) // 🔑 문자열 변환
+      where("participants", "array-contains", String(user.userId))
     );
 
+    setLoading(true); // 구독 시작 시 로딩 켜기
     const unsub = onSnapshot(q, (snapshot) => {
       const roomList = snapshot.docs.map((doc) => ({
         roomId: doc.id,
         ...doc.data(),
       }));
       setRooms(roomList);
+      setLoading(false); // 데이터 들어오면 로딩 끄기
     });
 
     return () => unsub();
   }, [user?.userId, setRooms]);
+
+  // ✅ 로딩 중에는 로더만 보여주기
+  if (loading) {
+    return (
+      <div style={{ padding: "10px", textAlign: "center", marginTop: "5rem" }}>
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "10px" }}>
@@ -68,7 +82,7 @@ export default function ChatList() {
           {rooms.map((room) => {
             // 내 userId 기준으로 상대방 정보 꺼내기
             const peer = room.peers?.[String(user.userId)];
-            const unreadCount = room.unread?.[String(user.userId)] || 0; // 🔑 안읽음 개수
+            const unreadCount = room.unread?.[String(user.userId)] || 0;
 
             return (
               <li

@@ -6,6 +6,7 @@ import logoSvg from "../../image/loginPage/logo.svg";
 import backgroundImage from "../../image/loginPage/background.png";
 import api from "../../api/axios";
 import useUserStore from "../../api/userStore";
+import Loader from "../common/Loader";
 
 // 🔑 Firebase Auth
 import { signInWithCustomToken } from "firebase/auth";
@@ -163,7 +164,7 @@ export default function LoginOrGate() {
   if (busy) {
     return (
       <main className="login-root" role="main" style={{ padding: 24 }}>
-        로그인 처리 중...
+        <Loader />
       </main>
     );
   }
