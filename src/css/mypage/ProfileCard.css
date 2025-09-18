@@ -226,8 +226,8 @@
   position: absolute;
   bottom: 1.5rem;
   right: 1rem;
-  width: 59px;   /* 아이콘 크기 */
-  height: 50px;
+  width: 40px;   /* 아이콘 크기 */
+  height: 40px;
   border-radius: 8px;
   background: transparent;
   display: flex;
