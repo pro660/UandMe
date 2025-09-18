@@ -1,15 +1,24 @@
+/* 전체 페이지 스크롤 막기 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* ✅ body 스크롤 방지 */
+}
+
 .chatroom {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-    background: radial-gradient(
+  height: 100dvh; /* ✅ 모바일 브라우저 대응 */
+  background: radial-gradient(
     circle at 70% 20%,   /* 그라데이션 시작 위치 (우측 상단에 한방울) */
     rgba(255, 105, 195, 0.15), /* FF69C3, 투명도 15% */
     rgba(255, 255, 255, 1) 70% /* 바깥쪽은 흰색 */
   );
-  padding-top: 4.5rem;
+  padding-top: 4.5rem; /* ✅ 헤더 높이만큼 공간 확보 */
 }
 
+/* 상단 헤더 */
 .chatroom-header {
   display: flex;
   align-items: center;
@@ -18,11 +27,11 @@
   border-bottom: 1px solid #eee;
   font-weight: bold;
 
-  position: fixed; /* ✅ 화면 상단에 고정 */
-  top: 4.5rem;
+  position: fixed; /* ✅ 화면 상단 고정 */
+  top: 0; /* ✅ 최상단에 붙임 */
   left: 0;
   right: 0;
-  z-index: 1000; /* ✅ 다른 요소 위로 */
+  z-index: 1000;
 }
 
 .chatroom-header .back-btn {
@@ -33,13 +42,16 @@
   cursor: pointer;
 }
 
+/* 메시지 영역 (여기만 스크롤 가능) */
 .chatroom-messages {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* ✅ iOS 부드러운 스크롤 */
   padding: 16px;
-  padding-bottom: 10rem; /* ✅ 네비게이션 바 높이 + 여유 */
+  padding-bottom: 8rem; /* ✅ 입력창 + 네비게이션 여유 공간 */
 }
 
+/* 메시지 아이템 */
 .chat-msg {
   display: flex;
   margin-bottom: 12px;
@@ -83,12 +95,12 @@
 
 .other .bubble {
   background: white;
-  border-radius: 0 18px 18px 18px;
+  border-radius: 0 18px 18px 18px; /* 왼쪽 말풍선 */
 }
 
 .me .bubble {
   background: #F7FBFF;
-  border-radius: 18px 0 18px 18px;
+  border-radius: 18px 0 18px 18px; /* 오른쪽 말풍선 */
 }
 
 .time {
@@ -96,18 +108,19 @@
   color: #575757;
 }
 
+/* 하단 입력창 */
 .chatroom-input {
   display: flex;
   padding: 8px;
   border-top: 1px solid #eee;
   background: white;
 
-  position: fixed; /* ✅ 화면 하단에 고정 */
-  bottom: 4rem; /* ✅ 네비게이션 높이만큼 띄우기 */
+  position: fixed; /* ✅ 화면 하단 고정 */
+  bottom: 4rem; /* ✅ 네비게이션 높이만큼 띄우기 (상황에 맞게 조절) */
   left: 0;
   right: 0;
 
-  z-index: 1000; /* ✅ 메뉴바보다 위로 */
+  z-index: 1000;
 }
 
 .chatroom-input input {
@@ -130,8 +143,6 @@
   cursor: pointer;
 
   display: flex; /* ✅ flex로 중앙 정렬 */
-  align-items: center; /* 세로 가운데 */
-  justify-content: center; /* 가로 가운데 */
-
-  cursor: pointer;
+  align-items: center;
+  justify-content: center;
 }

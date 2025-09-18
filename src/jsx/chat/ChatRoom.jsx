@@ -60,7 +60,7 @@ export default function ChatRoom() {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const msg = change.doc.data();
-          if (msg.senderId !== String(user.userId)) {
+          if (String(msg.senderId) !== String(user.userId)) {
             markAsRead(roomId, user.userId);
           }
         }
@@ -84,12 +84,12 @@ export default function ChatRoom() {
 
   async function sendMessage() {
     if (!input.trim()) return;
-    const senderId = String(user.userId);
+    const senderId = String(user.userId); // ✅ 문자열 고정
 
     const messageRef = collection(db, "chatRooms", roomId, "messages");
     await addDoc(messageRef, {
       text: input,
-      senderId,
+      senderId, // ✅ 문자열 저장
       createdAt: serverTimestamp(),
     });
 
@@ -97,7 +97,7 @@ export default function ChatRoom() {
     const roomRef = doc(db, "chatRooms", roomId);
     const roomSnap = await getDoc(roomRef);
     const participants = roomSnap.data()?.participants || [];
-    const peerId = participants.find((id) => id !== senderId);
+    const peerId = participants.find((id) => String(id) !== senderId);
 
     await updateDoc(roomRef, {
       lastMessage: {
@@ -105,17 +105,17 @@ export default function ChatRoom() {
         senderId,
         createdAt: serverTimestamp(),
       },
-      [`unread.${peerId}`]: increment(1),
+      [`unread.${String(peerId)}`]: increment(1),
     });
 
     setInput("");
   }
 
-  // ✅ 상대방 정보 추출
+  // ✅ 상대방 정보 추출 (내 userId 제외)
   const peerId =
     roomInfo?.participants?.find((id) => String(id) !== String(user.userId)) ||
     null;
-  const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
+  const peerData = peerId ? roomInfo?.peers?.[String(peerId)] : null;
 
   return (
     <div className="chatroom">
@@ -157,8 +157,8 @@ export default function ChatRoom() {
       {/* 메시지 영역 */}
       <div className="chatroom-messages">
         {messages.map((msg) => {
-          const isMe = msg.senderId === String(user.userId);
-          const senderData = roomInfo?.peers?.[msg.senderId] || {};
+          const isMe = String(msg.senderId) === String(user.userId); // ✅ 문자열 비교
+          const senderData = roomInfo?.peers?.[String(msg.senderId)] || {};
           return (
             <div key={msg.id} className={`chat-msg ${isMe ? "me" : "other"}`}>
               {!isMe && (
@@ -206,7 +206,7 @@ export default function ChatRoom() {
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
           <div
             className="modal-content"
-            onClick={(e) => e.stopPropagation()} // 배경 클릭 시 닫히고, 내부 클릭은 유지
+            onClick={(e) => e.stopPropagation()}
           >
             <YouProfile userId={peerId} />
           </div>
