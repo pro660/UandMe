@@ -81,6 +81,7 @@ export default function YouProfile({ userId, onClose }) {
             background: "none",
             border: "none",
             cursor: "pointer",
+            color: "black",
           }}
         >
           ✕

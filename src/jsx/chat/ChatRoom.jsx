@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
@@ -21,25 +21,44 @@ import YouProfile from "../mypage/YouProfile.jsx";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
-  const navigate = useNavigate(); // ✅ 네비게이터 훅
+  const navigate = useNavigate();
   const { user } = useUserStore();
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
 
-  // ✅ 모달 상태
   const [showProfile, setShowProfile] = useState(false);
 
-  // ✅ 내 아이디 문자열 고정
   const myId = String(user?.userId || "");
 
-  // ✅ body 스크롤 막기 (채팅방 들어왔을 때만)
+  // ✅ refs
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const chatroomRef = useRef(null);
+
+  // ✅ body 스크롤 막기
   useEffect(() => {
-    document.body.style.overflow = "hidden"; // 스크롤 막기
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "auto"; // 나가면 원복
+      document.body.style.overflow = "auto";
     };
+  }, []);
+
+  // ✅ ResizeObserver: 키보드 대응
+  useEffect(() => {
+    if (!chatroomRef.current) return;
+
+    const el = chatroomRef.current;
+
+    const resizeObserver = new ResizeObserver(() => {
+      // viewport 높이에 맞게 chatroom 높이 갱신
+      el.style.height = `${window.innerHeight}px`;
+    });
+
+    resizeObserver.observe(document.body);
+
+    return () => resizeObserver.disconnect();
   }, []);
 
   // ✅ 방 정보 불러오기
@@ -82,6 +101,11 @@ export default function ChatRoom() {
     return () => unsub();
   }, [roomId, myId]);
 
+  // ✅ 메시지 변경 시 맨 아래로 스크롤
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   // ✅ 방 입장 시 unread 초기화
   useEffect(() => {
     if (roomId && myId) {
@@ -106,7 +130,6 @@ export default function ChatRoom() {
       createdAt: serverTimestamp(),
     });
 
-    // 방 메타데이터 업데이트
     const roomRef = doc(db, "chatRooms", roomId);
     const roomSnap = await getDoc(roomRef);
     const participants = (roomSnap.data()?.participants || []).map(String);
@@ -118,6 +141,7 @@ export default function ChatRoom() {
     });
 
     setInput("");
+    inputRef.current?.focus(); // ✅ 메시지 보내도 키보드 유지
   }
 
   // ✅ 상대방 정보 추출
@@ -126,12 +150,12 @@ export default function ChatRoom() {
   const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
 
   return (
-    <div className="chatroom">
+    <div className="chatroom" ref={chatroomRef}>
       {/* 상단 헤더 */}
       <div className="chatroom-header">
         <button className="back-btn" onClick={() => navigate("/chat")}>
           ←
-        </button>{" "}
+        </button>
         {peerData ? (
           <div
             style={{
@@ -197,11 +221,14 @@ export default function ChatRoom() {
             </div>
           );
         })}
+        {/* ✅ 스크롤 기준점 */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 입력창 */}
       <div className="chatroom-input">
         <input
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="메세지를 입력해주세요."
@@ -216,7 +243,7 @@ export default function ChatRoom() {
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
           <div
             className="modal-content"
-            onClick={(e) => e.stopPropagation()} // 배경 클릭 시 닫기, 내부 클릭 유지
+            onClick={(e) => e.stopPropagation()}
           >
             <YouProfile userId={peerId} onClose={() => setShowProfile(false)} />
           </div>
