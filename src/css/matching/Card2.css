@@ -1,3 +1,8 @@
+:root{
+  --arch-height: 45%;     /* 아치가 카드 바닥에서 차지하는 높이 */
+  --arch-radius: 44px;    /* 아치 윗모서리 둥근 정도(양끝만 둥글게) */
+}
+
 /* ===== 제목 ===== */
 .title {
   background-color: #f9fafb;
@@ -21,27 +26,18 @@
   width: 100%;
   max-width: 40rem;
   height: 22rem;
-  touch-action: pan-y; /* 세로 스크롤 유지, 가로 드래그는 우리가 처리 */
+  touch-action: pan-y;
   user-select: none;
-
-  /* 화면 밖 카드는 잘라내서 가장자리에 일찍 등장시키되 넘친 부분은 숨김 */
   overflow: hidden;
-
-  /* (선택) 미관 */
   border-radius: 1rem;
-  /* border: 1px solid #ddd; */
 }
 
 /* 스냅(손 뗄 때만) 부드럽게 */
-.card-wrap.snapping .slot {
-  transition: transform .26s ease;
-}
-
-/* 드래그 방향별로 약간 다른 이징을 주고 싶다면 클래스 활용 가능 */
+.card-wrap.snapping .slot { transition: transform .26s ease; }
 .card-wrap.snapping.dir-left  .slot { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
 .card-wrap.snapping.dir-right .slot { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
 
-/* ===== 슬롯(–2, –1, 0, +1, +2) ===== */
+/* ===== 슬롯 ===== */
 .slot {
   position: absolute;
   top: 50%;
@@ -54,11 +50,28 @@
   will-change: transform;
 }
 
-/* ===== 카드 공통 ===== */
+/* ===== 카드 ===== */
 .card {
+  position: relative;
   width: 100%;
   height: 100%;
-  background: #FFF5FA;
+  /* 좌우 11%만 핑크, 중앙은 연핑크 */
+  background:
+  linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.35) 0%,
+    rgba(255,255,255,0.4) 20%,
+    rgba(251,150,212,0.8) 100%
+  ),
+  linear-gradient(
+    to right,
+    rgba(251,150,212,0.5) 0%,
+    rgba(251,150,212,0.5) 11%,
+    #FFE3F4 50%,
+    rgba(251,150,212,0.5) 89%,
+    rgba(251,150,212,0.5) 100%
+  );
+
   border-radius: 1rem;
   box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
   display: flex;
@@ -67,31 +80,119 @@
   gap: .6rem;
   padding: 1rem;
   backface-visibility: hidden;
+  overflow: hidden;                 /* 내부 아치 잘림 방지용 컨테이너 */
   will-change: transform;
 }
 
+.card-stars { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+
+.card-stars .star {
+  position: absolute;
+  user-select: none;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 2px 3px rgba(0,0,0,.3));
+}
+
+
+
+/* ===== 카드 안쪽 하단 아치 ===== */
+/* 평평한 상단 + 좌우만 둥근 느낌 → border-top-left/right-radius 사용 */
+.card .arch{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;                         /* 카드 바닥에 붙이기 */
+  height: var(--arch-height);        /* 아치 높이 */
+  background: #fff;
+  border-top-left-radius:  var(--arch-radius);
+  border-top-right-radius: var(--arch-radius);
+  z-index: -1;
+}
+
+/* ===== 콘텐츠는 아치 위로 ===== */
+.card .content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+}
+
+/* 아치 내부 텍스트 */
+.arch-content{
+  position: relative;
+  z-index: 1;
+  height: 0rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;          /* 아치 내부 중앙 정렬 */
+}
+
+.arch-content .name {
+  margin-top: 10rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color:#575757;
+}
+.arch-content .major {
+  margin-top: -1rem;
+  margin-bottom: 1.6rem;
+  font-size: .75rem;
+  font-weight: 200;
+  color: #575757;
+}
+.arch-content .msg {
+  font-size: .8rem;
+  font-weight: 100;
+  color: #575757;
+}
+.card-stars .star {
+  position: absolute;
+  user-select: none;
+  filter: invert(0) saturate(200%) brightness(1.8) contrast(2) drop-shadow(0 2px 3px rgba(1,1,1,0.5));
+}
+
+
 /* ===== 이미지/텍스트 ===== */
 .img-wrap {
-  width: 7.5rem;
-  height: 7.5rem;
-  border-radius: 1rem;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 0.2rem 0.6rem rgba(0,0,0,.08);
+  background: transparent;   /* ⬅️ #fff 제거 */
+  box-shadow: none;          /* ⬅️ 그림자 제거(원하면 남겨도 됨) */
 }
-.img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display:block;
+
+.img-frame {
+  width: 8rem;
+  height: 8rem;
+  
+  margin-top: 1rem;
+
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
-.info h3 { margin: 0; font-size: 1.1rem; }
+
+.info h3 { margin: 0; font-size: 1.1rem; color:#444; }
 .info .major { margin: 0; font-size: .9rem; color: #666; }
 .info .msg { margin: .2rem 0 0; font-size: .95rem; color: #333; }
 
+.no-match {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+
+  margin-top: 10rem;
+}
+
 /* 접근성 */
 @media (prefers-reduced-motion: reduce) {
-  .card-wrap.snapping .slot {
-    transition: none;
+  .card-wrap.snapping .slot { transition: none; }
+}
+
+@media (max-width: 380px) {
+  /* 타이틀은 음수 마진 제거하고 간격만 유지 */
+  .title{
+    padding-top: 2.5rem;   /* 필요시 조절 */
+    margin-bottom: -8rem;      /* ⬅️ 겹침 원인 제거 */
   }
 }
