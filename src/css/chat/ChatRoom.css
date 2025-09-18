@@ -15,7 +15,7 @@
   min-height: 100dvh;
 
   /* 헤더가 fixed라서 상단 여백 확보 */
-  padding-top: 5rem;
+  padding-top: 4rem;
 
   background: radial-gradient(
     circle at 70% 20%,
@@ -68,8 +68,6 @@
 
   /* 오래된 iOS용 fallback */
   padding-bottom: calc(var(--inputbar-h) + constant(safe-area-inset-bottom));
-
-  padding-top: 5rem !important;
 }
 
 /* 메시지 */
@@ -81,13 +79,13 @@
 
 .chat-msg.other {
   align-items: flex-start;
-  margin-left: 8px !important;
+  margin-left: 10px !important;
 }
 
 .chat-msg.me {
   justify-content: flex-end;
   text-align: right;
-  margin-right: 8px !important;
+  margin-right: 10px !important;
 }
 
 .avatar {
