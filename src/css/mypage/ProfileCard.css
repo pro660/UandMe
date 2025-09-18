@@ -226,22 +226,16 @@
   position: absolute;
   bottom: 1rem;
   right: 1rem;
-  width: 44px;   /* 원 크기 */
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* ✅ 아이콘 삐져나오는 거 방지 */
 }
 
 .insta-btn-inside img {
-  max-width: 70%;   /* ✅ 원 안에 꽉 차게 */
-  max-height: 70%;
-  right: 2rem;
-  object-fit: contain;
-  display: block;
+  width: 25px;
+  height: 25px;
 }
-
