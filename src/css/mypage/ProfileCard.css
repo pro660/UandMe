@@ -225,9 +225,11 @@
 .insta-btn-inside {
   position: absolute;
   bottom: 2rem;
-  right: 0.5rem;
+  right: -0.5rem;
   width: 36px;   /* 아이콘 크기 */
   height: 36px;
+  border-radius: 8px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
