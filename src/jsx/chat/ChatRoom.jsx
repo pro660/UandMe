@@ -19,6 +19,7 @@ import { FaArrowUp } from "react-icons/fa";
 import "../../css/chat/ChatRoom.css";
 import YouProfile from "../mypage/YouProfile.jsx";
 
+
 export default function ChatRoom() {
   const { roomId } = useParams();
   const { user } = useUserStore();
@@ -27,29 +28,22 @@ export default function ChatRoom() {
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
 
-  // ✅ 모달 상태
   const [showProfile, setShowProfile] = useState(false);
 
-  // ✅ 방 정보 불러오기
   useEffect(() => {
     if (!roomId) return;
     const roomRef = doc(db, "chatRooms", roomId);
     getDoc(roomRef).then((snap) => {
-      if (snap.exists()) {
-        setRoomInfo(snap.data());
-      }
+      if (snap.exists()) setRoomInfo(snap.data());
     });
   }, [roomId]);
 
-  // ✅ 메시지 실시간 구독
   useEffect(() => {
     if (!roomId) return;
-
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "asc")
     );
-
     const unsub = onSnapshot(q, (snapshot) => {
       const newMessages = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -66,11 +60,9 @@ export default function ChatRoom() {
         }
       });
     });
-
     return () => unsub();
   }, [roomId, user?.userId]);
 
-  // ✅ 방 입장 시 unread 초기화
   useEffect(() => {
     if (roomId && user?.userId) {
       markAsRead(roomId, user.userId);
@@ -84,42 +76,37 @@ export default function ChatRoom() {
 
   async function sendMessage() {
     if (!input.trim()) return;
-    const senderId = String(user.userId); // ✅ 문자열 고정
+    const senderId = String(user.userId);
 
     const messageRef = collection(db, "chatRooms", roomId, "messages");
     await addDoc(messageRef, {
       text: input,
-      senderId, // ✅ 문자열 저장
+      senderId,
       createdAt: serverTimestamp(),
     });
 
-    // 방 메타데이터 업데이트
     const roomRef = doc(db, "chatRooms", roomId);
     const roomSnap = await getDoc(roomRef);
-    const participants = roomSnap.data()?.participants || [];
-    const peerId = participants.find((id) => String(id) !== senderId);
+    const participants = (roomSnap.data()?.participants || []).map(String);
+    const peerId = participants.find((id) => id !== senderId);
 
     await updateDoc(roomRef, {
-      lastMessage: {
-        text: input,
-        senderId,
-        createdAt: serverTimestamp(),
-      },
-      [`unread.${String(peerId)}`]: increment(1),
+      lastMessage: { text: input, senderId, createdAt: serverTimestamp() },
+      [`unread.${peerId}`]: increment(1),
     });
 
     setInput("");
   }
 
-  // ✅ 상대방 정보 추출 (내 userId 제외)
-  const peerId =
-    roomInfo?.participants?.find((id) => String(id) !== String(user.userId)) ||
-    null;
-  const peerData = peerId ? roomInfo?.peers?.[String(peerId)] : null;
+  // ✅ 내 아이디와 상대 아이디 구분 확실히
+  const myId = String(user.userId);
+  const participants = roomInfo?.participants?.map(String) || [];
+  const peerId = participants.find((id) => id !== myId) || null;
+  const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
 
   return (
     <div className="chatroom">
-      {/* 상단 헤더 */}
+      {/* 헤더 */}
       <div className="chatroom-header">
         <button className="back-btn">←</button>
         {peerData ? (
@@ -157,7 +144,7 @@ export default function ChatRoom() {
       {/* 메시지 영역 */}
       <div className="chatroom-messages">
         {messages.map((msg) => {
-          const isMe = String(msg.senderId) === String(user.userId); // ✅ 문자열 비교
+          const isMe = String(msg.senderId) === myId;
           const senderData = roomInfo?.peers?.[String(msg.senderId)] || {};
           return (
             <div key={msg.id} className={`chat-msg ${isMe ? "me" : "other"}`}>
@@ -166,7 +153,7 @@ export default function ChatRoom() {
                   src={senderData.typeImageUrl}
                   alt="avatar"
                   className="avatar"
-                  onClick={() => setShowProfile(true)} // ✅ 메시지 아바타 클릭도 모달 오픈
+                  onClick={() => setShowProfile(true)}
                   style={{ cursor: "pointer" }}
                 />
               )}
@@ -177,10 +164,12 @@ export default function ChatRoom() {
                 <div className="bubble">{msg.text}</div>
                 <div className="time">
                   {msg.createdAt?.toDate
-                    ? msg.createdAt.toDate().toLocaleTimeString("ko-KR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                    ? msg.createdAt
+                        .toDate()
+                        .toLocaleTimeString("ko-KR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
                     : ""}
                 </div>
               </div>
@@ -201,13 +190,10 @@ export default function ChatRoom() {
         </button>
       </div>
 
-      {/* 상대방 프로필 모달 */}
+      {/* 상대 프로필 모달 */}
       {showProfile && peerId && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <YouProfile userId={peerId} />
           </div>
         </div>

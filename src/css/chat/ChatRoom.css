@@ -10,6 +10,7 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100dvh; /* ✅ 모바일 브라우저 대응 */
+  padding-top: 5rem;
   background: radial-gradient(
     circle at 70% 20%,   /* 그라데이션 시작 위치 (우측 상단에 한방울) */
     rgba(255, 105, 195, 0.15), /* FF69C3, 투명도 15% */
