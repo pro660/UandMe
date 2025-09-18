@@ -1,12 +1,11 @@
 // src/jsx/chat/ChatRoom.jsx
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
   query,
   orderBy,
   onSnapshot,
-  addDoc,
   doc,
   updateDoc,
   serverTimestamp,
@@ -33,8 +32,9 @@ export default function ChatRoom() {
   // ✅ 모달 상태
   const [showProfile, setShowProfile] = useState(false);
 
-  // ✅ 내 아이디 문자열 고정
-  const myId = String(user?.userId || "");
+  // ✅ 내 아이디 (숫자/문자열 동시 준비)
+  const myIdNum = Number(user?.userId);
+  const myIdStr = Number.isFinite(myIdNum) ? String(myIdNum) : "";
 
   // ✅ ref
   const chatroomRef = useRef(null);
@@ -61,16 +61,30 @@ export default function ChatRoom() {
     });
   }, [roomId, navigate]);
 
-  // ✅ 상대방 정보 계산 (memo)
+  // ✅ 참가자/상대 ID 계산 (숫자 기준)
   const participants = useMemo(
-    () => (roomInfo?.participants || []).map(String),
+    () => (roomInfo?.participants || []).map(Number),
     [roomInfo]
   );
-  const peerId = useMemo(
-    () => participants.find((id) => id !== myId) || null,
-    [participants, myId]
+  const peerIdNum = useMemo(
+    () => participants.find((id) => id !== myIdNum) ?? null,
+    [participants, myIdNum]
   );
-  const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
+  const peerIdStr = peerIdNum != null ? String(peerIdNum) : null;
+
+  // ✅ peers를 userId(숫자) -> 카드데이터로 역색인
+  const peersByUserId = useMemo(() => {
+    const out = {};
+    const p = roomInfo?.peers || {};
+    for (const k of Object.keys(p)) {
+      const u = Number(p[k]?.userId);
+      if (Number.isFinite(u)) out[u] = p[k];
+    }
+    return out;
+  }, [roomInfo]);
+
+  // 헤더에 띄울 상대 정보
+  const peerData = peerIdNum != null ? peersByUserId[peerIdNum] ?? null : null;
 
   // ✅ 메시지 실시간 구독
   useEffect(() => {
@@ -97,7 +111,7 @@ export default function ChatRoom() {
 
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, myId]);
+  }, [roomId, myIdNum]);
 
   // ✅ 포커스/가시 상태 변화 시 읽음 처리
   useEffect(() => {
@@ -109,14 +123,14 @@ export default function ChatRoom() {
       document.removeEventListener("visibilitychange", onFocusOrVisible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, myId, roomId]);
+  }, [messages, myIdNum, roomId]);
 
   // ✅ 최초 입장 시 읽음 초기화
   useEffect(() => {
-    if (roomId && myId) {
-      markAsRead(roomId, myId);
+    if (roomId && myIdStr) {
+      markAsRead(roomId, myIdStr);
     }
-  }, [roomId, myId]);
+  }, [roomId, myIdStr]);
 
   // ✅ iOS Safari 키보드 대응(뷰포트 변화)
   useEffect(() => {
@@ -140,17 +154,16 @@ export default function ChatRoom() {
 
   function smartScrollToBottom(force = false) {
     if (force || isNearBottom()) {
-      // 새 메시지가 왔을 때만 자연스럽게
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 30);
     }
   }
 
-  async function markAsRead(roomId, userId) {
+  async function markAsRead(roomId, userIdStr) {
     try {
       const roomRef = doc(db, "chatRooms", roomId);
-      await updateDoc(roomRef, { [`unread.${String(userId)}`]: 0 });
+      await updateDoc(roomRef, { [`unread.${userIdStr}`]: 0 });
     } catch (e) {
       console.warn("markAsRead failed", e);
     }
@@ -158,55 +171,55 @@ export default function ChatRoom() {
 
   // 마지막 메시지가 상대가 보낸 것이고, 포커스/가시 상태일 때만 읽음 반영
   function maybeMarkAsRead(list) {
-    if (!roomId || !myId || !Array.isArray(list) || list.length === 0) return;
+    if (!roomId || !myIdStr || !Array.isArray(list) || list.length === 0) return;
     if (document.visibilityState !== "visible") return;
     if (typeof window !== "undefined" && !document.hasFocus()) return;
 
     const last = list[list.length - 1];
-    if (String(last?.senderId) !== myId) {
-      markAsRead(roomId, myId);
+    if (Number(last?.senderId) !== myIdNum) {
+      markAsRead(roomId, myIdStr);
     }
   }
 
   async function sendMessage() {
     const text = input.trim();
     if (!text) return;
-    if (!myId || !roomId) return;
-    if (!roomInfo?.participants?.length) return;
+    if (!Number.isFinite(myIdNum) || !roomId) return;
+    if (!Array.isArray(roomInfo?.participants) || roomInfo.participants.length < 2)
+      return;
 
     setSending(true);
     try {
       // ✅ 트랜잭션으로 메시지 생성 + 룸 메타 동시 갱신 (레이스 방지)
       const roomRef = doc(db, "chatRooms", roomId);
-      const msgRef = doc(collection(db, "chatRooms", roomId, "messages"));
+      const msgColRef = collection(db, "chatRooms", roomId, "messages");
 
       await runTransaction(db, async (tx) => {
         const snap = await tx.get(roomRef);
         if (!snap.exists()) throw new Error("Room not found");
         const data = snap.data() || {};
-        const parts = (data.participants || []).map(String);
-        const receiverId = parts.find((id) => id !== myId);
-        if (!receiverId) throw new Error("Peer not found");
+        const parts = (data.participants || []).map(Number);
+        const receiverIdNum = parts.find((id) => id !== myIdNum);
+        if (!Number.isFinite(receiverIdNum)) throw new Error("Peer not found");
 
-        tx.set(msgRef, {
+        const newMsgRef = doc(msgColRef); // auto-id
+        tx.set(newMsgRef, {
           text,
-          senderId: myId,
+          senderId: myIdNum, // 숫자
           createdAt: serverTimestamp(),
         });
 
         tx.update(roomRef, {
-          lastMessage: { text, senderId: myId, createdAt: serverTimestamp() },
-          [`unread.${receiverId}`]: increment(1),
+          lastMessage: { text, senderId: myIdNum, createdAt: serverTimestamp() }, // 숫자
+          [`unread.${String(receiverIdNum)}`]: increment(1), // 키는 문자열
         });
       });
 
       setInput("");
-      // 전송 후 포커스 유지 + 스크롤
       inputRef.current?.focus();
       smartScrollToBottom(true);
     } catch (e) {
       console.error("sendMessage failed:", e);
-      // TODO: 토스트 등 사용자 피드백 연결 가능
     } finally {
       setSending(false);
     }
@@ -220,7 +233,7 @@ export default function ChatRoom() {
     }
   }
 
-  // 메시지 시간 포맷 (createdAt 없을 수 있음: 대기중 로컬변이)
+  // 메시지 시간 포맷
   function formatTime(ts) {
     try {
       if (!ts?.toDate) return "";
@@ -275,8 +288,8 @@ export default function ChatRoom() {
       {/* 메시지 영역 */}
       <div className="chatroom-messages" ref={messagesWrapRef}>
         {messages.map((msg) => {
-          const isMe = String(msg.senderId) === myId;
-          const senderData = roomInfo?.peers?.[String(msg.senderId)] || {};
+          const isMe = Number(msg.senderId) === myIdNum;
+          const senderData = peersByUserId[Number(msg.senderId)] || {};
           return (
             <div key={msg.id} className={`chat-msg ${isMe ? "me" : "other"}`}>
               {!isMe && (
@@ -309,19 +322,21 @@ export default function ChatRoom() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            !myId
+            !Number.isFinite(myIdNum)
               ? "로그인 정보를 불러오는 중..."
               : !roomId
               ? "채팅방 정보를 불러오는 중..."
               : "메세지를 입력해주세요."
           }
-          disabled={sending || !myId || !roomId}
+          disabled={sending || !Number.isFinite(myIdNum) || !roomId}
         />
         <button
           type="button"
           className="send-btn"
           onClick={sendMessage}
-          disabled={sending || !input.trim() || !myId || !roomId}
+          disabled={
+            sending || !input.trim() || !Number.isFinite(myIdNum) || !roomId
+          }
           aria-busy={sending}
         >
           <FaArrowUp size={20} color="white" />
@@ -329,13 +344,10 @@ export default function ChatRoom() {
       </div>
 
       {/* 상대방 프로필 모달 */}
-      {showProfile && peerId && (
+      {showProfile && peerIdNum != null && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <YouProfile userId={peerId} onClose={() => setShowProfile(false)} />
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <YouProfile userId={peerIdNum} onClose={() => setShowProfile(false)} />
           </div>
         </div>
       )}
