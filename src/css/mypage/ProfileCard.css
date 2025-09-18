@@ -224,9 +224,9 @@
 /* 카드 내부 인스타 버튼 */
 .insta-btn-inside {
   position: absolute;
-  top: 1.5rem;    /* ✅ 위에서 1.5rem 내려오기 */
-  right: 1rem;    /* ✅ 오른쪽에서 1rem */
-  width: 36px;
+  bottom: 2rem;
+  right: 0.5rem;
+  width: 36px;   /* 아이콘 크기 */
   height: 36px;
   display: flex;
   align-items: center;
