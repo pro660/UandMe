@@ -226,8 +226,8 @@
   position: absolute;
   bottom: 1rem;
   right: 1rem;
-  width: 36px;
-  height: 36px;
+  width: 44px;   /* ✅ 원 크기 키움 */
+  height: 44px;
   border-radius: 50%;
   background: white;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
@@ -237,6 +237,8 @@
 }
 
 .insta-btn-inside img {
-  width: 20px;
-  height: 20px;
+  width: 26px;   /* ✅ 아이콘 크기 키움 */
+  height: 26px;
+  object-fit: contain;
+  vertical-align: middle; /* ✅ 세로 정렬 보정 */
 }
