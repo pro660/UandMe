@@ -68,6 +68,8 @@
 
   /* 오래된 iOS용 fallback */
   padding-bottom: calc(var(--inputbar-h) + constant(safe-area-inset-bottom));
+
+  padding-top: 0.5rem;
 }
 
 /* 메시지 */
