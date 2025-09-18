@@ -1,11 +1,3 @@
-/* 전체 페이지 스크롤 막기 */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden; /* ✅ body 스크롤 방지 */
-}
-
 .chatroom {
   display: flex;
   flex-direction: column;

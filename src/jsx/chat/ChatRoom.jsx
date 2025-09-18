@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
   query,
@@ -21,6 +21,7 @@ import YouProfile from "../mypage/YouProfile.jsx";
 
 export default function ChatRoom() {
   const { roomId } = useParams();
+  const navigate = useNavigate(); // ✅ 네비게이터 훅
   const { user } = useUserStore();
 
   const [messages, setMessages] = useState([]);
@@ -30,8 +31,16 @@ export default function ChatRoom() {
   // ✅ 모달 상태
   const [showProfile, setShowProfile] = useState(false);
 
-  // ✅ 내 아이디를 항상 문자열로
+  // ✅ 내 아이디 문자열 고정
   const myId = String(user?.userId || "");
+
+  // ✅ body 스크롤 막기 (채팅방 들어왔을 때만)
+  useEffect(() => {
+    document.body.style.overflow = "hidden"; // 스크롤 막기
+    return () => {
+      document.body.style.overflow = "auto"; // 나가면 원복
+    };
+  }, []);
 
   // ✅ 방 정보 불러오기
   useEffect(() => {
@@ -60,7 +69,6 @@ export default function ChatRoom() {
       }));
       setMessages(newMessages);
 
-      // 새로운 메시지가 들어왔는데 내가 보낸 게 아니면 → 읽음 처리
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const msg = change.doc.data();
@@ -89,7 +97,7 @@ export default function ChatRoom() {
   async function sendMessage() {
     if (!input.trim()) return;
 
-    const senderId = myId; // ✅ 문자열 고정
+    const senderId = myId;
 
     const messageRef = collection(db, "chatRooms", roomId, "messages");
     await addDoc(messageRef, {
@@ -121,7 +129,9 @@ export default function ChatRoom() {
     <div className="chatroom">
       {/* 상단 헤더 */}
       <div className="chatroom-header">
-        <button className="back-btn">←</button>
+        <button className="back-btn" onClick={() => navigate("/chat")}>
+          ←
+        </button>{" "}
         {peerData ? (
           <div
             style={{
@@ -204,10 +214,7 @@ export default function ChatRoom() {
       {/* 상대방 프로필 모달 */}
       {showProfile && peerId && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <YouProfile userId={peerId} />
           </div>
         </div>
