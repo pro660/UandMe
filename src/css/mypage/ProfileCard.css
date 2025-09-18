@@ -225,7 +225,7 @@
 .insta-btn-inside {
   position: absolute;
   bottom: 1rem;
-  right: 2rem;
+  right: 1rem;
   width: 44px;   /* 원 크기 */
   height: 44px;
   border-radius: 50%;
@@ -240,6 +240,7 @@
 .insta-btn-inside img {
   max-width: 70%;   /* ✅ 원 안에 꽉 차게 */
   max-height: 70%;
+  right: 2rem;
   object-fit: contain;
   display: block;
 }
