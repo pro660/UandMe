@@ -85,7 +85,6 @@ export default function ChatRoom() {
     () => participants.find((id) => id !== myIdNum) ?? null,
     [participants, myIdNum]
   );
-  const peerIdStr = peerIdNum != null ? String(peerIdNum) : null;
 
   // ✅ peers를 userId(숫자) -> 카드데이터로 역색인
   const peersByUserId = useMemo(() => {

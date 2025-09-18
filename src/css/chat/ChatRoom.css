@@ -15,7 +15,7 @@
   min-height: 100dvh;
 
   /* 헤더가 fixed라서 상단 여백 확보 */
-  padding-top: 5rem;
+  padding-top: 7rem;
 
   background: radial-gradient(
     circle at 70% 20%,
@@ -59,6 +59,8 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 
+  margin-bottom: 5rem;
+
   padding: 16px;
 
   /* ✅ 입력바 높이 + 안전영역만큼 하단 여백 확보 */
@@ -76,11 +78,13 @@
 
 .chat-msg.other {
   align-items: flex-start;
+  margin-left: 8px;
 }
 
 .chat-msg.me {
   justify-content: flex-end;
   text-align: right;
+  margin-right: 8px;
 }
 
 .avatar {
@@ -136,7 +140,7 @@
   align-items: center;
   gap: 1rem;
 
-  padding: 1rem;
+  padding: 1rem 2rem;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   /* fallback */
   padding-bottom: calc(8px + constant(safe-area-inset-bottom));

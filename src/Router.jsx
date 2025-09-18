@@ -20,6 +20,8 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
+import ChatRoomDummy from "./jsx/chat/ChatRoomDummy";
+
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
@@ -91,6 +93,7 @@ function AppRouter() {
               </ChatRoomGuard>
             }
           />
+          <Route path="/chat-dummy" element={<ChatRoomDummy />} />
         </Routes>
       </Layout>
     </BrowserRouter>
