@@ -1,109 +1,137 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import "../../css/matching/Card.css";
+import starImg from "../../image/matching/star.svg";
+import Img from "../../image/home/animal.svg";
+import useMatchingStore from "../../api/matchingStore";
+import NoHuman from "../../jsx/matching/Nohuman";
 
-const candidates = [
-  { id: 1, name: "정민",   major: "항공소프트웨어공학과", msg: "반갑습니다", img: "/images/panda.png" },
-  { id: 2, name: "정재민", major: "항공소프트웨어공학과", msg: "안녕하세요", img: "/images/dog.png" },
-  { id: 3, name: "종민",   major: "항공소프트웨어공학과", msg: "좋은 하루!", img: "/images/cat.png"  },
+const FIXED_STARS = [
+  { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
+  { id: 1, left: 10, top: 50, size: 80, rot: 0, op: 0.5 },
+  { id: 2, left: 88, top: 37, size: 110, rot: 0, op: 0.6 },
 ];
 
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const rem = (r) => r * 16; // 1rem = 16px
+const rem = (r) => r * 16;
+const wrap = (i, n) => (i + n) % n;
 
-export default function Card() {
-  // 처음 상태: 1 - "2" - 3
-  const [center, setCenter] = useState(1);
+export default function Card2() {
+  // 1) 스토어 읽기 (훅 아님)
+  const candidates = useMatchingStore((s) => s.candidates) || [];
+  const N = candidates.length;
+
+  // 2) ✅ 모든 훅은 무조건 최상단에서 먼저!
+  const [center, setCenter] = useState(0);
+  const centerRef = useRef(center);
+  useEffect(() => {
+    centerRef.current = center;
+  }, [center]);
+
   const [dx, setDx] = useState(0);
   const [snapping, setSnapping] = useState(false);
+  const [dir, setDir] = useState("");
 
-  const startX = useRef(0);
   const dragging = useRef(false);
+  const lastX = useRef(0);
 
-  const THRESH = rem(6);      // 스와이프 임계(≈96px)
-  const SPREAD = rem(9);      // 좌/우 간격(≈144px)
-  const SNAP_MS = 260;        // transition과 동일
-  const GHOST_OFFSET = rem(5.2); // 고스트를 센터 옆에 붙일 거리(≈83px)
+  // 3) 그 다음에 조기 리턴
+  if (N === 0) {
+    return <NoHuman />;
+  }
+
+  // --- 이하 로직 동일 ---
+  const CARD_W = rem(13);
+  const GAP = rem(1.5);
+  const SPREAD = CARD_W + GAP;
+  const SNAP_MS = 260;
+  const MAX_DRAG = CARD_W + GAP;
 
   const onStart = (x) => {
     dragging.current = true;
     setSnapping(false);
-    startX.current = x;
+    setDir("");
+    lastX.current = x;
   };
 
   const onMove = (x) => {
     if (!dragging.current) return;
-    setDx(x - startX.current);
+    const delta = x - lastX.current;
+    lastX.current = x;
+    const nextDx = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, dx + delta));
+    setDx(nextDx);
   };
 
-  // 2단계 스냅: 1) p=-1/1까지 스냅 → 2) center 교체 후 p=0
-  const smoothTransition = (targetP, onAfter) => {
+  const completeSlide = (sign) => {
+    if (N <= 1) return;
     setSnapping(true);
-    setDx(targetP * THRESH);
+    setDir(sign < 0 ? "dir-left" : "dir-right");
+    setDx(sign * SPREAD);
     window.setTimeout(() => {
+      const nextCenter =
+        sign < 0 ? wrap(centerRef.current + 1, N) : wrap(centerRef.current - 1, N);
+      centerRef.current = nextCenter;
+      setCenter(nextCenter);
       setSnapping(false);
-      onAfter?.();
       setDx(0);
+      setDir("");
     }, SNAP_MS);
   };
 
   const onEnd = () => {
     if (!dragging.current) return;
     dragging.current = false;
-
-    const p = clamp(dx / THRESH, -1, 1);
-
-    if (p <= -1 && center < candidates.length - 1) {
-      // 왼쪽 스와이프: 오른쪽 카드가 중앙으로
-      smoothTransition(-1, () => setCenter((c) => c + 1));
-      return;
+    const absDx = Math.abs(dx);
+    const sign = dx < 0 ? -1 : 1;
+    if (absDx >= MAX_DRAG / 2) {
+      completeSlide(sign);
+    } else {
+      setSnapping(true);
+      setDx(0);
+      setTimeout(() => setSnapping(false), SNAP_MS);
     }
-    if (p >= 1 && center > 0) {
-      // 오른쪽 스와이프: 왼쪽 카드가 중앙으로
-      smoothTransition(1, () => setCenter((c) => c - 1));
-      return;
-    }
-
-    // 임계 미달 → 원위치
-    setSnapping(true);
-    setDx(0);
-    window.setTimeout(() => setSnapping(false), SNAP_MS);
   };
 
-  // 좌/우/두 칸 떨어진 인덱스 (없으면 null)
-  const L  = center - 1 >= 0 ? center - 1 : null;
-  const R  = center + 1 < candidates.length ? center + 1 : null;
-  const LL = center - 2 >= 0 ? center - 2 : null;
-  const RR = center + 2 < candidates.length ? center + 2 : null;
+  const xFarLeft = -2 * SPREAD + dx;
+  const xLeft = -1 * SPREAD + dx;
+  const xCenter = 0 * SPREAD + dx;
+  const xRight = +1 * SPREAD + dx;
+  const xFarRight = +2 * SPREAD + dx;
 
-  const p = clamp(dx / THRESH, -1, 1);
-
-  // 슬롯 위치 (덱 전체 이동 X, 슬롯 개별 이동)
-  const xLeft   = -SPREAD + p * SPREAD;
-  const xCenter = 0 + p * SPREAD;
-  const xRight  = +SPREAD + p * SPREAD;
-
-  // 페이드 아웃(사이드가 바깥으로 밀릴수록 사라짐)
-  const leftFadeOut  = p < 0 ? 1 + p : 1; // 왼쪽 드래그 시 왼쪽 카드 1→0
-  const rightFadeOut = p > 0 ? 1 - p : 1; // 오른쪽 드래그 시 오른쪽 카드 1→0
-
-  // ====== 고스트: 센터 기준 옆에서 등장 (동적 위치) ======
-  // 왼쪽 드래그(p<0): 센터 오른쪽 옆에 RR(다다음=보통 3번) 희미→진하게
-  const ghostRightOpacity = (p < 0 && RR !== null) ? -p : 0;
-  const ghostRightX = xCenter + GHOST_OFFSET;
-  const ghostRightCard = RR !== null ? candidates[RR] : null;
-
-  // 오른쪽 드래그(p>0): 센터 왼쪽 옆에 LL(다다이전=보통 1번) 희미→진하게
-  const ghostLeftOpacity = (p > 0 && LL !== null) ? p : 0;
-  const ghostLeftX = xCenter - GHOST_OFFSET;
-  const ghostLeftCard = LL !== null ? candidates[LL] : null;
+  const idxFarLeft = wrap(center - 2, N);
+  const idxLeft = wrap(center - 1, N);
+  const idxRight = wrap(center + 1, N);
+  const idxFarRight = wrap(center + 2, N);
 
   const CardBody = ({ item }) => (
     <>
-      <div className="img-wrap"><img src={item.img} alt={item.name} /></div>
-      <div className="info">
-        <h3>{item.name}</h3>
-        <p className="major">{item.major}</p>
-        <p className="msg">“{item.msg}”</p>
+      <div className="card-stars" aria-hidden="true">
+        {FIXED_STARS.map((s) => (
+          <img
+            key={s.id}
+            src={starImg}
+            alt=""
+            className="star"
+            style={{
+              left: `${s.left}%`,
+              top: `${s.top}%`,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              opacity: s.op,
+              transform: `translate(-50%, -50%) rotate(${s.rot}deg)`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="img-frame">
+        <img src={item.typeImageUrl || Img} alt={item.name} draggable={false} />
+      </div>
+
+      <div className="arch" aria-hidden={false}>
+        <div className="arch-content">
+          <p className="name">{item.name || "이름 없음"}</p>
+          <p className="major">{item.department || "학과 없음"}</p>
+          <p className="msg">“{item.introduce || "소개 없음"}”</p>
+        </div>
       </div>
     </>
   );
@@ -114,7 +142,7 @@ export default function Card() {
 
       <div className="card-root">
         <div
-          className={`card-wrap ${snapping ? "snapping" : ""}`}
+          className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
           onTouchStart={(e) => onStart(e.touches[0].clientX)}
           onTouchMove={(e) => onMove(e.touches[0].clientX)}
           onTouchEnd={onEnd}
@@ -123,69 +151,27 @@ export default function Card() {
           onMouseUp={onEnd}
           onMouseLeave={onEnd}
         >
-          {/* 왼쪽 슬롯 */}
-          {L !== null && (
-            <div
-              className="slot slot-left"
-              style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}
-            >
-              <div className="card card-left" style={{ opacity: leftFadeOut }}>
-                <CardBody item={candidates[L]} />
-              </div>
+          <>
+            <div className="slot slot-far-left" style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}>
+              <div className="card"><CardBody item={candidates[idxFarLeft]} /></div>
             </div>
-          )}
 
-          {/* 가운데 슬롯 (항상 위 z-index) */}
-          <div
-            className="slot slot-center"
-            style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
-          >
-            <div className="card card-center">
-              <CardBody item={candidates[center]} />
+            <div className="slot slot-left" style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}>
+              <div className="card"><CardBody item={candidates[idxLeft]} /></div>
             </div>
-          </div>
 
-          {/* 오른쪽 슬롯 */}
-          {R !== null && (
-            <div
-              className="slot slot-right"
-              style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}
-            >
-              <div className="card card-right" style={{ opacity: rightFadeOut }}>
-                <CardBody item={candidates[R]} />
-              </div>
+            <div className="slot slot-center" style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}>
+              <div className="card"><CardBody item={candidates[center]} /></div>
             </div>
-          )}
 
-          {/* ====== 고스트 레이어들 (센터 옆에서 동적 위치) ====== */}
-          {ghostRightCard && (
-            <div
-              className="ghost ghost-right"
-              style={{
-                transform: `translate(calc(-50% + ${ghostRightX}px), -50%)`,
-                opacity: ghostRightOpacity
-              }}
-            >
-              <div className="card ghost-card">
-                <CardBody item={ghostRightCard} />
-              </div>
+            <div className="slot slot-right" style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}>
+              <div className="card"><CardBody item={candidates[idxRight]} /></div>
             </div>
-          )}
 
-          {ghostLeftCard && (
-            <div
-              className="ghost ghost-left"
-              style={{
-                transform: `translate(calc(-50% + ${ghostLeftX}px), -50%)`,
-                opacity: ghostLeftOpacity
-              }}
-            >
-              <div className="card ghost-card">
-                <CardBody item={ghostLeftCard} />
-              </div>
+            <div className="slot slot-far-right" style={{ transform: `translate(calc(-50% + ${xFarRight}px), -50%)` }}>
+              <div className="card"><CardBody item={candidates[idxFarRight]} /></div>
             </div>
-          )}
-          {/* =============================================== */}
+          </>
         </div>
       </div>
     </>
