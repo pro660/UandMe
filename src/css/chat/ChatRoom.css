@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   height: 100dvh; /* ✅ 모바일 브라우저 대응 */
-  height: 100vh;
   max-height: 100dvh;
   padding-top: 5rem;
   background: radial-gradient(
@@ -22,7 +21,7 @@
   font-weight: bold;
 
   position: fixed; /* ✅ 화면 상단 고정 */
-  top: 0; /* ✅ 최상단에 붙임 */
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
@@ -109,11 +108,12 @@
   border-top: 1px solid #eee;
   background: white;
 
-  position: fixed; /* ✅ 화면 하단 고정 */
-  bottom: 0; /* ✅ 네비게이션 높이만큼 띄우기 (상황에 맞게 조절) */
+  position: sticky; /* ✅ fixed → sticky (키보드 대응) */
+  bottom: 0;
   left: 0;
   right: 0;
 
+  padding-bottom: env(safe-area-inset-bottom); /* ✅ iOS 홈바 대응 */
   z-index: 1000;
 }
 
@@ -136,12 +136,15 @@
   font-size: 18px;
   cursor: pointer;
 
-  display: flex; /* ✅ flex로 중앙 정렬 */
+  display: flex;
   align-items: center;
   justify-content: center;
+
+  -webkit-tap-highlight-color: transparent; /* ✅ 터치 하이라이트 제거 */
+  touch-action: manipulation; /* ✅ 모바일 터치 딜레이 방지 */
 }
 
-
+/* 모달 */
 .modal-overlay {
   position: fixed;
   top: 0;
