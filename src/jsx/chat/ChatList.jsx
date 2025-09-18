@@ -14,31 +14,44 @@ export default function ChatList() {
   const { user } = useUserStore();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true); // ✅ 로딩 상태
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Firestore에서 내가 속한 채팅방 불러오기
+  // ✅ Time formatter (Timestamp | {seconds} 모두 대응)
+  function formatTime(ts) {
+    if (!ts) return "";
+    const d = typeof ts.toDate === "function" ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : null);
+    if (!d) return "";
+    return d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: true });
+  }
+
+  // ✅ Firestore에서 내가 속한 채팅방 불러오기 (숫자 기준)
   useEffect(() => {
-    if (!user?.userId) return;
+    const uid = Number(user?.userId);
+    if (!Number.isFinite(uid)) return;
 
     const q = query(
       collection(db, "chatRooms"),
-      where("participants", "array-contains", String(user.userId))
+      // 🔄 CHANGED: 숫자 배열이므로 Number(uid) 로 검색
+      where("participants", "array-contains", uid)
     );
 
-    setLoading(true); // 구독 시작 시 로딩 켜기
-    const unsub = onSnapshot(q, (snapshot) => {
-      const roomList = snapshot.docs.map((doc) => ({
-        roomId: doc.id,
-        ...doc.data(),
-      }));
-      setRooms(roomList);
-      setLoading(false); // 데이터 들어오면 로딩 끄기
-    });
+    setLoading(true);
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const roomList = snapshot.docs.map((doc) => ({
+          roomId: doc.id,
+          ...doc.data(),
+        }));
+        setRooms(roomList);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
 
     return () => unsub();
   }, [user?.userId, setRooms]);
 
-  // ✅ 로딩 중에는 로더만 보여주기
   if (loading) {
     return (
       <div style={{ padding: "10px", textAlign: "center", marginTop: "5rem" }}>
@@ -80,9 +93,17 @@ export default function ChatList() {
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {rooms.map((room) => {
-            // 내 userId 기준으로 상대방 정보 꺼내기
-            const peer = room.peers?.[String(user.userId)];
-            const unreadCount = room.unread?.[String(user.userId)] || 0;
+            const myIdNum = Number(user.userId);
+            // 🔄 CHANGED: participants는 숫자 배열로 가정
+            const parts = (room.participants || []).map(Number);
+            const peerIdNum = parts.find((id) => id !== myIdNum);
+            const peerIdStr = peerIdNum != null ? String(peerIdNum) : undefined;
+
+            // 🔄 CHANGED: 상대 id로 peers 접근
+            const peer = peerIdStr ? room.peers?.[peerIdStr] : undefined;
+
+            // unread는 내 id 키로
+            const unreadCount = room.unread?.[String(myIdNum)] || 0;
 
             return (
               <li
@@ -108,6 +129,7 @@ export default function ChatList() {
                       borderRadius: "50%",
                       objectFit: "cover",
                       marginRight: "12px",
+                      background: "#f2f2f2",
                     }}
                   />
                   <div>
@@ -118,7 +140,7 @@ export default function ChatList() {
                         marginBottom: "4px",
                       }}
                     >
-                      {peer?.nickname || peer?.name}
+                      {peer?.nickname || peer?.name || "상대방"}
                     </div>
                     <div
                       style={{
@@ -144,15 +166,7 @@ export default function ChatList() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {room.lastMessage?.createdAt
-                      ? new Date(
-                          room.lastMessage.createdAt.seconds * 1000
-                        ).toLocaleTimeString("ko-KR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
-                      : ""}
+                    {formatTime(room.lastMessage?.createdAt)}
                   </div>
 
                   {unreadCount > 0 && (
