@@ -4,7 +4,7 @@ import useUserStore from "../../api/userStore";
 import api from "../../api/axios";
 import "../../css/mypage/ProfileCard.css";
 import editIcon from "../../image/home/edit.svg";
-import instaIcon from "../../image/home/instagram.svg";
+import { ReactComponent as InstaIcon } from "../../image/home/instagram.svg";
 import InstaAdd from "../mypage/InstaAdd.jsx"; // ✅ 인스타 모달 불러오기
 
 export default function ProfileCard({
@@ -86,7 +86,11 @@ export default function ProfileCard({
               className="introduce-edit-icon"
               onClick={() => setIsEditing(true)}
             >
-              <img src={editIcon} alt="수정하기" className="introduce-edit-img" />
+              <img
+                src={editIcon}
+                alt="수정하기"
+                className="introduce-edit-img"
+              />
             </button>
           </>
         ) : (
@@ -175,7 +179,7 @@ export default function ProfileCard({
                   className="insta-btn-inside"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <img src={instaIcon} alt="인스타그램" className="insta-icon" />
+                  <InstaIcon style={{ width: "100%", height: "100%" }} />
                 </a>
               )
             ) : (
@@ -187,7 +191,7 @@ export default function ProfileCard({
                   setShowInstaModal(true); // 모달 열기
                 }}
               >
-                <img src={instaIcon} alt="인스타그램 수정" className="insta-icon" />
+                <InstaIcon style={{ width: "100%", height: "100%" }} />
               </button>
             )}
           </div>
