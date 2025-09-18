@@ -18,6 +18,8 @@
   align-items: center;
   height: 100vh;
   background: #f9fafb;
+
+  flex-direction: column;
 }
 
 /* ===== 래퍼 ===== */
@@ -129,15 +131,18 @@
   justify-content: center;          /* 아치 내부 중앙 정렬 */
 }
 
+/* introduce 줄바꿈 반영 */
+.arch .msg { white-space: pre-line; }
+
 .arch-content .name {
-  margin-top: 10rem;
+  margin-top: 11rem;
   font-size: 1.1rem;
   font-weight: 700;
   color:#575757;
 }
 .arch-content .major {
-  margin-top: -1rem;
-  margin-bottom: 1.6rem;
+  margin-top: 0rem;
+  margin-bottom: 0.8rem;
   font-size: .75rem;
   font-weight: 200;
   color: #575757;
@@ -174,6 +179,36 @@
 .info h3 { margin: 0; font-size: 1.1rem; color:#444; }
 .info .major { margin: 0; font-size: .9rem; color: #666; }
 .info .msg { margin: .2rem 0 0; font-size: .95rem; color: #333; }
+
+/* CTA 버튼 영역 */
+.cta-wrap{
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+
+  position: fixed;
+  bottom: 10vh;
+}
+
+.cta-btn{
+  width: 90vw;
+  height: 7vh;
+  border: 0;
+  border-radius: 999px;          /* 완전 둥글게 */
+  background: linear-gradient(90deg, #FF69C3, #E8048D);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 24px rgba(216,77,174,.28);
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+
+  
+}
+
+.cta-btn:active { transform: scale(.98); }
+.cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
+
 
 .no-match {
   display: flex;
