@@ -15,7 +15,7 @@
   min-height: 100dvh;
 
   /* 헤더가 fixed라서 상단 여백 확보 */
-  padding-top: 7rem;
+  padding-top: 5rem;
 
   background: radial-gradient(
     circle at 70% 20%,
@@ -74,6 +74,7 @@
 .chat-msg {
   display: flex;
   margin-bottom: 12px;
+  margin-top: 5px;
 }
 
 .chat-msg.other {
@@ -140,7 +141,7 @@
   align-items: center;
   gap: 1rem;
 
-  padding: 1rem 2rem;
+  padding: 1rem 2rem !important;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   /* fallback */
   padding-bottom: calc(8px + constant(safe-area-inset-bottom));
