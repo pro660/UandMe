@@ -191,7 +191,7 @@ export default function ProfileCard({
                   setShowInstaModal(true); // 모달 열기
                 }}
               >
-                <InstaIcon style={{ width: "100%", height: "100%" }} />
+                <InstaIcon style={{ width: "120%", height: "120%" }} />
               </button>
             )}
           </div>
