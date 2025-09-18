@@ -14,6 +14,8 @@ import {
   runTransaction,
 } from "firebase/firestore";
 import { db } from "../../libs/firebase";
+import { auth } from "../../libs/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import useUserStore from "../../api/userStore";
 import { FaArrowUp } from "react-icons/fa";
 import "../../css/chat/ChatRoom.css";
@@ -28,6 +30,7 @@ export default function ChatRoom() {
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
   const [sending, setSending] = useState(false);
+  const [authReady, setAuthReady] = useState(false); // ✅ 익명 로그인 완료 가드
 
   // ✅ 모달 상태
   const [showProfile, setShowProfile] = useState(false);
@@ -43,6 +46,16 @@ export default function ChatRoom() {
   const inputRef = useRef(null);
   const inputWrapperRef = useRef(null);
 
+  // 🔐 Firebase Auth 준비되면 시작
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (fbUser) => {
+      // 디버그용: 현재 인증 상태 확인
+      // console.log("[ChatRoom][Auth]", fbUser?.uid, fbUser?.isAnonymous);
+      setAuthReady(true);
+    });
+    return unsub;
+  }, []);
+
   // ✅ body 스크롤 막기
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -53,13 +66,15 @@ export default function ChatRoom() {
 
   // ✅ 방 정보 불러오기
   useEffect(() => {
-    if (!roomId) return;
+    if (!authReady || !roomId) return;
     const roomRef = doc(db, "chatRooms", roomId);
-    getDoc(roomRef).then((snap) => {
-      if (snap.exists()) setRoomInfo(snap.data());
-      else navigate("/chat"); // 방이 없으면 리스트로
-    });
-  }, [roomId, navigate]);
+    getDoc(roomRef)
+      .then((snap) => {
+        if (snap.exists()) setRoomInfo(snap.data());
+        else navigate("/chat"); // 방이 없으면 리스트로
+      })
+      .catch((e) => console.error("[ChatRoom] getDoc room error:", e));
+  }, [authReady, roomId, navigate]);
 
   // ✅ 참가자/상대 ID 계산 (숫자 기준)
   const participants = useMemo(
@@ -70,6 +85,7 @@ export default function ChatRoom() {
     () => participants.find((id) => id !== myIdNum) ?? null,
     [participants, myIdNum]
   );
+  const peerIdStr = peerIdNum != null ? String(peerIdNum) : null;
 
   // ✅ peers를 userId(숫자) -> 카드데이터로 역색인
   const peersByUserId = useMemo(() => {
@@ -85,32 +101,38 @@ export default function ChatRoom() {
   // 헤더에 띄울 상대 정보
   const peerData = peerIdNum != null ? peersByUserId[peerIdNum] ?? null : null;
 
-  // ✅ 메시지 실시간 구독
+  // ✅ 메시지 실시간 구독 (로그인 완료 후)
   useEffect(() => {
-    if (!roomId) return;
+    if (!authReady || !roomId) return;
 
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "asc")
     );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      const newMessages = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
-      setMessages(newMessages);
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const newMessages = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setMessages(newMessages);
 
-      // 새 메시지 added 체크해 읽음 처리(필요할 때만)
-      const added = snapshot.docChanges().some((c) => c.type === "added");
-      if (added) maybeMarkAsRead(newMessages);
-      // 오토스크롤
-      smartScrollToBottom();
-    });
+        // 새 메시지 added 체크해 읽음 처리(필요할 때만)
+        const added = snapshot.docChanges().some((c) => c.type === "added");
+        if (added) maybeMarkAsRead(newMessages);
+        // 오토스크롤
+        smartScrollToBottom();
+      },
+      (err) => {
+        console.error("[ChatRoom] onSnapshot(messages) error:", err);
+      }
+    );
 
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, myIdNum]);
+  }, [authReady, roomId, myIdNum]);
 
   // ✅ 포커스/가시 상태 변화 시 읽음 처리
   useEffect(() => {
@@ -126,10 +148,10 @@ export default function ChatRoom() {
 
   // ✅ 최초 입장 시 읽음 초기화
   useEffect(() => {
-    if (roomId && myIdStr) {
+    if (authReady && roomId && myIdStr) {
       markAsRead(roomId, myIdStr);
     }
-  }, [roomId, myIdStr]);
+  }, [authReady, roomId, myIdStr]);
 
   // ✅ iOS Safari 키보드 대응(뷰포트 변화)
   useEffect(() => {
@@ -215,7 +237,7 @@ export default function ChatRoom() {
       });
 
       setInput("");
-      inputRef.current?.focus();
+      inputRef.current?.focus(); // 필요 시 blur로 바꿔 키보드 닫기
       smartScrollToBottom(true);
     } catch (e) {
       console.error("sendMessage failed:", e);
