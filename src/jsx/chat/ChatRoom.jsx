@@ -1,3 +1,4 @@
+// src/jsx/chat/ChatRoom.jsx
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -27,13 +28,18 @@ export default function ChatRoom() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
+
+  // ✅ 모달 상태
   const [showProfile, setShowProfile] = useState(false);
 
+  // ✅ 내 아이디 문자열 고정
   const myId = String(user?.userId || "");
 
+  // ✅ ref
   const chatroomRef = useRef(null);
-  const inputWrapperRef = useRef(null);
+  const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const inputWrapperRef = useRef(null);
 
   // ✅ body 스크롤 막기
   useEffect(() => {
@@ -43,40 +49,37 @@ export default function ChatRoom() {
     };
   }, []);
 
-  // ✅ 키보드 대응 (resize 이벤트로 입력창 위치 조정)
-  useEffect(() => {
-    const handleResize = () => {
-      if (!chatroomRef.current || !inputWrapperRef.current) return;
-      const vh = window.innerHeight;
-      chatroomRef.current.style.height = `${vh}px`;
-      inputWrapperRef.current.style.bottom = "0px"; // 항상 하단 고정
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   // ✅ 방 정보 불러오기
   useEffect(() => {
     if (!roomId) return;
     const roomRef = doc(db, "chatRooms", roomId);
     getDoc(roomRef).then((snap) => {
-      if (snap.exists()) setRoomInfo(snap.data());
+      if (snap.exists()) {
+        setRoomInfo(snap.data());
+      }
     });
   }, [roomId]);
 
   // ✅ 메시지 실시간 구독
   useEffect(() => {
     if (!roomId) return;
+
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "asc")
     );
+
     const unsub = onSnapshot(q, (snapshot) => {
       const newMessages = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setMessages(newMessages);
+
+      // ✅ 스크롤 맨 아래로
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
 
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
@@ -87,12 +90,15 @@ export default function ChatRoom() {
         }
       });
     });
+
     return () => unsub();
   }, [roomId, myId]);
 
-  // ✅ unread 초기화
+  // ✅ 방 입장 시 unread 초기화
   useEffect(() => {
-    if (roomId && myId) markAsRead(roomId, myId);
+    if (roomId && myId) {
+      markAsRead(roomId, myId);
+    }
   }, [roomId, myId]);
 
   async function markAsRead(roomId, userId) {
@@ -102,6 +108,7 @@ export default function ChatRoom() {
 
   async function sendMessage() {
     if (!input.trim()) return;
+
     const senderId = myId;
 
     const messageRef = collection(db, "chatRooms", roomId, "messages");
@@ -111,6 +118,7 @@ export default function ChatRoom() {
       createdAt: serverTimestamp(),
     });
 
+    // 방 메타데이터 업데이트
     const roomRef = doc(db, "chatRooms", roomId);
     const roomSnap = await getDoc(roomRef);
     const participants = (roomSnap.data()?.participants || []).map(String);
@@ -123,27 +131,42 @@ export default function ChatRoom() {
 
     setInput("");
 
-    // ✅ 전송 후 스크롤 맨 아래
-    setTimeout(() => {
-      const msgBox = document.querySelector(".chatroom-messages");
-      if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-    }, 100);
+    // ✅ 전송 후 다시 포커스 (키보드 유지)
+    inputRef.current?.focus();
   }
 
+  // ✅ 상대방 정보 추출
   const participants = (roomInfo?.participants || []).map(String);
   const peerId = participants.find((id) => id !== myId) || null;
   const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
 
+  // ✅ iOS Safari 키보드 대응
+  useEffect(() => {
+    const handleResize = () => {
+      if (!chatroomRef.current || !inputWrapperRef.current) return;
+      chatroomRef.current.style.height = `${window.innerHeight}px`;
+      inputWrapperRef.current.style.bottom = "0px";
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div className="chatroom" ref={chatroomRef}>
-      {/* 헤더 */}
+      {/* 상단 헤더 */}
       <div className="chatroom-header">
         <button className="back-btn" onClick={() => navigate("/chat")}>
           ←
         </button>
         {peerData ? (
           <div
-            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+            }}
             onClick={() => setShowProfile(true)}
           >
             <img
@@ -168,7 +191,7 @@ export default function ChatRoom() {
         )}
       </div>
 
-      {/* 메시지 */}
+      {/* 메시지 영역 */}
       <div className="chatroom-messages">
         {messages.map((msg) => {
           const isMe = String(msg.senderId) === myId;
@@ -181,6 +204,7 @@ export default function ChatRoom() {
                   alt="avatar"
                   className="avatar"
                   onClick={() => setShowProfile(true)}
+                  style={{ cursor: "pointer" }}
                 />
               )}
               <div className="bubble-wrap">
@@ -200,6 +224,7 @@ export default function ChatRoom() {
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 입력창 */}
@@ -210,7 +235,11 @@ export default function ChatRoom() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="메세지를 입력해주세요."
         />
-        <button className="send-btn" onClick={sendMessage}>
+        <button
+          type="button"
+          className="send-btn"
+          onClick={sendMessage}
+        >
           <FaArrowUp size={20} color="white" />
         </button>
       </div>
@@ -218,7 +247,10 @@ export default function ChatRoom() {
       {/* 상대방 프로필 모달 */}
       {showProfile && peerId && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <YouProfile userId={peerId} onClose={() => setShowProfile(false)} />
           </div>
         </div>

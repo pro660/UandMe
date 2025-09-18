@@ -1,13 +1,13 @@
 .chatroom {
   display: flex;
   flex-direction: column;
-  height: 100dvh; /* ✅ 모바일 브라우저 대응 */
+  height: 100dvh;
   max-height: 100dvh;
   padding-top: 5rem;
   background: radial-gradient(
-    circle at 70% 20%,   /* 그라데이션 시작 위치 (우측 상단에 한방울) */
-    rgba(255, 105, 195, 0.15), /* FF69C3, 투명도 15% */
-    rgba(255, 255, 255, 1) 70% /* 바깥쪽은 흰색 */
+    circle at 70% 20%,
+    rgba(255, 105, 195, 0.15),
+    rgba(255, 255, 255, 1) 70%
   );
 }
 
@@ -20,7 +20,7 @@
   border-bottom: 1px solid #eee;
   font-weight: bold;
 
-  position: fixed; /* ✅ 화면 상단 고정 */
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -35,15 +35,16 @@
   cursor: pointer;
 }
 
-/* 메시지 영역 (여기만 스크롤 가능) */
+/* 메시지 영역 */
 .chatroom-messages {
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* ✅ iOS 부드러운 스크롤 */
+  -webkit-overflow-scrolling: touch;
   padding: 16px;
+  padding-bottom: 6rem; /* 입력창 영역 확보 */
 }
 
-/* 메시지 아이템 */
+/* 메시지 */
 .chat-msg {
   display: flex;
   margin-bottom: 12px;
@@ -87,12 +88,12 @@
 
 .other .bubble {
   background: white;
-  border-radius: 0 18px 18px 18px; /* 왼쪽 말풍선 */
+  border-radius: 0 18px 18px 18px;
 }
 
 .me .bubble {
   background: #F7FBFF;
-  border-radius: 18px 0 18px 18px; /* 오른쪽 말풍선 */
+  border-radius: 18px 0 18px 18px;
 }
 
 .time {
@@ -100,14 +101,14 @@
   color: #575757;
 }
 
-/* 하단 입력창 */
+/* 입력창 */
 .chatroom-input {
   display: flex;
   padding: 8px;
   border-top: 1px solid #eee;
   background: white;
 
-  position: absolute; /* ✅ JS에서 bottom 0 보정 */
+  position: absolute; /* ✅ iOS Safari 대응 */
   bottom: 0;
   left: 0;
   right: 0;
@@ -139,8 +140,8 @@
   align-items: center;
   justify-content: center;
 
-  -webkit-tap-highlight-color: transparent; /* ✅ 터치 하이라이트 제거 */
-  touch-action: manipulation; /* ✅ 모바일 터치 딜레이 방지 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* 모달 */
@@ -160,9 +161,9 @@
 .modal-content {
   width: 90%;
   max-width: 480px;
-  max-height: 90vh;        /* ✅ 화면의 90%까지만 */
-  overflow-y: auto;        /* ✅ 내부 스크롤 허용 */
-  -webkit-overflow-scrolling: touch; /* ✅ 모바일 부드러운 스크롤 */
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #fff;
   border-radius: 12px;
 }
