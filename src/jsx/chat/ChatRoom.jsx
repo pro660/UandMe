@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
@@ -27,15 +27,13 @@ export default function ChatRoom() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
-
   const [showProfile, setShowProfile] = useState(false);
 
   const myId = String(user?.userId || "");
 
-  // ✅ refs
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
   const chatroomRef = useRef(null);
+  const inputWrapperRef = useRef(null);
+  const inputRef = useRef(null);
 
   // ✅ body 스크롤 막기
   useEffect(() => {
@@ -45,20 +43,16 @@ export default function ChatRoom() {
     };
   }, []);
 
-  // ✅ ResizeObserver: 키보드 대응
+  // ✅ 키보드 대응 (resize 이벤트로 입력창 위치 조정)
   useEffect(() => {
-    if (!chatroomRef.current) return;
-
-    const el = chatroomRef.current;
-
-    const resizeObserver = new ResizeObserver(() => {
-      // viewport 높이에 맞게 chatroom 높이 갱신
-      el.style.height = `${window.innerHeight}px`;
-    });
-
-    resizeObserver.observe(document.body);
-
-    return () => resizeObserver.disconnect();
+    const handleResize = () => {
+      if (!chatroomRef.current || !inputWrapperRef.current) return;
+      const vh = window.innerHeight;
+      chatroomRef.current.style.height = `${vh}px`;
+      inputWrapperRef.current.style.bottom = "0px"; // 항상 하단 고정
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // ✅ 방 정보 불러오기
@@ -66,21 +60,17 @@ export default function ChatRoom() {
     if (!roomId) return;
     const roomRef = doc(db, "chatRooms", roomId);
     getDoc(roomRef).then((snap) => {
-      if (snap.exists()) {
-        setRoomInfo(snap.data());
-      }
+      if (snap.exists()) setRoomInfo(snap.data());
     });
   }, [roomId]);
 
   // ✅ 메시지 실시간 구독
   useEffect(() => {
     if (!roomId) return;
-
     const q = query(
       collection(db, "chatRooms", roomId, "messages"),
       orderBy("createdAt", "asc")
     );
-
     const unsub = onSnapshot(q, (snapshot) => {
       const newMessages = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -97,20 +87,12 @@ export default function ChatRoom() {
         }
       });
     });
-
     return () => unsub();
   }, [roomId, myId]);
 
-  // ✅ 메시지 변경 시 맨 아래로 스크롤
+  // ✅ unread 초기화
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // ✅ 방 입장 시 unread 초기화
-  useEffect(() => {
-    if (roomId && myId) {
-      markAsRead(roomId, myId);
-    }
+    if (roomId && myId) markAsRead(roomId, myId);
   }, [roomId, myId]);
 
   async function markAsRead(roomId, userId) {
@@ -120,7 +102,6 @@ export default function ChatRoom() {
 
   async function sendMessage() {
     if (!input.trim()) return;
-
     const senderId = myId;
 
     const messageRef = collection(db, "chatRooms", roomId, "messages");
@@ -141,29 +122,28 @@ export default function ChatRoom() {
     });
 
     setInput("");
-    inputRef.current?.focus(); // ✅ 메시지 보내도 키보드 유지
+
+    // ✅ 전송 후 스크롤 맨 아래
+    setTimeout(() => {
+      const msgBox = document.querySelector(".chatroom-messages");
+      if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+    }, 100);
   }
 
-  // ✅ 상대방 정보 추출
   const participants = (roomInfo?.participants || []).map(String);
   const peerId = participants.find((id) => id !== myId) || null;
   const peerData = peerId ? roomInfo?.peers?.[peerId] : null;
 
   return (
     <div className="chatroom" ref={chatroomRef}>
-      {/* 상단 헤더 */}
+      {/* 헤더 */}
       <div className="chatroom-header">
         <button className="back-btn" onClick={() => navigate("/chat")}>
           ←
         </button>
         {peerData ? (
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-            }}
+            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
             onClick={() => setShowProfile(true)}
           >
             <img
@@ -188,7 +168,7 @@ export default function ChatRoom() {
         )}
       </div>
 
-      {/* 메시지 영역 */}
+      {/* 메시지 */}
       <div className="chatroom-messages">
         {messages.map((msg) => {
           const isMe = String(msg.senderId) === myId;
@@ -201,7 +181,6 @@ export default function ChatRoom() {
                   alt="avatar"
                   className="avatar"
                   onClick={() => setShowProfile(true)}
-                  style={{ cursor: "pointer" }}
                 />
               )}
               <div className="bubble-wrap">
@@ -221,12 +200,10 @@ export default function ChatRoom() {
             </div>
           );
         })}
-        {/* ✅ 스크롤 기준점 */}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* 입력창 */}
-      <div className="chatroom-input">
+      <div className="chatroom-input" ref={inputWrapperRef}>
         <input
           ref={inputRef}
           value={input}
@@ -241,10 +218,7 @@ export default function ChatRoom() {
       {/* 상대방 프로필 모달 */}
       {showProfile && peerId && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <YouProfile userId={peerId} onClose={() => setShowProfile(false)} />
           </div>
         </div>
