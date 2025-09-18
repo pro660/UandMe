@@ -40,7 +40,7 @@ function Layout({ children }) {
 function AppRouter() {
   return (
     <BrowserRouter>
-      {/* <Layout> */}
+      <Layout>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -92,7 +92,7 @@ function AppRouter() {
             }
           />
         </Routes>
-      {/* </Layout> */}
+      </Layout>
     </BrowserRouter>
   );
 }
