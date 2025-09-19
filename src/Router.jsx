@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
 import ProtectedRoute from "./ProtectedRoute";
 import ChatRoomGuard from "./jsx/chat/ChatRoomGuard";
@@ -20,7 +21,36 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
-import PageFade from "./jsx/common/PageFade.jsx";
+// ✅ 전역 페이드 전환 컴포넌트 (인라인 정의)
+function PageFade({ children }) {
+  const location = useLocation();
+
+  const variants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.25 } },
+    exit: { opacity: 0, transition: { duration: 0.2 } },
+  };
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        variants={variants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "#fff", // ✅ 깜빡임 방지
+          willChange: "opacity",
+        }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
 // ✅ 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -34,8 +64,10 @@ function Layout({ children }) {
     <>
       {!shouldHide && <Header />}
 
-      {/* 여기서 children을 PageFade로 감싸줌 */}
-      <div className="content-wrap" style={{ position: "relative", minHeight: "100%" }}>
+      <div
+        className="content-wrap"
+        style={{ position: "relative", minHeight: "100%", overflow: "hidden" }}
+      >
         <PageFade>{children}</PageFade>
       </div>
 
@@ -83,7 +115,7 @@ function AppRouter() {
             }
           />
 
-          {/* 회원가입(정보 입력 페이지) */}
+          {/* 회원가입 */}
           <Route
             path="/infoform"
             element={
@@ -110,7 +142,7 @@ function AppRouter() {
           />
           <Route path="/loading" element={<Loader />} />
 
-          {/* ✅ 채팅방 라우트 */}
+          {/* 채팅방 */}
           <Route
             path="/chat/:roomId"
             element={
