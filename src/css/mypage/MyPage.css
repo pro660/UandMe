@@ -21,7 +21,8 @@
   gap: 0.5rem;
   position: relative;
 
-  padding-bottom: 7rem;
+  padding-bottom: 6rem;
+  background-color: #FF69C3;
 }
 
 /* 로그아웃 버튼: pill 스타일 */
