@@ -587,3 +587,22 @@
 .submit-hint .msg {
   opacity: 0.9;
 }
+
+/* iOS/안드 포함: 모바일 폭에서만 입력 컨트롤 16px 고정 */
+@media (max-width: 480px) {
+  /* 범위를 폼 루트로 한정하면 다른 페이지에 영향 X */
+  .profile-root input,
+  .profile-root select,
+  .profile-root textarea,
+  .profile-root .text-input,
+  .profile-root .select-input {
+    font-size: 16px !important; /* 확대 방지 핵심 */
+    line-height: 1.2;            /* 커서 높이/줄간 보정 */
+  }
+
+  /* 플레이스홀더도 같이 맞추면 깔끔 */
+  .profile-root input::placeholder,
+  .profile-root .text-input::placeholder {
+    font-size: 16px;
+  }
+}
