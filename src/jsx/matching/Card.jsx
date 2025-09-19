@@ -18,6 +18,7 @@ const FIXED_STARS = [
 
 const rem = (r) => r * 16;
 const wrap = (i, n) => (i + n) % n;
+const getUid = (it) => it?.userId ?? it?.id ?? it?.targetUserId ?? null;
 
 export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
@@ -44,12 +45,10 @@ export default function Card() {
     let idx = mid;
     for (let d = 0; d <= Math.min(8, n - 1); d++) {
       if (mid - d > 0 && isBreak(arr[mid - d])) {
-        idx = mid - d + 1;
-        break;
+        idx = mid - d + 1; break;
       }
       if (mid + d < n - 1 && isBreak(arr[mid + d])) {
-        idx = mid + d + 1;
-        break;
+        idx = mid + d + 1; break;
       }
     }
     return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
@@ -58,15 +57,14 @@ export default function Card() {
   // 상태 관리
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
-  useEffect(() => {
-    centerRef.current = center;
-  }, [center]);
+  useEffect(() => { centerRef.current = center; }, [center]);
 
   const [dx, setDx] = useState(0);
   const [snapping, setSnapping] = useState(false);
   const [dir, setDir] = useState("");
   const [loading, setLoading] = useState(false);
   const dragging = useRef(false);
+  const movedRef = useRef(false);     // ⬅️ 드래그로 충분히 움직였는지(탭 가드)
   const lastX = useRef(0);
 
   if (N === 0) return <NoHuman />;
@@ -83,14 +81,17 @@ export default function Card() {
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
-  const xTwoLeft = -SPREAD / 2 + dx;
-  const xTwoRight = SPREAD / 2 + dx;
+  // N=2 간격 좀 더 넓혀 살짝 겹침 방지 (필요시 0.8~1.0 사이로 조절)
+  const TWO_MULT = 0.9;
+  const xTwoLeft = -SPREAD * TWO_MULT + dx;
+  const xTwoRight = SPREAD * TWO_MULT + dx;
   const otherIdx = wrap(center + 1, N);
 
   // 드래그
   const onStart = (x) => {
     if (hasOne) return;
     dragging.current = true;
+    movedRef.current = false;
     setSnapping(false);
     setDir("");
     lastX.current = x;
@@ -100,8 +101,10 @@ export default function Card() {
     const delta = x - lastX.current;
     lastX.current = x;
     setDx((prev) => {
-      const next = prev + delta;
-      return Math.max(-MAX_DRAG, Math.min(MAX_DRAG, next));
+      const next = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, prev + delta));
+      // 일정 이상 움직이면 "드래그"로 판단 -> 클릭 무시
+      if (Math.abs(next) > 12) movedRef.current = true;
+      return next;
     });
   };
   const onEnd = () => {
@@ -115,6 +118,8 @@ export default function Card() {
       setDx(0);
       setTimeout(() => setSnapping(false), SNAP_MS);
     }
+    // 다음 탭을 위해 리셋
+    setTimeout(() => { movedRef.current = false; }, SNAP_MS);
   };
   const completeSlide = (sign) => {
     if (N <= 1) return;
@@ -123,9 +128,7 @@ export default function Card() {
     setDx(sign * SPREAD);
     setTimeout(() => {
       const nextCenter =
-        sign < 0
-          ? wrap(centerRef.current + 1, N)
-          : wrap(centerRef.current - 1, N);
+        sign < 0 ? wrap(centerRef.current + 1, N) : wrap(centerRef.current - 1, N);
       setCenter(nextCenter);
       setSnapping(false);
       setDx(0);
@@ -150,7 +153,6 @@ export default function Card() {
         : [];
       if (typeof setCandidates === "function") setCandidates(nextList);
 
-      // ✅ 크레딧 차감
       setUser({
         ...user,
         matchCredits: Math.max(0, (user?.matchCredits ?? 0) - 1),
@@ -169,7 +171,7 @@ export default function Card() {
     }
   };
 
-  // 카드 내부
+  // 카드 내부 (순수 렌더)
   const CardBody = ({ item = {} }) => {
     const {
       name = "이름 없음",
@@ -177,33 +179,10 @@ export default function Card() {
       introduce = "소개 없음",
       typeImageUrl,
     } = item;
-
-    // 다양한 서버 응답 키 커버
-    const uid = item?.userId ?? item?.id ?? item?.targetUserId ?? null;
-
     const msgText = breakAtHalf(introduce ?? "");
 
     return (
-      <div
-        className="card-click-area"
-        role="button"
-        tabIndex={0}
-        // ⛔️ 드래그 핸들러로 이벤트가 전파되지 않게 차단
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        // ✅ 탭/클릭 시 모달 열기 (모바일 대응)
-        onMouseUp={(e) => {
-          e.stopPropagation();
-          setSelectedUserId(uid);
-        }}
-        onTouchEnd={(e) => {
-          e.stopPropagation();
-          setSelectedUserId(uid);
-        }}
-        onKeyUp={(e) => {
-          if (e.key === "Enter" || e.key === " ") setSelectedUserId(uid);
-        }}
-      >
+      <>
         <div
           className="card-stars"
           aria-hidden="true"
@@ -236,7 +215,7 @@ export default function Card() {
             <p className="msg">“{msgText}”</p>
           </div>
         </div>
-      </div>
+      </>
     );
   };
 
@@ -251,6 +230,14 @@ export default function Card() {
   const idxLeft = wrap(center - 1, N);
   const idxRight = wrap(center + 1, N);
   const idxFarRight = wrap(center + 2, N);
+
+  // ⬇️ 카드 클릭(탭) 핸들러: 드래그로 많이 움직였으면 무시, 탭이면 열기
+  const handleCardClick = (item) => (e) => {
+    e.stopPropagation();
+    if (movedRef.current) return; // 드래그였으면 클릭 무시
+    const uid = getUid(item);
+    if (uid != null) setSelectedUserId(uid);
+  };
 
   return (
     <>
@@ -271,11 +258,9 @@ export default function Card() {
           {hasOne && (
             <div
               className="slot slot-center"
-              style={{
-                transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
-              }}
+              style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
             >
-              <div className="card">
+              <div className="card" onClick={handleCardClick(candidates[center])}>
                 <CardBody item={candidates[center]} />
               </div>
             </div>
@@ -288,9 +273,10 @@ export default function Card() {
                 className="slot slot-left"
                 style={{
                   transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,
+                  zIndex: 2, // 왼쪽을 살짝 위로
                 }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[center])}>
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
@@ -298,9 +284,10 @@ export default function Card() {
                 className="slot slot-right"
                 style={{
                   transform: `translate(calc(-50% + ${xTwoRight}px), -50%)`,
+                  zIndex: 1,
                 }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[otherIdx])}>
                   <CardBody item={candidates[otherIdx]} />
                 </div>
               </div>
@@ -312,51 +299,41 @@ export default function Card() {
             <>
               <div
                 className="slot slot-far-left"
-                style={{
-                  transform: `translate(calc(-50% + ${xFarLeft}px), -50%)`,
-                }}
+                style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[idxFarLeft])}>
                   <CardBody item={candidates[idxFarLeft]} />
                 </div>
               </div>
               <div
                 className="slot slot-left"
-                style={{
-                  transform: `translate(calc(-50% + ${xLeft}px), -50%)`,
-                }}
+                style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[idxLeft])}>
                   <CardBody item={candidates[idxLeft]} />
                 </div>
               </div>
               <div
                 className="slot slot-center"
-                style={{
-                  transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
-                }}
+                style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[center])}>
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
               <div
                 className="slot slot-right"
-                style={{
-                  transform: `translate(calc(-50% + ${xRight}px), -50%)`,
-                }}
+                style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[idxRight])}>
                   <CardBody item={candidates[idxRight]} />
                 </div>
               </div>
               <div
                 className="slot slot-far-right"
-                style={{
-                  transform: `translate(calc(-50% + ${xFarRight}px), -50%)`,
-                }}
+                style={{ transform: `translate(calc(-50% + ${xFarRight}px), -50%)` }}
               >
-                <div className="card">
+                <div className="card" onClick={handleCardClick(candidates[idxFarRight])}>
                   <CardBody item={candidates[idxFarRight]} />
                 </div>
               </div>
@@ -380,14 +357,8 @@ export default function Card() {
       {/* ✅ 모달: null 체크 + 포털 */}
       {selectedUserId != null &&
         createPortal(
-          <div
-            className="modal-overlay"
-            onClick={() => setSelectedUserId(null)}
-          >
-            <div
-              className="modal-content"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <YouProfile
                 userId={selectedUserId}
                 onClose={() => setSelectedUserId(null)}
