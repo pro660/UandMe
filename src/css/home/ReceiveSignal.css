@@ -149,18 +149,28 @@
   cursor: default; /* DECLINED 상태 → 클릭 불가 */
 }
 
-/* 모달 오버레이 */
-.yp-overlay {
-  position: fixed; inset: 0;
+/* ChatRoom 스타일과 동일하게 맞춤 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
   background: rgba(0,0,0,0.35);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
+
+  /* 배경 스크롤 체인 방지 */
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
-/* 모달 박스 */
-.yp-modal {
+.modal-content {
   width: min(720px, 92%);
-  max-height: 90vh; overflow: auto;
-  background: #fff; border-radius: 16px;
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+  -webkit-overflow-scrolling: touch;
 }
