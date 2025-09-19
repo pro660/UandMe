@@ -25,7 +25,9 @@ export default function ProfileCard({
 
   // 소개 수정
   const [isEditing, setIsEditing] = useState(false);
-  const [editingIntroduce, setEditingIntroduce] = useState(user?.introduce || "");
+  const [editingIntroduce, setEditingIntroduce] = useState(
+    user?.introduce || ""
+  );
   const [saving, setSaving] = useState(false);
 
   // 인스타 수정 모달
@@ -98,10 +100,10 @@ export default function ProfileCard({
     setUploading(true);
 
     try {
-      // 1) 파일 업로드 (서버 엔드포인트는 프로젝트에 맞게)
+      // 1) 파일 업로드
       const form = new FormData();
       form.append("file", file);
-      // 예시 엔드포인트: /files/upload (multipart/form-data)
+
       const up = await api.post("/files/upload", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -115,14 +117,14 @@ export default function ProfileCard({
       if (!imageUrl) throw new Error("업로드 응답에 URL이 없습니다.");
 
       // 2) 내 프로필 이미지로 반영
-      // 예시 엔드포인트: /users/me/profile-image
       await api.put("/users/me/profile-image", { imageUrl });
 
-      // 3) 최신 프로필 재조회 후 store 업데이트
+      // ★ 3) 업로드 성공 시 즉시 서버 URL로 교체 (blob 미리보기 URL은 더 이상 사용하지 않음)
+      setLocalImage(imageUrl);
+
+      // 4) 최신 프로필 재조회 후 store 업데이트
       const refreshed = await api.get("/users/me/profile");
       useUserStore.getState().updateUser(refreshed.data);
-
-      // 로컬 미리보기는 유지(리렌더되면 부모에서 내려오는 imageSrc가 갱신되어 동기화됨)
     } catch (err) {
       console.error("❌ 이미지 업로드 실패:", err);
       alert("이미지를 업로드하지 못했습니다.");
@@ -130,6 +132,7 @@ export default function ProfileCard({
       setLocalImage(prev);
     } finally {
       setUploading(false);
+      // 이제 <img>는 서버 URL을 바라보고 있어서 revoke해도 끊기지 않음
       URL.revokeObjectURL(previewUrl);
       // 같은 파일 재선택 가능하도록 input 초기화
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -231,7 +234,10 @@ export default function ProfileCard({
 
               {/* ✅ 중앙 ‘사진 첨부’ 버튼 (읽기 전용 아닐 때만) */}
               {!readOnly && (
-                <div className="avatar-upload-btn" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="avatar-upload-btn"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     type="button"
                     className="avatar-upload-circle"
@@ -240,7 +246,7 @@ export default function ProfileCard({
                   >
                     {/* 카메라 아이콘 (inline SVG) */}
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M9.5 3h5l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.3L9.5 3zm2.5 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0-2a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
+                      <path d="M9.5 3h5l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.3L9.5 3zm2.5 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0-2a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" />
                     </svg>
                   </button>
                 </div>
@@ -260,7 +266,10 @@ export default function ProfileCard({
 
               {/* 업로드 중 오버레이 */}
               {uploading && (
-                <div className="avatar-uploading" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="avatar-uploading"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="avatar-spinner" />
                 </div>
               )}
@@ -305,12 +314,30 @@ export default function ProfileCard({
           <div className="profile-card-back">
             <div className="profile-card-back-title">프로필 정보</div>
             <ul className="profile-card-back-list">
-              <li><span className="label">학과</span><span className="value">{department}</span></li>
-              <li><span className="label">학번</span><span className="value">{studentNo}</span></li>
-              <li><span className="label">출생년도</span><span className="value">{birthYear}</span></li>
-              <li><span className="label">성별</span><span className="value">{gender}</span></li>
-              <li><span className="label">MBTI</span><span className="value">{gender}</span></li>
-              <li><span className="label">성향</span><span className="value">{gender}</span></li>
+              <li>
+                <span className="label">학과</span>
+                <span className="value">{department}</span>
+              </li>
+              <li>
+                <span className="label">학번</span>
+                <span className="value">{studentNo}</span>
+              </li>
+              <li>
+                <span className="label">출생년도</span>
+                <span className="value">{birthYear}</span>
+              </li>
+              <li>
+                <span className="label">성별</span>
+                <span className="value">{gender}</span>
+              </li>
+              <li>
+                <span className="label">MBTI</span>
+                <span className="value">{gender}</span>
+              </li>
+              <li>
+                <span className="label">성향</span>
+                <span className="value">{gender}</span>
+              </li>
             </ul>
           </div>
         </div>

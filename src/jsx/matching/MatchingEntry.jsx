@@ -1,44 +1,48 @@
 // src/jsx/matching/MatchingEntry.jsx
-import React, { useEffect, useMemo } from "react";
-import useMatchingStore from "../../api/matchingStore";
+import React, { useEffect, useState } from "react";
+import api from "../../api/axios";
 import Matching from "./Matching";
 import Card from "./Card";
 
-/** matching-storage 내용 → candidates 읽기 (zustand persist/직접 저장 둘 다 커버) */
-function readStoredCandidates() {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem("matching-storage");
-    if (!raw) return [];
-    const data = JSON.parse(raw);
-    const state = data?.state ?? data; // persist를 썼으면 state 안에 있음
-    const cands = state?.candidates;
-    return Array.isArray(cands) ? cands : [];
-  } catch {
-    return [];
-  }
-}
+const normalizeList = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.candidates)) return data.candidates;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
 
 export default function MatchingEntry() {
-  const candidates = useMatchingStore((s) => s.candidates) || [];
-  const setCandidates = useMatchingStore((s) => s.setCandidates);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
+  const [initialList, setInitialList] = useState([]);
 
-  // 로컬스토리지에 저장된 후보 (한 번만 계산)
-  const storedCandidates = useMemo(readStoredCandidates, []);
-  const hasStored = storedCandidates.length > 0;
-  const hasStore = candidates.length > 0;
-
-  // 스토어가 비어있고, 로컬스토리지에 있으면 주입
   useEffect(() => {
-    if (!hasStore && hasStored) {
-      setCandidates?.(storedCandidates);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasStore, hasStored]);
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const resp = await api.get("/match/previous");
+        const list = normalizeList(resp?.data);
+        if (!alive) return;
+        setInitialList(list);
+      } catch (e) {
+        if (!alive) return;
+        console.error("❌ 이전 매칭 불러오기 실패:", e);
+        setErr(e);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
-  // 최종 분기
-  if (hasStore || hasStored) {
-    return <Card />;        // ✅ 후보가 있으면 카드 뷰
+  if (loading) return <div style={{ padding: "1.6rem", textAlign: "center" }}>불러오는 중…</div>;
+  if (err) {
+    const msg = err?.response?.data?.message || err.message;
+    return <div style={{ padding: "1.6rem", color: "#ff4d4f" }}>문제 발생: {msg}</div>;
   }
-  return <Matching />;       // ✅ 없으면 매칭 시작 뷰
+
+  return initialList.length > 0
+    ? <Card initialCandidates={initialList} />
+    : <Matching />;
 }

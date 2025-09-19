@@ -3,7 +3,6 @@ import "../../css/mypage/MyPage.css";
 import ResultPage from "../signup/ResultPage";
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
-import useMatchingStore from "../../api/matchingStore.js";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import QuitForm from "./QuitForm.jsx";
@@ -12,7 +11,6 @@ function MyPage() {
   const navigate = useNavigate();
 
   const clearUser = useUserStore((s) => s.clearUser);
-  const clearMatch = useMatchingStore((s) => s.clearMatch); // ✅ 매칭 스토어 초기화 함수
 
   const [quitOpen, setQuitOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -25,7 +23,6 @@ function MyPage() {
       console.error("로그아웃 실패:", err);
     } finally {
       clearUser();
-      clearMatch(); // ✅ 매칭 상태도 초기화
 
       // 로컬스토리지 정리
       localStorage.removeItem("user");
@@ -43,7 +40,6 @@ function MyPage() {
     try {
       await api.delete("/auth/kakao/unlink"); // 회원탈퇴 호출
       clearUser();
-      clearMatch(); // ✅ 매칭 상태도 초기화
 
       // 로컬스토리지 정리
       localStorage.removeItem("user");
