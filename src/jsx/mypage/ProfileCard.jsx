@@ -310,7 +310,7 @@ export default function ProfileCard({
               <li><span className="label">출생년도</span><span className="value">{birthYear}</span></li>
               <li><span className="label">성별</span><span className="value">{gender}</span></li>
               <li><span className="label">MBTI</span><span className="value">{gender}</span></li>
-              <li><span className="label">호르몬</span><span className="value">{gender}</span></li>
+              <li><span className="label">성향</span><span className="value">{gender}</span></li>
             </ul>
           </div>
         </div>

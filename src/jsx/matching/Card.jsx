@@ -1,6 +1,6 @@
 // src/jsx/matching/Card.jsx
 import React, { useRef, useState, useEffect } from "react";
-// ✅ 공용 axios 인스턴스 사용
+import { useNavigate } from "react-router-dom"; // ✅ 추가
 import api from "../../api/axios.js";
 
 import "../../css/matching/Card.css";
@@ -19,16 +19,16 @@ const rem = (r) => r * 16;
 const wrap = (i, n) => (i + n) % n;
 
 export default function Card() {
-  // ✅ Zustand
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
+  const navigate = useNavigate();
 
   const N = candidates.length;
 
-  // 문자열 길이의 절반 근처(공백/구두점 우선)에서 줄바꿈
+  // 문자열 길이의 절반 근처에서 줄바꿈
   function breakAtHalf(text) {
     const raw = (text ?? "").trim();
-    const arr = Array.from(raw); // 이모지/한글 안전
+    const arr = Array.from(raw);
     const n = arr.length;
     if (n < 2) return raw;
 
@@ -36,11 +36,17 @@ export default function Card() {
     const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
 
     let idx = mid;
-    // 절반 주변 8글자 범위에서 자연스러운 분할점 탐색
     for (let d = 0; d <= Math.min(8, n - 1); d++) {
-      const L = mid - d, R = mid + d;
-      if (L > 0 && isBreak(arr[L])) { idx = L + 1; break; }
-      if (R < n - 1 && isBreak(arr[R])) { idx = R + 1; break; }
+      const L = mid - d,
+        R = mid + d;
+      if (L > 0 && isBreak(arr[L])) {
+        idx = L + 1;
+        break;
+      }
+      if (R < n - 1 && isBreak(arr[R])) {
+        idx = R + 1;
+        break;
+      }
     }
 
     const head = arr.slice(0, idx).join("");
@@ -48,25 +54,26 @@ export default function Card() {
     return `${head}\n${tail}`;
   }
 
-  // ✅ 훅들 최상단
+  // 상태 관리
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
-  useEffect(() => { centerRef.current = center; }, [center]);
+  useEffect(() => {
+    centerRef.current = center;
+  }, [center]);
 
   const [dx, setDx] = useState(0);
   const [snapping, setSnapping] = useState(false);
   const [dir, setDir] = useState("");
-  const [loading, setLoading] = useState(false); // API 로딩
+  const [loading, setLoading] = useState(false);
 
   const dragging = useRef(false);
   const lastX = useRef(0);
 
-  // 후보가 0명이면 NoHuman
   if (N === 0) {
     return <NoHuman />;
   }
 
-  // 치수
+  // 카드 치수
   const CARD_W = rem(13);
   const GAP = rem(1.5);
   const SPREAD = CARD_W + GAP;
@@ -78,14 +85,14 @@ export default function Card() {
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
-  // N=2 전용 좌우 배치
+  // N=2 전용
   const xTwoLeft = -SPREAD / 2 + dx;
   const xTwoRight = SPREAD / 2 + dx;
   const otherIdx = wrap(center + 1, N);
 
   // 드래그
   const onStart = (x) => {
-    if (hasOne) return; // 1명일 땐 드래그 비활성화
+    if (hasOne) return;
     dragging.current = true;
     setSnapping(false);
     setDir("");
@@ -101,13 +108,15 @@ export default function Card() {
   };
 
   const completeSlide = (sign) => {
-    if (N <= 1) return; // 1명 이하면 이동 안 함
+    if (N <= 1) return;
     setSnapping(true);
     setDir(sign < 0 ? "dir-left" : "dir-right");
     setDx(sign * SPREAD);
     window.setTimeout(() => {
       const nextCenter =
-        sign < 0 ? wrap(centerRef.current + 1, N) : wrap(centerRef.current - 1, N);
+        sign < 0
+          ? wrap(centerRef.current + 1, N)
+          : wrap(centerRef.current - 1, N);
       centerRef.current = nextCenter;
       setCenter(nextCenter);
       setSnapping(false);
@@ -129,11 +138,10 @@ export default function Card() {
     }
   };
 
-  // 🔗 다시 매칭하기: 공용 api로 호출
+  // 다시 매칭하기 API
   const handleRematch = async () => {
     try {
       setLoading(true);
-      // baseURL/토큰/리트라이 등은 api 인스턴스에서 처리됨
       const res = await api.post("/match/start", {});
       const payload = res?.data;
       const nextList = Array.isArray(payload)
@@ -146,7 +154,6 @@ export default function Card() {
         setCandidates(nextList);
       }
 
-      // 내부 상태 리셋
       setCenter(0);
       setDx(0);
       setSnapping(false);
@@ -164,28 +171,38 @@ export default function Card() {
   };
 
   // 슬롯 좌표
-  const xFarLeft  = -2 * SPREAD + dx;
-  const xLeft     = -1 * SPREAD + dx;
-  const xCenter   =  0 * SPREAD + dx;
-  const xRight    = +1 * SPREAD + dx;
+  const xFarLeft = -2 * SPREAD + dx;
+  const xLeft = -1 * SPREAD + dx;
+  const xCenter = 0 * SPREAD + dx;
+  const xRight = +1 * SPREAD + dx;
   const xFarRight = +2 * SPREAD + dx;
 
   // 인덱스
-  const idxFarLeft  = wrap(center - 2, N);
-  const idxLeft     = wrap(center - 1, N);
-  const idxRight    = wrap(center + 1, N);
+  const idxFarLeft = wrap(center - 2, N);
+  const idxLeft = wrap(center - 1, N);
+  const idxRight = wrap(center + 1, N);
   const idxFarRight = wrap(center + 2, N);
 
+  // 카드 내부
   const CardBody = ({ item = {} }) => {
     const {
+      candidateId,
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
       typeImageUrl,
     } = item;
     const msgText = breakAtHalf(introduce);
+
     return (
-      <>
+      <div
+        className="card-click-area"
+        onClick={() =>
+          navigate(`/youprofile/${candidateId}`, {
+            state: { showFlirtingPanel: true }, // ✅ 매칭에서만 버튼 뜨게
+          })
+        }
+      >
         {/* 배경 별 */}
         <div className="card-stars" aria-hidden="true">
           {FIXED_STARS.map((s) => (
@@ -211,7 +228,7 @@ export default function Card() {
           <img src={typeImageUrl} alt={name} draggable={false} />
         </div>
 
-        {/* 아치 내부 텍스트 */}
+        {/* 텍스트 */}
         <div className="arch" aria-hidden={false}>
           <div className="arch-content">
             <p className="name">{name}</p>
@@ -219,7 +236,7 @@ export default function Card() {
             <p className="msg">“{msgText}”</p>
           </div>
         </div>
-      </>
+      </div>
     );
   };
 
@@ -231,102 +248,116 @@ export default function Card() {
         <div
           className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
           onTouchStart={(e) => !hasOne && onStart(e.touches[0].clientX)}
-          onTouchMove={(e)  => !hasOne && onMove(e.touches[0].clientX)}
+          onTouchMove={(e) => !hasOne && onMove(e.touches[0].clientX)}
           onTouchEnd={onEnd}
           onMouseDown={(e) => !hasOne && onStart(e.clientX)}
-          onMouseMove={(e)  => !hasOne && onMove(e.clientX)}
+          onMouseMove={(e) => !hasOne && onMove(e.clientX)}
           onMouseUp={onEnd}
           onMouseLeave={onEnd}
         >
-          <> {/* 카드 지정 div */}
-            {/* === N=1: 중앙 1장만 === */}
-            {hasOne && (
+          {/* N=1 */}
+          {hasOne && (
+            <div
+              className="slot slot-center"
+              style={{
+                transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
+              }}
+            >
+              <div className="card">
+                <CardBody item={candidates[center]} />
+              </div>
+            </div>
+          )}
+
+          {/* N=2 */}
+          {hasTwo && (
+            <>
               <div
-                className="slot slot-center"
-                style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
+                className="slot slot-left"
+                style={{
+                  transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,
+                }}
               >
                 <div className="card">
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
-            )}
 
-            {/* === N=2: 딱 2장만 좌/우로 === */}
-            {hasTwo && (
-              <>
-                <div
-                  className="slot slot-left"
-                  style={{ transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[center]} />
-                  </div>
+              <div
+                className="slot slot-right"
+                style={{
+                  transform: `translate(calc(-50% + ${xTwoRight}px), -50%)`,
+                }}
+              >
+                <div className="card">
+                  <CardBody item={candidates[otherIdx]} />
                 </div>
+              </div>
+            </>
+          )}
 
-                <div
-                  className="slot slot-right"
-                  style={{ transform: `translate(calc(-50% + ${xTwoRight}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[otherIdx]} />
-                  </div>
+          {/* N>=3 */}
+          {hasThreePlus && (
+            <>
+              <div
+                className="slot slot-far-left"
+                style={{
+                  transform: `translate(calc(-50% + ${xFarLeft}px), -50%)`,
+                }}
+              >
+                <div className="card">
+                  <CardBody item={candidates[idxFarLeft]} />
                 </div>
-              </>
-            )}
+              </div>
 
-            {/* === N>=3: 기존 5슬롯 === */}
-            {hasThreePlus && (
-              <>
-                <div
-                  className="slot slot-far-left"
-                  style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[idxFarLeft]} />
-                  </div>
+              <div
+                className="slot slot-left"
+                style={{
+                  transform: `translate(calc(-50% + ${xLeft}px), -50%)`,
+                }}
+              >
+                <div className="card">
+                  <CardBody item={candidates[idxLeft]} />
                 </div>
+              </div>
 
-                <div
-                  className="slot slot-left"
-                  style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[idxLeft]} />
-                  </div>
+              <div
+                className="slot slot-center"
+                style={{
+                  transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
+                }}
+              >
+                <div className="card">
+                  <CardBody item={candidates[center]} />
                 </div>
+              </div>
 
-                <div
-                  className="slot slot-center"
-                  style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[center]} />
-                  </div>
+              <div
+                className="slot slot-right"
+                style={{
+                  transform: `translate(calc(-50% + ${xRight}px), -50%)`,
+                }}
+              >
+                <div className="card">
+                  <CardBody item={candidates[idxRight]} />
                 </div>
+              </div>
 
-                <div
-                  className="slot slot-right"
-                  style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[idxRight]} />
-                  </div>
+              <div
+                className="slot slot-far-right"
+                style={{
+                  transform: `translate(calc(-50% + ${xFarRight}px), -50%)`,
+                }}
+              >
+                <div className="card">
+                  <CardBody item={candidates[idxFarRight]} />
                 </div>
-
-                <div
-                  className="slot slot-far-right"
-                  style={{ transform: `translate(calc(-50% + ${xFarRight}px), -50%)` }}
-                >
-                  <div className="card">
-                    <CardBody item={candidates[idxFarRight]} />
-                  </div>
-                </div>
-              </>
-            )}
-          </>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* ⬇️ 카드 아래 둥근/와이드 버튼 */}
+        {/* CTA 버튼 */}
         <div className="cta-wrap">
           <button
             type="button"
