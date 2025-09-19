@@ -173,8 +173,6 @@
   width: 8rem;
   height: 8rem;
   
-  margin-top: 1rem;
-
   pointer-events: none;
   -webkit-user-drag: none;
   user-select: none;
