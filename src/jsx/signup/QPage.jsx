@@ -1,10 +1,11 @@
 // src/pages/QPage.jsx
 import React, { useMemo, useState, useEffect, useContext } from "react";
 import { useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
-import Loader from "../common/Loader.jsx"; // ✅ 추가
+import Loader from "../common/Loader.jsx";
 import "../../css/signup/QPage.css";
 import bigheartImg from "../../image/loginPage/bigheart.svg";
 
@@ -78,7 +79,7 @@ const DEFAULT_QUESTIONS = [
 ];
 
 /* ---------------------------------
-   ✅ react-router v6 이동 차단 Hook (tx.retry 지원)
+   ✅ react-router v6 이동 차단 Hook
 -----------------------------------*/
 function useBlocker(blocker, when = true) {
   const { navigator } = useContext(UNSAFE_NavigationContext);
@@ -91,13 +92,13 @@ function useBlocker(blocker, when = true) {
 
     navigator.push = (...args) => {
       const tx = { action: "push", args, retry: () => push(...args) };
-      if (blocker(tx)) return; // 차단
+      if (blocker(tx)) return;
       push(...args);
     };
 
     navigator.replace = (...args) => {
       const tx = { action: "replace", args, retry: () => replace(...args) };
-      if (blocker(tx)) return; // 차단
+      if (blocker(tx)) return;
       replace(...args);
     };
 
@@ -127,9 +128,7 @@ export default function QPage({
   const q = questions[step];
   const displayNo = useMemo(() => String(step + 1).padStart(2, "0"), [step]);
 
-  /* -------------------------------
-     1. 브라우저 새로고침/닫기 방지
-  --------------------------------*/
+  /* 1. 새로고침/닫기 방지 */
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (step < TOTAL && step >= 0 && !submitting) {
@@ -141,14 +140,12 @@ export default function QPage({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [step, TOTAL, submitting]);
 
-  /* -------------------------------
-     2. 내부 라우터 이동 방지 (스와이프 포함)
-  --------------------------------*/
+  /* 2. 내부 라우터 이동 방지 */
   useBlocker((tx) => {
     if (step < TOTAL && step >= 0 && !submitting) {
       setShowLeaveModal(true);
       setPendingTx(tx);
-      return true; // 이동 차단
+      return true;
     }
     return false;
   }, true);
@@ -158,21 +155,17 @@ export default function QPage({
       setShowLeaveModal(false);
       const retry = pendingTx.retry;
       setPendingTx(null);
-      retry(); // 원래 가려던 라우팅 실행
+      retry();
     }
   };
-
   const cancelLeave = () => {
     setShowLeaveModal(false);
     setPendingTx(null);
   };
 
-  /* -------------------------------
-     3. 진행/제출 로직
-  --------------------------------*/
+  /* 3. 진행/제출 로직 */
   const handleConfirm = async () => {
     if (choice === null) return;
-
     const next = answers.slice();
     next[step] = choice;
     setAnswers(next);
@@ -185,7 +178,6 @@ export default function QPage({
 
     try {
       setSubmitting(true);
-
       const ab = next.map((v) => (v === 0 ? "a" : "b"));
       const qPayload = {
         q1: ab[0],
@@ -199,34 +191,26 @@ export default function QPage({
         q9: ab[8],
         q10: ab[9],
       };
-
       const payload = { ...baseInfo, ...qPayload };
 
-      // 1) 서버 저장
       await api.put("/users/me/profile", payload);
-
-      // 2) 최신 프로필 조회
       const resp = await api.get("/users/me/profile");
       const profileData = resp.data;
 
-      // 3) ✅ 토큰/기타 필드 유지하며 user 병합 업데이트
       const prev = useUserStore.getState().user || {};
       useUserStore.getState().setUser({ ...prev, ...profileData });
 
-      // 4) 점수 계산
       const scoreA = ab.filter((c) => c === "a").length;
       const scoreB = ab.filter((c) => c === "b").length;
       const dominant =
         scoreA === scoreB ? "BALANCED" : scoreA > scoreB ? "A-TYPE" : "B-TYPE";
 
-      // 5) 복구용 백업 저장 (새로고침 대비)
       sessionStorage.setItem("q_answers", JSON.stringify(ab));
       sessionStorage.setItem("q_profile", JSON.stringify(profileData));
       sessionStorage.setItem("q_scoreA", String(scoreA));
       sessionStorage.setItem("q_scoreB", String(scoreB));
       sessionStorage.setItem("q_dominant", dominant);
 
-      // 6) 결과 페이지 이동
       navigate("/result", {
         replace: true,
         state: { profile: profileData, answers: ab, scoreA, scoreB, dominant },
@@ -253,7 +237,6 @@ export default function QPage({
 
   return (
     <div className="qpage">
-      {/* ✅ 진행중일 때 Loader 표시 */}
       {submitting && <Loader />}
 
       {/* 상단 */}
@@ -283,24 +266,33 @@ export default function QPage({
         <span className="qpage-heart-no">{displayNo}</span>
       </div>
 
-      {/* 질문 */}
-      <div className="qpage-card">
-        <p className="qpage-question">{q.text}</p>
-      </div>
+      {/* 질문 + 선택지 페이드 전환 */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={q.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { duration: 0.25 } }}
+          exit={{ opacity: 0, transition: { duration: 0.2 } }}
+          style={{ width: "100%" }}
+        >
+          <div className="qpage-card">
+            <p className="qpage-question">{q.text}</p>
+          </div>
 
-      {/* 선택지 */}
-      <div className="qpage-options">
-        {q.options.map((opt, idx) => (
-          <button
-            key={idx}
-            className={`qpage-option ${choice === idx ? "active" : ""}`}
-            onClick={() => setChoice(idx)}
-            type="button"
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
+          <div className="qpage-options">
+            {q.options.map((opt, idx) => (
+              <button
+                key={idx}
+                className={`qpage-option ${choice === idx ? "active" : ""}`}
+                onClick={() => setChoice(idx)}
+                type="button"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* 확인 버튼 */}
       <button
@@ -316,7 +308,7 @@ export default function QPage({
           : "확인"}
       </button>
 
-      {/* ✅ 이탈 경고 모달 */}
+      {/* 이탈 경고 모달 */}
       {showLeaveModal && (
         <div className="leave-modal">
           <div className="leave-modal-content">
