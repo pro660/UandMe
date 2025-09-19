@@ -1,7 +1,7 @@
 // src/jsx/ReceiveSignal.jsx
 import React, { useEffect, useState } from "react";
 import "../../css/home/ReceiveSignal.css";
-import YouProfile from "./mypage/YouProfile.jsx"; // ✅ 경로 확인
+import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 경로 확인
 
 export default function ReceiveSignal({ signals, onAccept, onReject /* onOpenProfile 제거 */ }) {
   const [profileOpen, setProfileOpen] = useState(false);
