@@ -12,27 +12,6 @@ const rem = (r) => r * 16;
 const wrap = (i, n) => (i + n) % n;
 const getUid = (it) => it?.userId ?? it?.id ?? it?.targetUserId ?? null;
 
-const getMsg = (t) => {
-  const raw = (t ?? "").trim();
-  const arr = Array.from(raw);
-  const n = arr.length;
-  if (n < 2) return raw;
-  const mid = Math.floor(n / 2);
-  const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
-  let idx = mid;
-  for (let d = 0; d <= Math.min(8, n - 1); d++) {
-    if (mid - d > 0 && isBreak(arr[mid - d])) { idx = mid - d + 1; break; }
-    if (mid + d < n - 1 && isBreak(arr[mid + d])) { idx = mid + d + 1; break; }
-  }
-  return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
-};
-
-// 슬롯별 회전 각도 (deg 단위는 CSS에서 곱해짐)
-const rotMap = {
-  farLeft: -25, left: -15, center: 0, right: 12, farRight: 25,
-};
-const rot2 = { left: -10, right: 10 };
-
 export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
@@ -50,7 +29,9 @@ export default function Card() {
   // 캐러셀 상태
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
-  useEffect(() => { centerRef.current = center; }, [center]);
+  useEffect(() => {
+    centerRef.current = center;
+  }, [center]);
 
   const [dx, setDx] = useState(0);
   const [snapping, setSnapping] = useState(false);
@@ -69,12 +50,10 @@ export default function Card() {
   const SNAP_MS = 260;
   const MAX_DRAG = SPREAD;
 
-  // 분기
   const hasOne = N === 1;
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
-  // N=2 간격(타이트)
   const TWO_MULT = 0.55;
   const xTwoLeft = -SPREAD * TWO_MULT + dx;
   const xTwoRight = SPREAD * TWO_MULT + dx;
@@ -85,7 +64,8 @@ export default function Card() {
     if (hasOne) return;
     dragging.current = true;
     movedRef.current = false;
-    setSnapping(false); setDir("");
+    setSnapping(false);
+    setDir("");
     lastX.current = x;
   };
   const onMove = (x) => {
@@ -105,10 +85,13 @@ export default function Card() {
     const sign = dx < 0 ? -1 : 1;
     if (absDx >= MAX_DRAG / 2) completeSlide(sign);
     else {
-      setSnapping(true); setDx(0);
+      setSnapping(true);
+      setDx(0);
       setTimeout(() => setSnapping(false), SNAP_MS);
     }
-    setTimeout(() => { movedRef.current = false; }, SNAP_MS);
+    setTimeout(() => {
+      movedRef.current = false;
+    }, SNAP_MS);
   };
   const completeSlide = (sign) => {
     if (N <= 1) return;
@@ -116,74 +99,102 @@ export default function Card() {
     setDir(sign < 0 ? "dir-left" : "dir-right");
     setDx(sign * SPREAD);
     setTimeout(() => {
-      const nextCenter = sign < 0 ? wrap(centerRef.current + 1, N)
-                                  : wrap(centerRef.current - 1, N);
+      const nextCenter =
+        sign < 0
+          ? wrap(centerRef.current + 1, N)
+          : wrap(centerRef.current - 1, N);
       setCenter(nextCenter);
-      setSnapping(false); setDx(0); setDir("");
+      setSnapping(false);
+      setDx(0);
+      setDir("");
     }, SNAP_MS);
   };
 
   // 다시 매칭
   const handleRematch = async () => {
-    if (user?.matchCredits <= 0) { alert("매칭 기회가 없습니다!"); return; }
+    if (user?.matchCredits <= 0) {
+      alert("매칭 기회가 없습니다!");
+      return;
+    }
     try {
       setLoading(true);
       const res = await api.post("/match/start", {});
       const payload = res?.data;
-      const nextList = Array.isArray(payload) ? payload
-        : Array.isArray(payload?.candidates) ? payload.candidates : [];
+      const nextList = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.candidates)
+        ? payload.candidates
+        : [];
       setCandidates?.(nextList);
-      setUser({ ...user, matchCredits: Math.max(0, (user?.matchCredits ?? 0) - 1) });
-      setCenter(0); setDx(0); setSnapping(false); setDir("");
+      setUser({
+        ...user,
+        matchCredits: Math.max(0, (user?.matchCredits ?? 0) - 1),
+      });
+      setCenter(0);
+      setDx(0);
+      setSnapping(false);
+      setDir("");
       if (!nextList.length) alert("새 매칭 결과가 없습니다.");
     } catch (e) {
       console.error(e);
       alert("매칭 시작 요청에 실패했습니다.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 공용 카드 클릭
-  const handleCardClick = (item) => (e) => {
-    e.stopPropagation();
-    if (movedRef.current) return; // 드래그 → 클릭 무시
-    const uid = getUid(item);
-    if (uid != null) setSelectedUserId(uid);
-  };
+  // 후보 카드 (3패널 고정)
+  const HoverPanelCard = ({ item }) => {
+    const [activeIndex, setActiveIndex] = useState(null);
 
-  // 콘텐츠 (이미지/텍스트)
-  const GlassContent = ({ item = {} }) => {
-    const {
-      name = "이름 없음",
-      department = "학과 없음",
-      introduce = "",
-      typeImageUrl,
-    } = item;
-    const msgText = getMsg(introduce ?? "");
+    const handleTap = (idx) => {
+      if (activeIndex === null) {
+        // 아무것도 안 열린 상태 → 패널 열기
+        setActiveIndex(idx);
+      } else if (activeIndex === idx) {
+        // 이미 열린 패널 다시 터치 → 상세 모달
+        const uid = getUid(item);
+        if (uid != null) setSelectedUserId(uid);
+      } else {
+        // 다른 패널 터치 → 전환만
+        setActiveIndex(idx);
+      }
+    };
+
     return (
-      <div className="glass-content">
-        <div className="glass-image">
-          {typeImageUrl ? <img src={typeImageUrl} alt={name} draggable={false} />
-                        : <div className="glass-image--placeholder" />}
-        </div>
-        <div className="glass-text">
-          <p className="glass-name">{name}</p>
-          <p className="glass-major">{department}</p>
-          {msgText && <p className="glass-msg">“{msgText}”</p>}
-        </div>
+      <div className="hover-card">
+        <p
+          className={activeIndex === 0 ? "active" : ""}
+          onClick={() => handleTap(0)}
+        >
+          <span>{item?.name ?? "이름 없음"}</span>
+        </p>
+        <p
+          className={activeIndex === 1 ? "active" : ""}
+          onClick={() => handleTap(1)}
+        >
+          <span>{item?.department ?? "학과 없음"}</span>
+        </p>
+        <p
+          className={activeIndex === 2 ? "active" : ""}
+          onClick={() => handleTap(2)}
+        >
+          <span>프로필</span>
+        </p>
       </div>
     );
   };
 
-  // 좌표 인덱스
-  const xFarLeft  = -2 * SPREAD + dx;
-  const xLeft     = -1 * SPREAD + dx;
-  const xCenter   =  0 * SPREAD + dx;
-  const xRight    = +1 * SPREAD + dx;
+  // 좌표
+  const xFarLeft = -2 * SPREAD + dx;
+  const xLeft = -1 * SPREAD + dx;
+  const xCenter = 0 * SPREAD + dx;
+  const xRight = +1 * SPREAD + dx;
   const xFarRight = +2 * SPREAD + dx;
 
-  const idxFarLeft  = wrap(center - 2, N);
-  const idxLeft     = wrap(center - 1, N);
-  const idxRight    = wrap(center + 1, N);
+  const idxFarLeft = wrap(center - 2, N);
+  const idxLeft = wrap(center - 1, N);
+  const idxRight = wrap(center + 1, N);
   const idxFarRight = wrap(center + 2, N);
 
   return (
@@ -191,9 +202,8 @@ export default function Card() {
       <div className="title">원하는 상대에게 플러팅하세요</div>
 
       <div className="card-root">
-        {/* hover 시 회전이 풀리도록 컨테이너 클래스 부여 */}
         <div
-          className={`card-wrap glass-container ${snapping ? "snapping" : ""} ${dir}`}
+          className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
           onTouchStart={(e) => !hasOne && onStart(e.touches[0].clientX)}
           onTouchMove={(e) => !hasOne && onMove(e.touches[0].clientX)}
           onTouchEnd={onEnd}
@@ -206,16 +216,11 @@ export default function Card() {
           {hasOne && (
             <div
               className="slot slot-center"
-              style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
+              style={{
+                transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
+              }}
             >
-              <div
-                className="glass"
-                data-text={candidates[center]?.name ?? ""}
-                style={{ "--r": rotMap.center }}
-                onClick={handleCardClick(candidates[center])}
-              >
-                <GlassContent item={candidates[center]} />
-              </div>
+              <HoverPanelCard item={candidates[center]} />
             </div>
           )}
 
@@ -229,16 +234,8 @@ export default function Card() {
                   zIndex: 2,
                 }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[center]?.name ?? ""}
-                  style={{ "--r": rot2.left }}
-                  onClick={handleCardClick(candidates[center])}
-                >
-                  <GlassContent item={candidates[center]} />
-                </div>
+                <HoverPanelCard item={candidates[center]} />
               </div>
-
               <div
                 className="slot slot-right"
                 style={{
@@ -246,14 +243,7 @@ export default function Card() {
                   zIndex: 1,
                 }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[otherIdx]?.name ?? ""}
-                  style={{ "--r": rot2.right }}
-                  onClick={handleCardClick(candidates[otherIdx])}
-                >
-                  <GlassContent item={candidates[otherIdx]} />
-                </div>
+                <HoverPanelCard item={candidates[otherIdx]} />
               </div>
             </>
           )}
@@ -263,78 +253,49 @@ export default function Card() {
             <>
               <div
                 className="slot slot-far-left"
-                style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}
+                style={{
+                  transform: `translate(calc(-50% + ${xFarLeft}px), -50%)`,
+                }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[idxFarLeft]?.name ?? ""}
-                  style={{ "--r": rotMap.farLeft }}
-                  onClick={handleCardClick(candidates[idxFarLeft])}
-                >
-                  <GlassContent item={candidates[idxFarLeft]} />
-                </div>
+                <HoverPanelCard item={candidates[idxFarLeft]} />
               </div>
-
               <div
                 className="slot slot-left"
-                style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}
+                style={{
+                  transform: `translate(calc(-50% + ${xLeft}px), -50%)`,
+                }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[idxLeft]?.name ?? ""}
-                  style={{ "--r": rotMap.left }}
-                  onClick={handleCardClick(candidates[idxLeft])}
-                >
-                  <GlassContent item={candidates[idxLeft]} />
-                </div>
+                <HoverPanelCard item={candidates[idxLeft]} />
               </div>
-
               <div
                 className="slot slot-center"
-                style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
+                style={{
+                  transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
+                }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[center]?.name ?? ""}
-                  style={{ "--r": rotMap.center }}
-                  onClick={handleCardClick(candidates[center])}
-                >
-                  <GlassContent item={candidates[center]} />
-                </div>
+                <HoverPanelCard item={candidates[center]} />
               </div>
-
               <div
                 className="slot slot-right"
-                style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}
+                style={{
+                  transform: `translate(calc(-50% + ${xRight}px), -50%)`,
+                }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[idxRight]?.name ?? ""}
-                  style={{ "--r": rotMap.right }}
-                  onClick={handleCardClick(candidates[idxRight])}
-                >
-                  <GlassContent item={candidates[idxRight]} />
-                </div>
+                <HoverPanelCard item={candidates[idxRight]} />
               </div>
-
               <div
                 className="slot slot-far-right"
-                style={{ transform: `translate(calc(-50% + ${xFarRight}px), -50%)` }}
+                style={{
+                  transform: `translate(calc(-50% + ${xFarRight}px), -50%)`,
+                }}
               >
-                <div
-                  className="glass"
-                  data-text={candidates[idxFarRight]?.name ?? ""}
-                  style={{ "--r": rotMap.farRight }}
-                  onClick={handleCardClick(candidates[idxFarRight])}
-                >
-                  <GlassContent item={candidates[idxFarRight]} />
-                </div>
+                <HoverPanelCard item={candidates[idxFarRight]} />
               </div>
             </>
           )}
         </div>
 
-        {/* CTA */}
+        {/* CTA 버튼 */}
         <div className="cta-wrap">
           <button
             type="button"
@@ -350,7 +311,10 @@ export default function Card() {
       {/* 모달 */}
       {selectedUserId != null &&
         createPortal(
-          <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
+          <div
+            className="modal-overlay"
+            onClick={() => setSelectedUserId(null)}
+          >
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <YouProfile
                 userId={selectedUserId}
