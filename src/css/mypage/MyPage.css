@@ -1,14 +1,32 @@
-.matching-page {
-  background-color: #f9b5d3;
-  padding-bottom: 10vh;
+/* 전역 변수: 실제 탭바 높이에 맞춰 수정 (예: 64~80px) */
+:root {
+  --tabbar-h: 72px;
 }
 
+/* 페이지 컨테이너 */
+.matching-page {
+  background-color: #f9b5d3;
+  min-height: 100svh;
+
+  /* 탭바 + 여유 + 안전영역 만큼 하단 패딩 확보 */
+  padding-bottom: calc(var(--tabbar-h) + 24px);
+  padding-bottom: calc(var(--tabbar-h) + 24px + constant(safe-area-inset-bottom));
+  padding-bottom: calc(var(--tabbar-h) + 24px + env(safe-area-inset-bottom));
+}
+
+/* 섹션 */
 .account-actions {
   display: flex;
   flex-direction: column; /* 세로 배치 */
   align-items: center;
   gap: 0.5rem;
   position: relative;
+  background-color: #f9b5d3;
+
+  /* 페이지 끝부분에서도 버튼이 탭바에 안 가리도록 여유 */
+  margin-bottom: calc(var(--tabbar-h) + 16px);
+  margin-bottom: calc(var(--tabbar-h) + 16px + constant(safe-area-inset-bottom));
+  margin-bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
 }
 
 /* 로그아웃 버튼: pill 스타일 */
@@ -43,3 +61,11 @@
 .delete-btn:hover {
   text-decoration: underline;
 }
+
+/* (옵션) 스페이서 컴포넌트를 쓰고 싶을 때
+.tabbar-spacer {
+  height: calc(var(--tabbar-h) + 16px);
+  height: calc(var(--tabbar-h) + 16px + constant(safe-area-inset-bottom));
+  height: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+}
+*/
