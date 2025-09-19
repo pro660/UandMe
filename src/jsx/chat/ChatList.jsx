@@ -14,9 +14,8 @@ export default function ChatList() {
   const { user } = useUserStore();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true); // ✅ 로딩 상태
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Firestore에서 내가 속한 채팅방 불러오기
   useEffect(() => {
     if (!user?.userId) return;
 
@@ -25,20 +24,45 @@ export default function ChatList() {
       where("participants", "array-contains", String(user.userId))
     );
 
-    setLoading(true); // 구독 시작 시 로딩 켜기
-    const unsub = onSnapshot(q, (snapshot) => {
-      const roomList = snapshot.docs.map((doc) => ({
-        roomId: doc.id,
-        ...doc.data(),
-      }));
-      setRooms(roomList);
-      setLoading(false); // 데이터 들어오면 로딩 끄기
-    });
+    setLoading(true);
+    const unsub = onSnapshot(
+      q,
+      { includeMetadataChanges: true },
+      (snapshot) => {
+        let updatedRooms = [];
+
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "removed") {
+            updatedRooms.push({
+              roomId: change.doc.id,
+              deleted: true,
+            });
+          } else {
+            updatedRooms.push({
+              roomId: change.doc.id,
+              ...change.doc.data(),
+            });
+          }
+        });
+
+        // ✅ 정렬: 삭제된 방은 맨 아래, 나머지는 lastMessage 기준 내림차순
+        updatedRooms.sort((a, b) => {
+          if (a.deleted && !b.deleted) return 1;
+          if (!a.deleted && b.deleted) return -1;
+
+          const aTime = a.lastMessage?.createdAt?.seconds || 0;
+          const bTime = b.lastMessage?.createdAt?.seconds || 0;
+          return bTime - aTime;
+        });
+
+        setRooms(updatedRooms);
+        setLoading(false);
+      }
+    );
 
     return () => unsub();
   }, [user?.userId, setRooms]);
 
-  // ✅ 로딩 중에는 로더만 보여주기
   if (loading) {
     return (
       <div style={{ padding: "10px", textAlign: "center", marginTop: "5rem" }}>
@@ -52,7 +76,6 @@ export default function ChatList() {
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
       {rooms.length === 0 ? (
-        // ✅ 빈 상태
         <div
           style={{
             textAlign: "center",
@@ -79,12 +102,22 @@ export default function ChatList() {
         </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {rooms.map((room) => {
-            // 내 userId 기준으로 상대방 정보 꺼내기
-            const peer = room.peers?.[String(user.userId)];
-            const unreadCount = room.unread?.[String(user.userId)] || 0;
-
-            return (
+          {rooms.map((room) =>
+            room.deleted ? (
+              // 🔴 삭제된 방 UI
+              <li
+                key={room.roomId}
+                style={{
+                  padding: "12px 8px",
+                  borderBottom: "1px solid #eee",
+                  color: "#c0392b",
+                  fontStyle: "italic",
+                }}
+              >
+                ❌ 이 채팅방은 삭제되었습니다
+              </li>
+            ) : (
+              // ✅ 정상 방 UI
               <li
                 key={room.roomId}
                 onClick={() => navigate(`/chat/${room.roomId}`)}
@@ -97,10 +130,9 @@ export default function ChatList() {
                   borderBottom: "1px solid #eee",
                 }}
               >
-                {/* 왼쪽: 프로필 + 이름 + 마지막 메시지 */}
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <img
-                    src={peer?.typeImageUrl}
+                    src={room.peers?.[String(user.userId)]?.typeImageUrl}
                     alt="프로필"
                     style={{
                       width: "48px",
@@ -118,7 +150,8 @@ export default function ChatList() {
                         marginBottom: "4px",
                       }}
                     >
-                      {peer?.nickname || peer?.name}
+                      {room.peers?.[String(user.userId)]?.nickname ||
+                        room.peers?.[String(user.userId)]?.name}
                     </div>
                     <div
                       style={{
@@ -135,7 +168,6 @@ export default function ChatList() {
                   </div>
                 </div>
 
-                {/* 오른쪽: 시간 + 안읽음 뱃지 */}
                 <div style={{ textAlign: "right", marginLeft: "8px" }}>
                   <div
                     style={{
@@ -155,7 +187,7 @@ export default function ChatList() {
                       : ""}
                   </div>
 
-                  {unreadCount > 0 && (
+                  {room.unread?.[String(user.userId)] > 0 && (
                     <div
                       style={{
                         marginTop: "4px",
@@ -170,16 +202,15 @@ export default function ChatList() {
                         textAlign: "center",
                       }}
                     >
-                      {unreadCount}
+                      {room.unread?.[String(user.userId)]}
                     </div>
                   )}
                 </div>
               </li>
-            );
-          })}
+            )
+          )}
         </ul>
       )}
     </div>
   );
 }
-

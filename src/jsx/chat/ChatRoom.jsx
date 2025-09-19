@@ -1,5 +1,5 @@
 // src/jsx/chat/ChatRoom.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
@@ -12,6 +12,7 @@ import {
   increment,
   getDoc,
   runTransaction,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import { auth } from "../../libs/firebase";
@@ -30,27 +31,21 @@ export default function ChatRoom() {
   const [input, setInput] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
   const [sending, setSending] = useState(false);
-  const [authReady, setAuthReady] = useState(false); // ✅ 익명 로그인 완료 가드
-
-  // ✅ 모달 상태
+  const [authReady, setAuthReady] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  // ✅ 내 아이디 (숫자/문자열 동시 준비)
   const myIdNum = Number(user?.userId);
   const myIdStr = Number.isFinite(myIdNum) ? String(myIdNum) : "";
 
-  // ✅ ref
   const chatroomRef = useRef(null);
   const messagesWrapRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const inputWrapperRef = useRef(null);
 
-  // 🔐 Firebase Auth 준비되면 시작
+  // 🔐 Firebase Auth 준비
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (fbUser) => {
-      // 디버그용: 현재 인증 상태 확인
-      // console.log("[ChatRoom][Auth]", fbUser?.uid, fbUser?.isAnonymous);
+    const unsub = onAuthStateChanged(auth, () => {
       setAuthReady(true);
     });
     return unsub;
@@ -71,12 +66,11 @@ export default function ChatRoom() {
     getDoc(roomRef)
       .then((snap) => {
         if (snap.exists()) setRoomInfo(snap.data());
-        else navigate("/chat"); // 방이 없으면 리스트로
+        else navigate("/chat");
       })
       .catch((e) => console.error("[ChatRoom] getDoc room error:", e));
   }, [authReady, roomId, navigate]);
 
-  // ✅ 참가자/상대 ID 계산 (숫자 기준)
   const participants = useMemo(
     () => (roomInfo?.participants || []).map(Number),
     [roomInfo]
@@ -86,7 +80,6 @@ export default function ChatRoom() {
     [participants, myIdNum]
   );
 
-  // ✅ peers를 userId(숫자) -> 카드데이터로 역색인
   const peersByUserId = useMemo(() => {
     const out = {};
     const p = roomInfo?.peers || {};
@@ -97,10 +90,53 @@ export default function ChatRoom() {
     return out;
   }, [roomInfo]);
 
-  // 헤더에 띄울 상대 정보
   const peerData = peerIdNum != null ? peersByUserId[peerIdNum] ?? null : null;
 
-  // ✅ 메시지 실시간 구독 (로그인 완료 후)
+  // ✅ 유틸 함수들 (useCallback으로 감싸기)
+  const isNearBottom = useCallback(() => {
+    const el = messagesWrapRef.current;
+    if (!el) return true;
+    const threshold = 120;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    return distance < threshold;
+  }, []);
+
+  const smartScrollToBottom = useCallback(
+    (force = false) => {
+      if (force || isNearBottom()) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 30);
+      }
+    },
+    [isNearBottom]
+  );
+
+  const markAsRead = useCallback(async (roomId, userIdStr) => {
+    try {
+      const roomRef = doc(db, "chatRooms", roomId);
+      await updateDoc(roomRef, { [`unread.${userIdStr}`]: 0 });
+    } catch (e) {
+      console.warn("markAsRead failed", e);
+    }
+  }, []);
+
+  const maybeMarkAsRead = useCallback(
+    (list) => {
+      if (!roomId || !myIdStr || !Array.isArray(list) || list.length === 0)
+        return;
+      if (document.visibilityState !== "visible") return;
+      if (typeof window !== "undefined" && !document.hasFocus()) return;
+
+      const last = list[list.length - 1];
+      if (Number(last?.senderId) !== myIdNum) {
+        markAsRead(roomId, myIdStr);
+      }
+    },
+    [roomId, myIdStr, myIdNum, markAsRead]
+  );
+
+  // ✅ 메시지 구독
   useEffect(() => {
     if (!authReady || !roomId) return;
 
@@ -118,10 +154,8 @@ export default function ChatRoom() {
         }));
         setMessages(newMessages);
 
-        // 새 메시지 added 체크해 읽음 처리(필요할 때만)
         const added = snapshot.docChanges().some((c) => c.type === "added");
         if (added) maybeMarkAsRead(newMessages);
-        // 오토스크롤
         smartScrollToBottom();
       },
       (err) => {
@@ -130,10 +164,9 @@ export default function ChatRoom() {
     );
 
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady, roomId, myIdNum]);
+  }, [authReady, roomId, myIdNum, maybeMarkAsRead, smartScrollToBottom]);
 
-  // ✅ 포커스/가시 상태 변화 시 읽음 처리
+  // ✅ 포커스/가시성 변화 시 읽음 처리
   useEffect(() => {
     const onFocusOrVisible = () => maybeMarkAsRead(messages);
     window.addEventListener("focus", onFocusOrVisible);
@@ -142,17 +175,16 @@ export default function ChatRoom() {
       window.removeEventListener("focus", onFocusOrVisible);
       document.removeEventListener("visibilitychange", onFocusOrVisible);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, myIdNum, roomId]);
+  }, [messages, maybeMarkAsRead]);
 
-  // ✅ 최초 입장 시 읽음 초기화
+  // ✅ 최초 입장 시 읽음 처리
   useEffect(() => {
     if (authReady && roomId && myIdStr) {
       markAsRead(roomId, myIdStr);
     }
-  }, [authReady, roomId, myIdStr]);
+  }, [authReady, roomId, myIdStr, markAsRead]);
 
-  // ✅ iOS Safari 키보드 대응(뷰포트 변화)
+  // ✅ iOS 키보드 대응
   useEffect(() => {
     const handleResize = () => {
       if (!chatroomRef.current || !inputWrapperRef.current) return;
@@ -164,43 +196,6 @@ export default function ChatRoom() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  function isNearBottom() {
-    const el = messagesWrapRef.current;
-    if (!el) return true;
-    const threshold = 120; // px
-    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-    return distance < threshold;
-  }
-
-  function smartScrollToBottom(force = false) {
-    if (force || isNearBottom()) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 30);
-    }
-  }
-
-  async function markAsRead(roomId, userIdStr) {
-    try {
-      const roomRef = doc(db, "chatRooms", roomId);
-      await updateDoc(roomRef, { [`unread.${userIdStr}`]: 0 });
-    } catch (e) {
-      console.warn("markAsRead failed", e);
-    }
-  }
-
-  // 마지막 메시지가 상대가 보낸 것이고, 포커스/가시 상태일 때만 읽음 반영
-  function maybeMarkAsRead(list) {
-    if (!roomId || !myIdStr || !Array.isArray(list) || list.length === 0) return;
-    if (document.visibilityState !== "visible") return;
-    if (typeof window !== "undefined" && !document.hasFocus()) return;
-
-    const last = list[list.length - 1];
-    if (Number(last?.senderId) !== myIdNum) {
-      markAsRead(roomId, myIdStr);
-    }
-  }
-
   async function sendMessage() {
     const text = input.trim();
     if (!text) return;
@@ -210,7 +205,6 @@ export default function ChatRoom() {
 
     setSending(true);
     try {
-      // ✅ 트랜잭션으로 메시지 생성 + 룸 메타 동시 갱신 (레이스 방지)
       const roomRef = doc(db, "chatRooms", roomId);
       const msgColRef = collection(db, "chatRooms", roomId, "messages");
 
@@ -222,21 +216,21 @@ export default function ChatRoom() {
         const receiverIdNum = parts.find((id) => id !== myIdNum);
         if (!Number.isFinite(receiverIdNum)) throw new Error("Peer not found");
 
-        const newMsgRef = doc(msgColRef); // auto-id
+        const newMsgRef = doc(msgColRef);
         tx.set(newMsgRef, {
           text,
-          senderId: myIdNum, // 숫자
+          senderId: myIdNum,
           createdAt: serverTimestamp(),
         });
 
         tx.update(roomRef, {
-          lastMessage: { text, senderId: myIdNum, createdAt: serverTimestamp() }, // 숫자
-          [`unread.${String(receiverIdNum)}`]: increment(1), // 키는 문자열
+          lastMessage: { text, senderId: myIdNum, createdAt: serverTimestamp() },
+          [`unread.${String(receiverIdNum)}`]: increment(1),
         });
       });
 
       setInput("");
-      inputRef.current?.focus(); // 필요 시 blur로 바꿔 키보드 닫기
+      inputRef.current?.focus();
       smartScrollToBottom(true);
     } catch (e) {
       console.error("sendMessage failed:", e);
@@ -245,7 +239,6 @@ export default function ChatRoom() {
     }
   }
 
-  // Enter로 전송
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -253,7 +246,6 @@ export default function ChatRoom() {
     }
   }
 
-  // 메시지 시간 포맷
   function formatTime(ts) {
     try {
       if (!ts?.toDate) return "";
@@ -263,6 +255,24 @@ export default function ChatRoom() {
       });
     } catch {
       return "";
+    }
+  }
+
+  // ✅ 방 삭제 (나가기)
+  async function handleLeaveRoom() {
+    if (!roomId) return;
+    const ok = window.confirm(
+      "채팅방을 나가면 대화 내용이 모두 삭제됩니다. 나가시겠습니까?"
+    );
+    if (!ok) return;
+
+    try {
+      const roomRef = doc(db, "chatRooms", roomId);
+      await deleteDoc(roomRef);
+      navigate("/chat");
+    } catch (err) {
+      console.error("채팅방 삭제 실패:", err);
+      alert("채팅방을 나갈 수 없습니다.");
     }
   }
 
@@ -280,6 +290,7 @@ export default function ChatRoom() {
               alignItems: "center",
               gap: "8px",
               cursor: "pointer",
+              flex: 1,
             }}
             onClick={() => setShowProfile(true)}
           >
@@ -301,8 +312,26 @@ export default function ChatRoom() {
             </div>
           </div>
         ) : (
-          <span className="title">채팅방</span>
+          <span className="title" style={{ flex: 1 }}>
+            채팅방
+          </span>
         )}
+
+        {/* ✅ 나가기 버튼 */}
+        <button
+          className="leave-btn"
+          onClick={handleLeaveRoom}
+          style={{
+            marginLeft: "auto",
+            background: "none",
+            border: "none",
+            fontSize: "0.9rem",
+            color: "#e74c3c",
+            cursor: "pointer",
+          }}
+        >
+          나가기
+        </button>
       </div>
 
       {/* 메시지 영역 */}
@@ -341,22 +370,14 @@ export default function ChatRoom() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={
-            !Number.isFinite(myIdNum)
-              ? "로그인 정보를 불러오는 중..."
-              : !roomId
-              ? "채팅방 정보를 불러오는 중..."
-              : "메세지를 입력해주세요."
-          }
+          placeholder="메세지를 입력해주세요."
           disabled={sending || !Number.isFinite(myIdNum) || !roomId}
         />
         <button
           type="button"
           className="send-btn"
           onClick={sendMessage}
-          disabled={
-            sending || !input.trim() || !Number.isFinite(myIdNum) || !roomId
-          }
+          disabled={sending || !input.trim() || !Number.isFinite(myIdNum) || !roomId}
           aria-busy={sending}
         >
           <FaArrowUp size={20} color="white" />
