@@ -48,9 +48,9 @@ function AppRouter() {
           <Route
             path="/"
             element={
-              // <ProtectedRoute>
+              <ProtectedRoute>
               <Home />
-              /* </ProtectedRoute> */
+              </ProtectedRoute>
             }
           />
           <Route path="/chat" element={<ChatList />} />
