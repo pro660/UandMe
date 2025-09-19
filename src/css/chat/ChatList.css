@@ -25,6 +25,8 @@
 
   animation: fadeInUp 0.25s ease;
   padding: 0; 
+    margin-top: 56px;
+
 }
 
 /* 모달 등장 애니메이션 */
