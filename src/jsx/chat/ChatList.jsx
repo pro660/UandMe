@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { AnimatePresence, motion } from "framer-motion"; // ✅ 추가
 import { db } from "../../libs/firebase";
 import useUserStore from "../../api/userStore";
 import useChatStore from "../../api/chatStore";
 import WarningIcon from "../../image/home/warning.svg";
 import Loader from "../common/Loader";
-import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 추가
+import YouProfile from "../mypage/YouProfile.jsx";
 
 import "../../css/chat/ChatList.css";
+
+const fade = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.35 } },
+  exit: { opacity: 0, transition: { duration: 0.35 } },
+};
 
 export default function ChatList() {
   const { rooms, setRooms, deletedRoomIds, clearDeletedRoom } = useChatStore();
@@ -17,7 +24,7 @@ export default function ChatList() {
 
   const [loading, setLoading] = useState(true);
 
-  // ✅ 프로필 모달 상태
+  // 프로필 모달 상태
   const [showProfile, setShowProfile] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
@@ -60,165 +67,169 @@ export default function ChatList() {
     return () => unsub();
   }, [user?.userId, setRooms, deletedRoomIds, clearDeletedRoom]);
 
-  if (loading) {
-    return (
-      <div style={{ padding: "10px", textAlign: "center", marginTop: "5rem" }}>
-        <Loader />
-      </div>
-    );
-  }
-
   return (
     <div style={{ padding: "10px" }}>
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
-      {rooms.length === 0 ? (
-        <div style={{ textAlign: "center", color: "#666", marginTop: "100px" }}>
-          <img
-            src={WarningIcon}
-            alt="경고 아이콘"
-            style={{
-              width: "6rem",
-              height: "6rem",
-              display: "block",
-              margin: "0 auto 1rem",
-            }}
-          />
-          <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>
-            아직 채팅이 시작되지 않았어요.
-          </p>
-          <p style={{ fontSize: "0.95rem", marginTop: "5px" }}>
-            매칭을 하여 원하는 이성과 채팅을 시작하세요.
-          </p>
-        </div>
-      ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {rooms.map((room) => {
-            if (room.deleted) {
-              return (
-                <li
-                  key={room.roomId}
-                  style={{
-                    padding: "12px 8px",
-                    borderBottom: "1px solid #eee",
-                    color: "#c0392b",
-                    fontStyle: "italic",
-                    background: "#fceaea",
-                    borderRadius: "6px",
-                    marginBottom: "6px",
-                    cursor: "not-allowed",
-                    opacity: 0.8,
-                  }}
-                >
-                  ❌ 이 채팅방은 삭제되었습니다
-                </li>
-              );
-            }
-
-            const peer = room.peers?.[String(user.userId)];
-            const unreadCount = room.unread?.[String(user.userId)] || 0;
-
-            return (
-              <li
-                key={room.roomId}
+      {/* ✅ 로딩 중에는 기존 화면 유지 */}
+      <AnimatePresence mode="sync">
+        {!loading && (
+          <motion.div key="chatlist" {...fade}>
+            {rooms.length === 0 ? (
+              <div
                 style={{
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px 8px",
-                  borderBottom: "1px solid #eee",
+                  textAlign: "center",
+                  color: "#666",
+                  marginTop: "100px",
                 }}
-                onClick={() => navigate(`/chat/${room.roomId}`)} // ✅ 리스트 클릭 → 채팅방 이동
               >
-                {/* 왼쪽: 프로필 + 이름 + 메시지 */}
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <img
-                    src={peer?.typeImageUrl}
-                    alt="프로필"
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      marginRight: "12px",
-                      cursor: "pointer",
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation(); // ✅ 채팅방 이동 막기
-                      setSelectedUserId(peer?.userId);
-                      setShowProfile(true);
-                    }}
-                  />
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "1rem",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {peer?.nickname || peer?.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.9rem",
-                        color: "#555",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        maxWidth: "200px",
-                      }}
-                    >
-                      {room.lastMessage?.text || "대화를 시작해보세요!"}
-                    </div>
-                  </div>
-                </div>
+                <img
+                  src={WarningIcon}
+                  alt="경고 아이콘"
+                  style={{
+                    width: "6rem",
+                    height: "6rem",
+                    display: "block",
+                    margin: "0 auto 1rem",
+                  }}
+                />
+                <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: 0 }}>
+                  아직 채팅이 시작되지 않았어요.
+                </p>
+                <p style={{ fontSize: "0.95rem", marginTop: "5px" }}>
+                  매칭을 하여 원하는 이성과 채팅을 시작하세요.
+                </p>
+              </div>
+            ) : (
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {rooms.map((room) => {
+                  if (room.deleted) {
+                    return (
+                      <li
+                        key={room.roomId}
+                        style={{
+                          padding: "12px 8px",
+                          borderBottom: "1px solid #eee",
+                          color: "#c0392b",
+                          fontStyle: "italic",
+                          background: "#fceaea",
+                          borderRadius: "6px",
+                          marginBottom: "6px",
+                          cursor: "not-allowed",
+                          opacity: 0.8,
+                        }}
+                      >
+                        ❌ 이 채팅방은 삭제되었습니다
+                      </li>
+                    );
+                  }
 
-                {/* 오른쪽: 시간 + 안읽음 */}
-                <div style={{ textAlign: "right", marginLeft: "8px" }}>
-                  <div
-                    style={{
-                      fontSize: "0.8rem",
-                      color: "#888",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {room.lastMessage?.createdAt
-                      ? new Date(
-                          room.lastMessage.createdAt.seconds * 1000
-                        ).toLocaleTimeString("ko-KR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
-                      : ""}
-                  </div>
+                  const peer = room.peers?.[String(user.userId)];
+                  const unreadCount = room.unread?.[String(user.userId)] || 0;
 
-                  {unreadCount > 0 && (
-                    <div
+                  return (
+                    <li
+                      key={room.roomId}
                       style={{
-                        marginTop: "4px",
-                        background: "#ff4d4f",
-                        color: "white",
-                        borderRadius: "12px",
-                        padding: "2px 8px",
-                        fontSize: "0.8rem",
-                        fontWeight: "bold",
-                        display: "inline-block",
-                        minWidth: "20px",
-                        textAlign: "center",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 8px",
+                        borderBottom: "1px solid #eee",
                       }}
+                      onClick={() => navigate(`/chat/${room.roomId}`)}
                     >
-                      {unreadCount}
-                    </div>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                      {/* 왼쪽 */}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <img
+                          src={peer?.typeImageUrl}
+                          alt="프로필"
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            marginRight: "12px",
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedUserId(peer?.userId);
+                            setShowProfile(true);
+                          }}
+                        />
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: "1rem",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            {peer?.nickname || peer?.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "#555",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              maxWidth: "200px",
+                            }}
+                          >
+                            {room.lastMessage?.text || "대화를 시작해보세요!"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 오른쪽 */}
+                      <div style={{ textAlign: "right", marginLeft: "8px" }}>
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "#888",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {room.lastMessage?.createdAt
+                            ? new Date(
+                                room.lastMessage.createdAt.seconds * 1000
+                              ).toLocaleTimeString("ko-KR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })
+                            : ""}
+                        </div>
+                        {unreadCount > 0 && (
+                          <div
+                            style={{
+                              marginTop: "4px",
+                              background: "#ff4d4f",
+                              color: "white",
+                              borderRadius: "12px",
+                              padding: "2px 8px",
+                              fontSize: "0.8rem",
+                              fontWeight: "bold",
+                              display: "inline-block",
+                              minWidth: "20px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {unreadCount}
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ✅ 프로필 모달 */}
       {showProfile && selectedUserId && (
@@ -227,9 +238,24 @@ export default function ChatList() {
             <YouProfile
               userId={selectedUserId}
               onClose={() => setShowProfile(false)}
-              fromMatching={false} // 리스트 → 플러팅 버튼 없음
+              fromMatching={false}
             />
           </div>
+        </div>
+      )}
+
+      {/* ✅ 오버레이 로딩 스피너 */}
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 2000,
+          }}
+        >
+          <Loader />
         </div>
       )}
     </div>
