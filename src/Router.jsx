@@ -20,9 +20,6 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
-import ChatRoomDummy from "./jsx/chat/ChatRoomDummy";
-import DummyResultPage from "./jsx/signup/DummyResultPage";
-
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
@@ -49,14 +46,35 @@ function AppRouter() {
           <Route
             path="/"
             element={
-              // <ProtectedRoute>
+              <ProtectedRoute>
                 <Home />
-              // </ProtectedRoute>
+              </ProtectedRoute>
             }
           />
-          <Route path="/chat" element={<ChatList />} />
-          <Route path="/matching" element={<MatchingEntry />} />
-          <Route path="/mypage" element={<MyPage />} />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/matching"
+            element={
+              <ProtectedRoute>
+                <MatchingEntry />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mypage"
+            element={
+              <ProtectedRoute>
+                <MyPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* 회원가입(정보 입력 페이지) */}
           <Route
@@ -94,8 +112,6 @@ function AppRouter() {
               </ChatRoomGuard>
             }
           />
-          <Route path="/chat-dummy" element={<ChatRoomDummy />} />
-          <Route path="/dummy-result" element={<DummyResultPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

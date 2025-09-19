@@ -36,7 +36,9 @@ export default function Card({ initialCandidates = [] }) {
 
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
-  useEffect(() => { centerRef.current = center; }, [center]);
+  useEffect(() => {
+    centerRef.current = center;
+  }, [center]);
 
   const [dx, setDx] = useState(0);
   const [snapping, setSnapping] = useState(false);
@@ -49,7 +51,9 @@ export default function Card({ initialCandidates = [] }) {
   // 모달 열릴 때 body 스크롤 제어
   useEffect(() => {
     document.body.style.overflow = selectedUserId != null ? "hidden" : "auto";
-    return () => { document.body.style.overflow = "auto"; };
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, [selectedUserId]);
 
   const N = candidates.length;
@@ -101,7 +105,9 @@ export default function Card({ initialCandidates = [] }) {
       setDx(0);
       setTimeout(() => setSnapping(false), SNAP_MS);
     }
-    setTimeout(() => { movedRef.current = false; }, SNAP_MS);
+    setTimeout(() => {
+      movedRef.current = false;
+    }, SNAP_MS);
   };
   const completeSlide = (sign) => {
     if (N <= 1) return;
@@ -109,7 +115,10 @@ export default function Card({ initialCandidates = [] }) {
     setDir(sign < 0 ? "dir-left" : "dir-right");
     setDx(sign * SPREAD);
     setTimeout(() => {
-      const nextCenter = sign < 0 ? wrap(centerRef.current + 1, N) : wrap(centerRef.current - 1, N);
+      const nextCenter =
+        sign < 0
+          ? wrap(centerRef.current + 1, N)
+          : wrap(centerRef.current - 1, N);
       setCenter(nextCenter);
       setSnapping(false);
       setDx(0);
@@ -165,24 +174,59 @@ export default function Card({ initialCandidates = [] }) {
     const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
     let idx = mid;
     for (let d = 0; d <= Math.min(8, n - 1); d++) {
-      if (mid - d > 0 && isBreak(arr[mid - d])) { idx = mid - d + 1; break; }
-      if (mid + d < n - 1 && isBreak(arr[mid + d])) { idx = mid + d + 1; break; }
+      if (mid - d > 0 && isBreak(arr[mid - d])) {
+        idx = mid - d + 1;
+        break;
+      }
+      if (mid + d < n - 1 && isBreak(arr[mid + d])) {
+        idx = mid + d + 1;
+        break;
+      }
     }
     return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
   };
 
+  // ⬇️ Card.jsx 안의 CardBody 만 이 코드로 교체
   const CardBody = ({ item = {} }) => {
     const {
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
-      typeImageUrl,
+      profileImageUrl, // ✅ 1순위
+      typeImageUrl, // ✅ 2순위
     } = item;
+
+    // 소개 줄바꿈 기존 로직 재사용
     const msgText = breakAtHalf(introduce ?? "");
+
+    // 이미지 소스 우선순위 + 에러 폴백
+    const primary = (profileImageUrl ?? "").trim() || null;
+    const fallback = (typeImageUrl ?? "").trim() || null;
+
+    const [imgSrc, setImgSrc] = useState(primary || fallback || null);
+    useEffect(() => {
+      // item 바뀌면 우선순위 다시 계산
+      setImgSrc(primary || fallback || null);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [primary, fallback]);
+
+    const handleImgError = () => {
+      if (imgSrc && imgSrc !== fallback && fallback) {
+        // 프로필(1순위) 실패 → 타입이미지(2순위)로 교체
+        setImgSrc(fallback);
+      } else {
+        // 둘 다 실패 → 플레이스홀더
+        setImgSrc(null);
+      }
+    };
 
     return (
       <>
-        <div className="card-stars" aria-hidden="true" style={{ pointerEvents: "none" }}>
+        <div
+          className="card-stars"
+          aria-hidden="true"
+          style={{ pointerEvents: "none" }}
+        >
           {FIXED_STARS.map((s) => (
             <img
               key={s.id}
@@ -200,9 +244,25 @@ export default function Card({ initialCandidates = [] }) {
             />
           ))}
         </div>
+
         <div className="img-frame">
-          <img src={typeImageUrl} alt={name} draggable={false} />
+          {imgSrc ? (
+            <img
+              src={imgSrc}
+              alt={name}
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              onError={handleImgError}
+            />
+          ) : (
+            // ✅ 이미지가 전혀 없거나 모두 실패했을 때
+            <div className="img-placeholder" aria-hidden="true">
+              {/* 필요하면 이 안에 아이콘/이니셜 등 넣어도 됨 */}
+            </div>
+          )}
         </div>
+
         <div className="arch">
           <div className="arch-content">
             <p className="name">{name}</p>
@@ -215,15 +275,15 @@ export default function Card({ initialCandidates = [] }) {
   };
 
   // 슬롯 좌표
-  const xFarLeft  = -2 * SPREAD + dx;
-  const xLeft     = -1 * SPREAD + dx;
-  const xCenter   =  0 * SPREAD + dx;
-  const xRight    =  1 * SPREAD + dx;
-  const xFarRight =  2 * SPREAD + dx;
+  const xFarLeft = -2 * SPREAD + dx;
+  const xLeft = -1 * SPREAD + dx;
+  const xCenter = 0 * SPREAD + dx;
+  const xRight = 1 * SPREAD + dx;
+  const xFarRight = 2 * SPREAD + dx;
 
-  const idxFarLeft  = wrap(center - 2, N);
-  const idxLeft     = wrap(center - 1, N);
-  const idxRight    = wrap(center + 1, N);
+  const idxFarLeft = wrap(center - 2, N);
+  const idxLeft = wrap(center - 1, N);
+  const idxRight = wrap(center + 1, N);
   const idxFarRight = wrap(center + 2, N);
 
   const handleCardClick = (item) => (e) => {
@@ -250,8 +310,16 @@ export default function Card({ initialCandidates = [] }) {
         >
           {/* === N=1 === */}
           {hasOne && (
-            <div className="slot slot-center" style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}>
-              <div className="card" onClick={handleCardClick(candidates[center])}>
+            <div
+              className="slot slot-center"
+              style={{
+                transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
+              }}
+            >
+              <div
+                className="card"
+                onClick={handleCardClick(candidates[center])}
+              >
                 <CardBody item={candidates[center]} />
               </div>
             </div>
@@ -260,13 +328,31 @@ export default function Card({ initialCandidates = [] }) {
           {/* === N=2 === */}
           {hasTwo && (
             <>
-              <div className="slot slot-left"  style={{ transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,  zIndex: 2 }}>
-                <div className="card" onClick={handleCardClick(candidates[center])}>
+              <div
+                className="slot slot-left"
+                style={{
+                  transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,
+                  zIndex: 2,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[center])}
+                >
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
-              <div className="slot slot-right" style={{ transform: `translate(calc(-50% + ${xTwoRight}px), -50%)`, zIndex: 1 }}>
-                <div className="card" onClick={handleCardClick(candidates[otherIdx])}>
+              <div
+                className="slot slot-right"
+                style={{
+                  transform: `translate(calc(-50% + ${xTwoRight}px), -50%)`,
+                  zIndex: 1,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[otherIdx])}
+                >
                   <CardBody item={candidates[otherIdx]} />
                 </div>
               </div>
@@ -276,28 +362,68 @@ export default function Card({ initialCandidates = [] }) {
           {/* === N>=3 === */}
           {hasThreePlus && (
             <>
-              <div className="slot slot-far-left" style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}>
-                <div className="card" onClick={handleCardClick(candidates[idxFarLeft])}>
+              <div
+                className="slot slot-far-left"
+                style={{
+                  transform: `translate(calc(-50% + ${xFarLeft}px), -50%)`,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[idxFarLeft])}
+                >
                   <CardBody item={candidates[idxFarLeft]} />
                 </div>
               </div>
-              <div className="slot slot-left" style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}>
-                <div className="card" onClick={handleCardClick(candidates[idxLeft])}>
+              <div
+                className="slot slot-left"
+                style={{
+                  transform: `translate(calc(-50% + ${xLeft}px), -50%)`,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[idxLeft])}
+                >
                   <CardBody item={candidates[idxLeft]} />
                 </div>
               </div>
-              <div className="slot slot-center" style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}>
-                <div className="card" onClick={handleCardClick(candidates[center])}>
+              <div
+                className="slot slot-center"
+                style={{
+                  transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[center])}
+                >
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
-              <div className="slot slot-right" style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}>
-                <div className="card" onClick={handleCardClick(candidates[idxRight])}>
+              <div
+                className="slot slot-right"
+                style={{
+                  transform: `translate(calc(-50% + ${xRight}px), -50%)`,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[idxRight])}
+                >
                   <CardBody item={candidates[idxRight]} />
                 </div>
               </div>
-              <div className="slot slot-far-right" style={{ transform: `translate(calc(-50% + ${xFarRight}px), -50%)` }}>
-                <div className="card" onClick={handleCardClick(candidates[idxFarRight])}>
+              <div
+                className="slot slot-far-right"
+                style={{
+                  transform: `translate(calc(-50% + ${xFarRight}px), -50%)`,
+                }}
+              >
+                <div
+                  className="card"
+                  onClick={handleCardClick(candidates[idxFarRight])}
+                >
                   <CardBody item={candidates[idxFarRight]} />
                 </div>
               </div>
@@ -307,7 +433,12 @@ export default function Card({ initialCandidates = [] }) {
 
         {/* CTA 버튼 */}
         <div className="cta-wrap">
-          <button type="button" className="cta-btn" onClick={handleRematch} disabled={loading}>
+          <button
+            type="button"
+            className="cta-btn"
+            onClick={handleRematch}
+            disabled={loading}
+          >
             {loading ? "매칭 시작 중..." : "다시 매칭하기"}
           </button>
         </div>
@@ -316,7 +447,10 @@ export default function Card({ initialCandidates = [] }) {
       {/* 상세 모달: 프로필 + 플러팅하기 버튼 */}
       {selectedUserId != null &&
         createPortal(
-          <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
+          <div
+            className="modal-overlay"
+            onClick={() => setSelectedUserId(null)}
+          >
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <YouProfile
                 userId={selectedUserId}
