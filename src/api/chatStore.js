@@ -14,6 +14,8 @@ const useChatStore = create((set) => ({
           : room
       ),
     })),
+
+  clearRooms: () => set({ rooms: [] }), // ✅ 추가
 }));
 
 export default useChatStore;

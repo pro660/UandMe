@@ -1,30 +1,38 @@
+// src/jsx/mypage/MyPage.jsx
 import "../../css/mypage/MyPage.css";
 import ResultPage from "../signup/ResultPage";
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
+import useMatchingStore from "../../api/matchingStore.js";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import QuitForm from "./QuitForm.jsx"; // ✅ 추가 (경로 맞게 조정 필요)
+import QuitForm from "./QuitForm.jsx";
 
-function Matching() {
+function MyPage() {
   const navigate = useNavigate();
-  const clearUser = useUserStore((s) => s.clearUser);
 
-  const [quitOpen, setQuitOpen] = useState(false); // ✅ 모달 열림 상태
+  const clearUser = useUserStore((s) => s.clearUser);
+  const clearMatch = useMatchingStore((s) => s.clearMatch); // ✅ 매칭 스토어 초기화 함수
+
+  const [quitOpen, setQuitOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // 로그아웃
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout"); // ✅ 서버 로그아웃 호출
+      await api.post("/auth/logout"); // 서버 로그아웃 호출
     } catch (err) {
       console.error("로그아웃 실패:", err);
     } finally {
-      clearUser(); // 상태 초기화
-      // ✅ 로컬스토리지 정리
+      clearUser();
+      clearMatch(); // ✅ 매칭 상태도 초기화
+
+      // 로컬스토리지 정리
       localStorage.removeItem("user");
       localStorage.removeItem("user-storage");
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("matching-storage"); // ✅ 추가
+
       navigate("/login");
     }
   };
@@ -33,12 +41,16 @@ function Matching() {
   const handleDeleteAccount = async () => {
     setLoading(true);
     try {
-      await api.delete("/auth/kakao/unlink"); // ✅ 회원탈퇴 호출
+      await api.delete("/auth/kakao/unlink"); // 회원탈퇴 호출
       clearUser();
-      // ✅ 로컬스토리지 정리
+      clearMatch(); // ✅ 매칭 상태도 초기화
+
+      // 로컬스토리지 정리
       localStorage.removeItem("user");
       localStorage.removeItem("user-storage");
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("matching-storage"); // ✅ 추가
+
       alert("회원탈퇴가 완료되었습니다.");
       navigate("/login");
     } catch (err) {
@@ -51,7 +63,7 @@ function Matching() {
   };
 
   return (
-    <div className="matching-page">
+    <div className="mypage">
       <ResultPage hideHomeButton={true} />
 
       {/* 버튼 영역 */}
@@ -64,7 +76,7 @@ function Matching() {
         </button>
       </div>
 
-      {/* ✅ 회원탈퇴 모달 */}
+      {/* 회원탈퇴 모달 */}
       <QuitForm
         open={quitOpen}
         onConfirm={handleDeleteAccount}
@@ -75,4 +87,4 @@ function Matching() {
   );
 }
 
-export default Matching;
+export default MyPage;
