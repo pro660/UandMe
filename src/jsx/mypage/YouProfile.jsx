@@ -117,13 +117,6 @@ export default function YouProfile({
         <p>{recommendedPartner}</p>
       </div>
 
-      {introduce && (
-        <div className="result-introduce">
-          <h3>자기소개</h3>
-          <p>{introduce}</p>
-        </div>
-      )}
-
       <div className="result-tags">
         {tags?.map((tag, idx) => (
           <span key={idx} className="tag">
