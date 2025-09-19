@@ -295,7 +295,7 @@ export default function Card({ initialCandidates = [] }) {
 
   return (
     <>
-      <div className="title">원하는 상대에게 플러팅하세요</div>
+      <div className="title">프로필 사진을 눌러 <br/> 원하는 상대에게 플러팅하세요</div>
 
       <div className="card-root">
         <div
