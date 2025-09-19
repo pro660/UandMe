@@ -40,7 +40,6 @@ function PageFade({ children }) {
         animate="animate"
         exit="exit"
         style={{
-          position: "absolute",
           inset: 0,
           background: "#fff", // ✅ 깜빡임 방지
           willChange: "opacity",
