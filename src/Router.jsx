@@ -21,18 +21,18 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
-// ✅ 전역 페이드 전환 컴포넌트 (인라인 정의)
+// ✅ 전역 페이드 전환 컴포넌트
 function PageFade({ children }) {
   const location = useLocation();
 
   const variants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 0.25 } },
-    exit: { opacity: 0, transition: { duration: 0.2 } },
+    animate: { opacity: 1, transition: { duration: 0.35 } }, // ⬅️ 0.35s
+    exit: { opacity: 0, transition: { duration: 0.35 } }, // ⬅️ 동일하게
   };
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="sync" initial={false}>
       <motion.div
         key={location.pathname}
         variants={variants}
@@ -40,9 +40,11 @@ function PageFade({ children }) {
         animate="animate"
         exit="exit"
         style={{
+          width: "100%",
+          height: "100%",
+          background: "#fff",
+          position: "absolute",
           inset: 0,
-          background: "#fff", // ✅ 깜빡임 방지
-          willChange: "opacity",
         }}
       >
         {children}
