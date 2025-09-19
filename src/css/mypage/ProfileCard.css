@@ -188,8 +188,7 @@
 .profile-card-back-title {
   font-weight: 800;
   font-size: 1.1rem;
-  margin-top: 2rem;
-  margin-bottom: 0.8rem;
+  margin-top: 0.6rem;
   color: #fff;
 }
 
@@ -198,7 +197,7 @@
   width: 100%;
   list-style: none;
   padding: 0.8rem 0.9rem;
-  margin: 2rem auto;
+  margin: 1.3rem auto;
   background: #fff;
   border-radius: 1rem;
 }
