@@ -225,6 +225,7 @@
   -webkit-overflow-scrolling: touch;
   background: transparent;
   border-radius: 12px;
+  padding: 0; 
 }
 /* 나가기 버튼 */
 .leave-btn {

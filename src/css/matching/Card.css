@@ -259,4 +259,6 @@
   flex-direction: column;
   overflow-y: auto; /* ✅ 모달 내부만 스크롤 */
   -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+
+  padding: 0; 
 }

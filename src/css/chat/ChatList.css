@@ -24,6 +24,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 
   animation: fadeInUp 0.25s ease;
+  padding: 0; 
 }
 
 /* 모달 등장 애니메이션 */
