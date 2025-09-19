@@ -6,7 +6,6 @@ import api from "../../api/axios.js";
 import "../../css/matching/Card.css";
 
 import starImg from "../../image/matching/star.svg";
-import Img from "../../image/home/animal.svg";
 import useMatchingStore from "../../api/matchingStore";
 import NoHuman from "./Nohuman";
 
@@ -209,7 +208,7 @@ export default function Card() {
 
         {/* 프로필 이미지 */}
         <div className="img-frame">
-          <img src={typeImageUrl || Img} alt={name} draggable={false} />
+          <img src={typeImageUrl} alt={name} draggable={false} />
         </div>
 
         {/* 아치 내부 텍스트 */}
