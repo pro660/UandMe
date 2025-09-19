@@ -24,7 +24,7 @@ export default function Card() {
   const [selectedUserId, setSelectedUserId] = useState(null); // ✅ 모달용 상태
   const N = candidates.length;
 
-  // 문자열 길이의 절반 근처(공백/구두점 우선)에서 줄바꿈
+  // 문자열 길이 절반에서 줄바꿈
   function breakAtHalf(text) {
     const raw = (text ?? "").trim();
     const arr = Array.from(raw);
@@ -89,7 +89,7 @@ export default function Card() {
   const xTwoRight = SPREAD / 2 + dx;
   const otherIdx = wrap(center + 1, N);
 
-  // 드래그 핸들러
+  // 드래그
   const onStart = (x) => {
     if (hasOne) return;
     dragging.current = true;
@@ -185,7 +185,7 @@ export default function Card() {
   // 카드 내부
   const CardBody = ({ item = {} }) => {
     const {
-      candidateId,
+      userId, // ✅ candidateId → userId
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
@@ -196,7 +196,7 @@ export default function Card() {
     return (
       <div
         className="card-click-area"
-        onClick={() => setSelectedUserId(candidateId)} // ✅ 클릭 시 모달 오픈
+        onClick={() => setSelectedUserId(userId)} // ✅ 모달 오픈
       >
         {/* 배경 별 */}
         <div className="card-stars" aria-hidden="true">
