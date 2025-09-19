@@ -82,7 +82,7 @@ export default function Card() {
   const hasThreePlus = N >= 3;
 
   // N=2 간격 좀 더 넓혀 살짝 겹침 방지 (필요시 0.8~1.0 사이로 조절)
-  const TWO_MULT = 0.4;
+  const TWO_MULT = 0.5;
   const xTwoLeft = -SPREAD * TWO_MULT + dx;
   const xTwoRight = SPREAD * TWO_MULT + dx;
   const otherIdx = wrap(center + 1, N);
