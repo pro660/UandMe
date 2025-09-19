@@ -54,6 +54,7 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
         <ul className="note-list">
           <li>기본 횟수: ‘신호 보내기’ 3회, ‘매칭’ 3회</li>
           <li>추가 횟수: 부스 쿠폰 등록 시 추가 가능</li>
+          <li>쿠폰 혜택: 쿠폰 등록 시 '신호 보내기' 및 '매칭 횟수'가 각 5회씩 추가됩니다.</li>
         </ul>
       </div>
     </div>
