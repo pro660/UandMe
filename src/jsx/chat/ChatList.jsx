@@ -45,7 +45,7 @@ export default function ChatList() {
           }
         });
 
-        // ✅ 정렬: 삭제된 방은 맨 아래, 나머지는 lastMessage 기준 내림차순
+        // ✅ 정렬: 삭제된 방은 무조건 맨 아래, 나머지는 최신순
         updatedRooms.sort((a, b) => {
           if (a.deleted && !b.deleted) return 1;
           if (!a.deleted && b.deleted) return -1;
@@ -104,7 +104,6 @@ export default function ChatList() {
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {rooms.map((room) =>
             room.deleted ? (
-              // 🔴 삭제된 방 UI
               <li
                 key={room.roomId}
                 style={{
@@ -112,12 +111,16 @@ export default function ChatList() {
                   borderBottom: "1px solid #eee",
                   color: "#c0392b",
                   fontStyle: "italic",
+                  background: "#fceaea",
+                  borderRadius: "6px",
+                  marginBottom: "6px",
+                  cursor: "not-allowed",
+                  opacity: 0.7,
                 }}
               >
                 ❌ 이 채팅방은 삭제되었습니다
               </li>
             ) : (
-              // ✅ 정상 방 UI
               <li
                 key={room.roomId}
                 onClick={() => navigate(`/chat/${room.roomId}`)}
@@ -130,6 +133,7 @@ export default function ChatList() {
                   borderBottom: "1px solid #eee",
                 }}
               >
+                {/* 왼쪽: 프로필 + 이름 + 마지막 메시지 */}
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <img
                     src={room.peers?.[String(user.userId)]?.typeImageUrl}
@@ -168,6 +172,7 @@ export default function ChatList() {
                   </div>
                 </div>
 
+                {/* 오른쪽: 시간 + 안읽음 뱃지 */}
                 <div style={{ textAlign: "right", marginLeft: "8px" }}>
                   <div
                     style={{
