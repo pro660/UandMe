@@ -216,6 +216,14 @@ export default function ProfileCard({
                 <span className="label">성별</span>
                 <span className="value">{gender}</span>
               </li>
+              <li>
+                <span className="label">MBTI</span>
+                <span className="value">{gender}</span>
+              </li>
+              <li>
+                <span className="label">호르몬</span>
+                <span className="value">{gender}</span>
+              </li>
             </ul>
           </div>
         </div>
