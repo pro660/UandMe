@@ -242,3 +242,67 @@
   object-fit: contain;
   display: block;
 }
+
+/* 이미지 래퍼가 기준이 되도록 */
+.profile-card-image-wrap {
+  position: relative;
+}
+
+/* 중앙 업로드 버튼 래퍼 */
+.avatar-upload-btn {
+  position: absolute;
+  inset: 0; /* 전체 덮지만 버튼만 클릭되게 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* 카드 클릭 방해 X */
+  z-index: 3;
+}
+
+/* 원형 버튼 자체는 클릭 가능 */
+.avatar-upload-circle {
+  pointer-events: auto;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0.6rem 1.6rem rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+.avatar-upload-circle svg {
+  width: 2.2rem;
+  height: 2.2rem;
+  fill: #ff69c3;
+}
+
+/* 업로드 중 오버레이 + 스피너 */
+.avatar-uploading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+}
+
+.avatar-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 0.3rem solid rgba(0,0,0,0.15);
+  border-top-color: #ff69c3;
+  animation: avatar-spin 1s linear infinite;
+}
+@keyframes avatar-spin { to { transform: rotate(360deg); } }
+
+/* 업로드 중 이미지는 살짝 흐리게 */
+[aria-busy="true"] .profile-card-image {
+  filter: grayscale(0.2);
+  opacity: 0.75;
+}
