@@ -1,0 +1,30 @@
+.nohuman-page{
+    
+    background-color: #F7FBFF;
+    width: 100%;
+    height: 90vh;     /* 화면 높이 전체 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    color: #575757;
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+    margin-top: -4rem;
+}
+
+.WarnImg {
+  transform: translateY(0rem);
+  width: 3.4rem;
+}
+
+.nohuman-page p {
+    font-size: 0.9rem;
+}
