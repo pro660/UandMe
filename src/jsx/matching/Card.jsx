@@ -1,60 +1,53 @@
-// src/jsx/matching/Card.jsx
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios.js";
 import "../../css/matching/Card.css";
 
-import starImg from "../../image/matching/star.svg";
 import useMatchingStore from "../../api/matchingStore";
 import useUserStore from "../../api/userStore";
 import NoHuman from "./Nohuman";
 import YouProfile from "../mypage/YouProfile.jsx";
 
-const FIXED_STARS = [
-  { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
-  { id: 1, left: 10, top: 50, size: 80, rot: 0.5, op: 0.5 },
-  { id: 2, left: 88, top: 37, size: 110, rot: 0, op: 0.6 },
-];
-
 const rem = (r) => r * 16;
 const wrap = (i, n) => (i + n) % n;
 const getUid = (it) => it?.userId ?? it?.id ?? it?.targetUserId ?? null;
 
+const getMsg = (t) => {
+  const raw = (t ?? "").trim();
+  const arr = Array.from(raw);
+  const n = arr.length;
+  if (n < 2) return raw;
+  const mid = Math.floor(n / 2);
+  const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
+  let idx = mid;
+  for (let d = 0; d <= Math.min(8, n - 1); d++) {
+    if (mid - d > 0 && isBreak(arr[mid - d])) { idx = mid - d + 1; break; }
+    if (mid + d < n - 1 && isBreak(arr[mid + d])) { idx = mid + d + 1; break; }
+  }
+  return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
+};
+
+// 슬롯별 회전 각도 (deg 단위는 CSS에서 곱해짐)
+const rotMap = {
+  farLeft: -25, left: -15, center: 0, right: 12, farRight: 25,
+};
+const rot2 = { left: -10, right: 10 };
+
 export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
-
   const { user, setUser } = useUserStore();
+
   const [selectedUserId, setSelectedUserId] = useState(null);
   const N = candidates.length;
 
-  // ✅ 모달 열릴 때 body 스크롤 막기
+  // 모달 열릴 때 body 스크롤 잠금
   useEffect(() => {
     document.body.style.overflow = selectedUserId != null ? "hidden" : "auto";
     return () => (document.body.style.overflow = "auto");
   }, [selectedUserId]);
 
-  // 문자열 절반 줄바꿈
-  function breakAtHalf(text) {
-    const raw = (text ?? "").trim();
-    const arr = Array.from(raw);
-    const n = arr.length;
-    if (n < 2) return raw;
-    const mid = Math.floor(n / 2);
-    const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
-    let idx = mid;
-    for (let d = 0; d <= Math.min(8, n - 1); d++) {
-      if (mid - d > 0 && isBreak(arr[mid - d])) {
-        idx = mid - d + 1; break;
-      }
-      if (mid + d < n - 1 && isBreak(arr[mid + d])) {
-        idx = mid + d + 1; break;
-      }
-    }
-    return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
-  }
-
-  // 상태 관리
+  // 캐러셀 상태
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
   useEffect(() => { centerRef.current = center; }, [center]);
@@ -64,25 +57,25 @@ export default function Card() {
   const [dir, setDir] = useState("");
   const [loading, setLoading] = useState(false);
   const dragging = useRef(false);
-  const movedRef = useRef(false);     // ⬅️ 드래그로 충분히 움직였는지(탭 가드)
+  const movedRef = useRef(false);
   const lastX = useRef(0);
 
   if (N === 0) return <NoHuman />;
 
-  // 카드 크기
+  // 기하
   const CARD_W = rem(13);
   const GAP = rem(1.5);
   const SPREAD = CARD_W + GAP;
   const SNAP_MS = 260;
-  const MAX_DRAG = CARD_W + GAP;
+  const MAX_DRAG = SPREAD;
 
-  // 인원수 분기
+  // 분기
   const hasOne = N === 1;
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
-  // N=2 간격 좀 더 넓혀 살짝 겹침 방지 (필요시 0.8~1.0 사이로 조절)
-  const TWO_MULT = 0.5;
+  // N=2 간격(타이트)
+  const TWO_MULT = 0.55;
   const xTwoLeft = -SPREAD * TWO_MULT + dx;
   const xTwoRight = SPREAD * TWO_MULT + dx;
   const otherIdx = wrap(center + 1, N);
@@ -92,8 +85,7 @@ export default function Card() {
     if (hasOne) return;
     dragging.current = true;
     movedRef.current = false;
-    setSnapping(false);
-    setDir("");
+    setSnapping(false); setDir("");
     lastX.current = x;
   };
   const onMove = (x) => {
@@ -102,7 +94,6 @@ export default function Card() {
     lastX.current = x;
     setDx((prev) => {
       const next = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, prev + delta));
-      // 일정 이상 움직이면 "드래그"로 판단 -> 클릭 무시
       if (Math.abs(next) > 12) movedRef.current = true;
       return next;
     });
@@ -114,11 +105,9 @@ export default function Card() {
     const sign = dx < 0 ? -1 : 1;
     if (absDx >= MAX_DRAG / 2) completeSlide(sign);
     else {
-      setSnapping(true);
-      setDx(0);
+      setSnapping(true); setDx(0);
       setTimeout(() => setSnapping(false), SNAP_MS);
     }
-    // 다음 탭을 위해 리셋
     setTimeout(() => { movedRef.current = false; }, SNAP_MS);
   };
   const completeSlide = (sign) => {
@@ -127,125 +116,84 @@ export default function Card() {
     setDir(sign < 0 ? "dir-left" : "dir-right");
     setDx(sign * SPREAD);
     setTimeout(() => {
-      const nextCenter =
-        sign < 0 ? wrap(centerRef.current + 1, N) : wrap(centerRef.current - 1, N);
+      const nextCenter = sign < 0 ? wrap(centerRef.current + 1, N)
+                                  : wrap(centerRef.current - 1, N);
       setCenter(nextCenter);
-      setSnapping(false);
-      setDx(0);
-      setDir("");
+      setSnapping(false); setDx(0); setDir("");
     }, SNAP_MS);
   };
 
-  // 다시 매칭 (크레딧 차감 포함)
+  // 다시 매칭
   const handleRematch = async () => {
-    if (user?.matchCredits <= 0) {
-      alert("매칭 기회가 없습니다!");
-      return;
-    }
+    if (user?.matchCredits <= 0) { alert("매칭 기회가 없습니다!"); return; }
     try {
       setLoading(true);
       const res = await api.post("/match/start", {});
       const payload = res?.data;
-      const nextList = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.candidates)
-        ? payload.candidates
-        : [];
-      if (typeof setCandidates === "function") setCandidates(nextList);
-
-      setUser({
-        ...user,
-        matchCredits: Math.max(0, (user?.matchCredits ?? 0) - 1),
-      });
-
-      setCenter(0);
-      setDx(0);
-      setSnapping(false);
-      setDir("");
+      const nextList = Array.isArray(payload) ? payload
+        : Array.isArray(payload?.candidates) ? payload.candidates : [];
+      setCandidates?.(nextList);
+      setUser({ ...user, matchCredits: Math.max(0, (user?.matchCredits ?? 0) - 1) });
+      setCenter(0); setDx(0); setSnapping(false); setDir("");
       if (!nextList.length) alert("새 매칭 결과가 없습니다.");
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("매칭 시작 요청에 실패했습니다.");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // 카드 내부 (순수 렌더)
-  const CardBody = ({ item = {} }) => {
-    const {
-      name = "이름 없음",
-      department = "학과 없음",
-      introduce = "소개 없음",
-      typeImageUrl,
-    } = item;
-    const msgText = breakAtHalf(introduce ?? "");
-
-    return (
-      <>
-        <div
-          className="card-stars"
-          aria-hidden="true"
-          style={{ pointerEvents: "none" }} // 장식이 클릭을 가로채지 않도록
-        >
-          {FIXED_STARS.map((s) => (
-            <img
-              key={s.id}
-              src={starImg}
-              alt=""
-              className="star"
-              style={{
-                left: `${s.left}%`,
-                top: `${s.top}%`,
-                width: `${s.size}px`,
-                height: `${s.size}px`,
-                opacity: s.op,
-                transform: `translate(-50%, -50%) rotate(${s.rot}deg)`,
-              }}
-            />
-          ))}
-        </div>
-        <div className="img-frame">
-          <img src={typeImageUrl} alt={name} draggable={false} />
-        </div>
-        <div className="arch">
-          <div className="arch-content">
-            <p className="name">{name}</p>
-            <p className="major">{department}</p>
-            <p className="msg">“{msgText}”</p>
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  // 슬롯 좌표
-  const xFarLeft = -2 * SPREAD + dx;
-  const xLeft = -1 * SPREAD + dx;
-  const xCenter = 0 * SPREAD + dx;
-  const xRight = +1 * SPREAD + dx;
-  const xFarRight = +2 * SPREAD + dx;
-
-  const idxFarLeft = wrap(center - 2, N);
-  const idxLeft = wrap(center - 1, N);
-  const idxRight = wrap(center + 1, N);
-  const idxFarRight = wrap(center + 2, N);
-
-  // ⬇️ 카드 클릭(탭) 핸들러: 드래그로 많이 움직였으면 무시, 탭이면 열기
+  // 공용 카드 클릭
   const handleCardClick = (item) => (e) => {
     e.stopPropagation();
-    if (movedRef.current) return; // 드래그였으면 클릭 무시
+    if (movedRef.current) return; // 드래그 → 클릭 무시
     const uid = getUid(item);
     if (uid != null) setSelectedUserId(uid);
   };
+
+  // 콘텐츠 (이미지/텍스트)
+  const GlassContent = ({ item = {} }) => {
+    const {
+      name = "이름 없음",
+      department = "학과 없음",
+      introduce = "",
+      typeImageUrl,
+    } = item;
+    const msgText = getMsg(introduce ?? "");
+    return (
+      <div className="glass-content">
+        <div className="glass-image">
+          {typeImageUrl ? <img src={typeImageUrl} alt={name} draggable={false} />
+                        : <div className="glass-image--placeholder" />}
+        </div>
+        <div className="glass-text">
+          <p className="glass-name">{name}</p>
+          <p className="glass-major">{department}</p>
+          {msgText && <p className="glass-msg">“{msgText}”</p>}
+        </div>
+      </div>
+    );
+  };
+
+  // 좌표 인덱스
+  const xFarLeft  = -2 * SPREAD + dx;
+  const xLeft     = -1 * SPREAD + dx;
+  const xCenter   =  0 * SPREAD + dx;
+  const xRight    = +1 * SPREAD + dx;
+  const xFarRight = +2 * SPREAD + dx;
+
+  const idxFarLeft  = wrap(center - 2, N);
+  const idxLeft     = wrap(center - 1, N);
+  const idxRight    = wrap(center + 1, N);
+  const idxFarRight = wrap(center + 2, N);
 
   return (
     <>
       <div className="title">원하는 상대에게 플러팅하세요</div>
 
       <div className="card-root">
+        {/* hover 시 회전이 풀리도록 컨테이너 클래스 부여 */}
         <div
-          className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
+          className={`card-wrap glass-container ${snapping ? "snapping" : ""} ${dir}`}
           onTouchStart={(e) => !hasOne && onStart(e.touches[0].clientX)}
           onTouchMove={(e) => !hasOne && onMove(e.touches[0].clientX)}
           onTouchEnd={onEnd}
@@ -260,8 +208,13 @@ export default function Card() {
               className="slot slot-center"
               style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
             >
-              <div className="card" onClick={handleCardClick(candidates[center])}>
-                <CardBody item={candidates[center]} />
+              <div
+                className="glass"
+                data-text={candidates[center]?.name ?? ""}
+                style={{ "--r": rotMap.center }}
+                onClick={handleCardClick(candidates[center])}
+              >
+                <GlassContent item={candidates[center]} />
               </div>
             </div>
           )}
@@ -273,13 +226,19 @@ export default function Card() {
                 className="slot slot-left"
                 style={{
                   transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,
-                  zIndex: 2, // 왼쪽을 살짝 위로
+                  zIndex: 2,
                 }}
               >
-                <div className="card" onClick={handleCardClick(candidates[center])}>
-                  <CardBody item={candidates[center]} />
+                <div
+                  className="glass"
+                  data-text={candidates[center]?.name ?? ""}
+                  style={{ "--r": rot2.left }}
+                  onClick={handleCardClick(candidates[center])}
+                >
+                  <GlassContent item={candidates[center]} />
                 </div>
               </div>
+
               <div
                 className="slot slot-right"
                 style={{
@@ -287,8 +246,13 @@ export default function Card() {
                   zIndex: 1,
                 }}
               >
-                <div className="card" onClick={handleCardClick(candidates[otherIdx])}>
-                  <CardBody item={candidates[otherIdx]} />
+                <div
+                  className="glass"
+                  data-text={candidates[otherIdx]?.name ?? ""}
+                  style={{ "--r": rot2.right }}
+                  onClick={handleCardClick(candidates[otherIdx])}
+                >
+                  <GlassContent item={candidates[otherIdx]} />
                 </div>
               </div>
             </>
@@ -301,47 +265,76 @@ export default function Card() {
                 className="slot slot-far-left"
                 style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}
               >
-                <div className="card" onClick={handleCardClick(candidates[idxFarLeft])}>
-                  <CardBody item={candidates[idxFarLeft]} />
+                <div
+                  className="glass"
+                  data-text={candidates[idxFarLeft]?.name ?? ""}
+                  style={{ "--r": rotMap.farLeft }}
+                  onClick={handleCardClick(candidates[idxFarLeft])}
+                >
+                  <GlassContent item={candidates[idxFarLeft]} />
                 </div>
               </div>
+
               <div
                 className="slot slot-left"
                 style={{ transform: `translate(calc(-50% + ${xLeft}px), -50%)` }}
               >
-                <div className="card" onClick={handleCardClick(candidates[idxLeft])}>
-                  <CardBody item={candidates[idxLeft]} />
+                <div
+                  className="glass"
+                  data-text={candidates[idxLeft]?.name ?? ""}
+                  style={{ "--r": rotMap.left }}
+                  onClick={handleCardClick(candidates[idxLeft])}
+                >
+                  <GlassContent item={candidates[idxLeft]} />
                 </div>
               </div>
+
               <div
                 className="slot slot-center"
                 style={{ transform: `translate(calc(-50% + ${xCenter}px), -50%)` }}
               >
-                <div className="card" onClick={handleCardClick(candidates[center])}>
-                  <CardBody item={candidates[center]} />
+                <div
+                  className="glass"
+                  data-text={candidates[center]?.name ?? ""}
+                  style={{ "--r": rotMap.center }}
+                  onClick={handleCardClick(candidates[center])}
+                >
+                  <GlassContent item={candidates[center]} />
                 </div>
               </div>
+
               <div
                 className="slot slot-right"
                 style={{ transform: `translate(calc(-50% + ${xRight}px), -50%)` }}
               >
-                <div className="card" onClick={handleCardClick(candidates[idxRight])}>
-                  <CardBody item={candidates[idxRight]} />
+                <div
+                  className="glass"
+                  data-text={candidates[idxRight]?.name ?? ""}
+                  style={{ "--r": rotMap.right }}
+                  onClick={handleCardClick(candidates[idxRight])}
+                >
+                  <GlassContent item={candidates[idxRight]} />
                 </div>
               </div>
+
               <div
                 className="slot slot-far-right"
                 style={{ transform: `translate(calc(-50% + ${xFarRight}px), -50%)` }}
               >
-                <div className="card" onClick={handleCardClick(candidates[idxFarRight])}>
-                  <CardBody item={candidates[idxFarRight]} />
+                <div
+                  className="glass"
+                  data-text={candidates[idxFarRight]?.name ?? ""}
+                  style={{ "--r": rotMap.farRight }}
+                  onClick={handleCardClick(candidates[idxFarRight])}
+                >
+                  <GlassContent item={candidates[idxFarRight]} />
                 </div>
               </div>
             </>
           )}
         </div>
 
-        {/* CTA 버튼 */}
+        {/* CTA */}
         <div className="cta-wrap">
           <button
             type="button"
@@ -354,7 +347,7 @@ export default function Card() {
         </div>
       </div>
 
-      {/* ✅ 모달: null 체크 + 포털 */}
+      {/* 모달 */}
       {selectedUserId != null &&
         createPortal(
           <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
