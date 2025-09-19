@@ -235,3 +235,23 @@
     margin-bottom: -8rem;      /* ⬅️ 겹침 원인 제거 */
   }
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 640px;
+  max-height: 90vh;
+  background: white;
+  border-radius: 16px;
+  overflow-y: auto;
+  position: relative;
+}

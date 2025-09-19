@@ -1,13 +1,12 @@
 // src/jsx/matching/Card.jsx
 import React, { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ 추가
 import api from "../../api/axios.js";
-
 import "../../css/matching/Card.css";
 
 import starImg from "../../image/matching/star.svg";
 import useMatchingStore from "../../api/matchingStore";
 import NoHuman from "./Nohuman";
+import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 모달로 띄울 컴포넌트
 
 const FIXED_STARS = [
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
@@ -21,11 +20,11 @@ const wrap = (i, n) => (i + n) % n;
 export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
-  const navigate = useNavigate();
 
+  const [selectedUserId, setSelectedUserId] = useState(null); // ✅ 모달용 상태
   const N = candidates.length;
 
-  // 문자열 길이의 절반 근처에서 줄바꿈
+  // 문자열 길이의 절반 근처(공백/구두점 우선)에서 줄바꿈
   function breakAtHalf(text) {
     const raw = (text ?? "").trim();
     const arr = Array.from(raw);
@@ -90,7 +89,7 @@ export default function Card() {
   const xTwoRight = SPREAD / 2 + dx;
   const otherIdx = wrap(center + 1, N);
 
-  // 드래그
+  // 드래그 핸들러
   const onStart = (x) => {
     if (hasOne) return;
     dragging.current = true;
@@ -197,11 +196,7 @@ export default function Card() {
     return (
       <div
         className="card-click-area"
-        onClick={() =>
-          navigate(`/youprofile/${candidateId}`, {
-            state: { showFlirtingPanel: true }, // ✅ 매칭에서만 버튼 뜨게
-          })
-        }
+        onClick={() => setSelectedUserId(candidateId)} // ✅ 클릭 시 모달 오픈
       >
         {/* 배경 별 */}
         <div className="card-stars" aria-hidden="true">
@@ -255,7 +250,7 @@ export default function Card() {
           onMouseUp={onEnd}
           onMouseLeave={onEnd}
         >
-          {/* N=1 */}
+          {/* === N=1 === */}
           {hasOne && (
             <div
               className="slot slot-center"
@@ -269,7 +264,7 @@ export default function Card() {
             </div>
           )}
 
-          {/* N=2 */}
+          {/* === N=2 === */}
           {hasTwo && (
             <>
               <div
@@ -296,7 +291,7 @@ export default function Card() {
             </>
           )}
 
-          {/* N>=3 */}
+          {/* === N>=3 === */}
           {hasThreePlus && (
             <>
               <div
@@ -369,6 +364,18 @@ export default function Card() {
           </button>
         </div>
       </div>
+
+      {/* ✅ 모달: selectedUserId 있을 때만 */}
+      {selectedUserId && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <YouProfile
+              userId={selectedUserId}
+              onClose={() => setSelectedUserId(null)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
