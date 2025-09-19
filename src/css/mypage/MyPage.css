@@ -1,41 +1,39 @@
-/* 전역 변수: 실제 탭바 높이에 맞춰 수정 (예: 64~80px) */
+/* 전역: 탭바 높이(10px=1rem 기준이면 7.2rem=72px) */
 :root {
-  --tabbar-h: 100px;
+  --tabbar-h: 7.2rem;
 }
 
 /* 페이지 컨테이너 */
-.matching-page {
-  background-color: #f9b5d3;
+.mypage {
   min-height: 100svh;
 
   /* 탭바 + 여유 + 안전영역 만큼 하단 패딩 확보 */
-  padding-bottom: calc(var(--tabbar-h) + 24px);
-  padding-bottom: calc(var(--tabbar-h) + 24px + constant(safe-area-inset-bottom));
-  padding-bottom: calc(var(--tabbar-h) + 24px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--tabbar-h) + 2.4rem);
+  padding-bottom: calc(var(--tabbar-h) + 2.4rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--tabbar-h) + 2.4rem + constant(safe-area-inset-bottom));
 }
 
-/* 섹션 */
+/* 버튼 영역 */
 .account-actions {
   display: flex;
   flex-direction: column; /* 세로 배치 */
   align-items: center;
   gap: 0.5rem;
   position: relative;
-  background-color: #f9b5d3;
 
   /* 페이지 끝부분에서도 버튼이 탭바에 안 가리도록 여유 */
-  margin-bottom: calc(var(--tabbar-h) + 16px);
-  margin-bottom: calc(var(--tabbar-h) + 16px + constant(safe-area-inset-bottom));
-  margin-bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+  margin-bottom: calc(var(--tabbar-h) + 1.6rem);
+  margin-bottom: calc(var(--tabbar-h) + 1.6rem + env(safe-area-inset-bottom));
+  margin-bottom: calc(var(--tabbar-h) + 1.6rem + constant(safe-area-inset-bottom));
 }
 
 /* 로그아웃 버튼: pill 스타일 */
 .logout-btn {
-  width: 80%; /* 화면 기준 넓이 */
-  max-width: 400px;
+  width: 80%;
+  max-width: 40rem;
   padding: 0.9rem;
-  border-radius: 2rem; /* pill 모양 */
-  border: 2px solid #acacac;
+  border-radius: 2rem;
+  border: 0.2rem solid #acacac;
   background: #fff;
   font-size: 1rem;
   font-weight: 600;
@@ -43,14 +41,12 @@
   text-align: center;
   cursor: pointer;
 }
-.logout-btn:hover {
-  background: #f9f9f9;
-}
+.logout-btn:hover { background: #f9f9f9; }
 
-/* 회원탈퇴: 오른쪽 하단 텍스트 버튼 */
+/* 회원탈퇴 텍스트 버튼 */
 .delete-btn {
   align-self: flex-end;
-  margin-right: 10%; /* 로그아웃 버튼 폭과 맞추기 */
+  margin-right: 10%;
   background: none;
   border: none;
   color: #e74c3c;
@@ -58,14 +54,11 @@
   font-weight: 600;
   cursor: pointer;
 }
-.delete-btn:hover {
-  text-decoration: underline;
-}
+.delete-btn:hover { text-decoration: underline; }
 
-/* (옵션) 스페이서 컴포넌트를 쓰고 싶을 때
+/* (옵션) 여유 스페이서 컴포넌트용 */
 .tabbar-spacer {
-  height: calc(var(--tabbar-h) + 16px);
-  height: calc(var(--tabbar-h) + 16px + constant(safe-area-inset-bottom));
-  height: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+  height: calc(var(--tabbar-h) + 1.6rem);
+  height: calc(var(--tabbar-h) + 1.6rem + env(safe-area-inset-bottom));
+  height: calc(var(--tabbar-h) + 1.6rem + constant(safe-area-inset-bottom));
 }
-*/

@@ -83,6 +83,9 @@ function MyPage() {
         onCancel={() => setQuitOpen(false)}
         loading={loading}
       />
+
+      {/* 탭바 여유 공간 확보용 (옵션) */}
+      <div className="tabbar-spacer" aria-hidden="true" />
     </div>
   );
 }
