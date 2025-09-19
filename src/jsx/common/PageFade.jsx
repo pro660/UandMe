@@ -1,4 +1,4 @@
-// src/jsx/common/PageFade.jsx
+// src/components/transitions/PageFade.jsx
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -7,14 +7,14 @@ export default function PageFade({ children, bg = "var(--page-bg, #fff)" }) {
 
   const variants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 0.18 } },
-    exit:    { opacity: 0, transition: { duration: 0.18 } }, // 동시 크로스페이드
+    animate: { opacity: 1, transition: { duration: 0.25 } },
+    exit:    { opacity: 0, transition: { duration: 0.2 } },
   };
 
   return (
-    <AnimatePresence mode="sync" initial={false}>
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
-        key={location.key || location.pathname}   // 동일 경로 재방문도 전환
+        key={location.pathname}    // 라우트 경로별로 전환
         variants={variants}
         initial="initial"
         animate="animate"
@@ -22,7 +22,7 @@ export default function PageFade({ children, bg = "var(--page-bg, #fff)" }) {
         style={{
           position: "absolute",
           inset: 0,
-          background: bg,         // ✅ 배경 고정 (하얀 번쩍 방지)
+          background: bg,          // 번쩍임 방지용 배경
           willChange: "opacity",
         }}
       >
