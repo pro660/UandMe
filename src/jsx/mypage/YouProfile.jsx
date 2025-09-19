@@ -7,14 +7,15 @@ import FlirtingPanel from "../matching/FlirtingPanel.jsx";
 import "../../css/signup/ResultPage.css";
 
 export default function YouProfile({ userId: propUserId, onClose }) {
+  // 라우트 접근 시 :userId, 모달 접근 시 prop.userId 사용
   const { userId: routeUserId } = useParams();
-  const userId = propUserId || routeUserId; // ✅ 모달 → prop 사용, 라우터 접근 → params 사용
+  const userId = propUserId || routeUserId;
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const location = useLocation();
-  const showFlirtingPanel = location.state?.showFlirtingPanel === true;
+  const showFlirtingPanel = location.state?.showFlirtingPanel === true || !!propUserId;
+  // 👉 모달로 열릴 때는 propUserId가 있으므로 플러팅 버튼 자동 표시
 
   useEffect(() => {
     if (!userId) return;
@@ -22,7 +23,7 @@ export default function YouProfile({ userId: propUserId, onClose }) {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        console.log("📡 API 호출: /users/", userId); // ✅ 디버그 로그
+        console.log("📡 API 호출: /users/", userId);
         const resp = await api.get(`/users/${userId}`);
         setUser(resp.data);
       } catch (err) {
@@ -39,9 +40,7 @@ export default function YouProfile({ userId: propUserId, onClose }) {
     return (
       <div className="result-page">
         <div className="arch-box" aria-hidden="true" />
-        <div style={{ marginTop: "5rem", textAlign: "center" }}>
-          불러오는 중...
-        </div>
+        <div style={{ marginTop: "5rem", textAlign: "center" }}>불러오는 중...</div>
       </div>
     );
   }
@@ -77,7 +76,7 @@ export default function YouProfile({ userId: propUserId, onClose }) {
     <div className="result-page" style={{ position: "relative" }}>
       <div className="arch-box" aria-hidden="true" />
 
-      {/* 닫기 버튼 */}
+      {/* 닫기 버튼 (모달에서만 표시) */}
       {onClose && (
         <button
           className="close-btn"
@@ -97,7 +96,7 @@ export default function YouProfile({ userId: propUserId, onClose }) {
         </button>
       )}
 
-      {/* 프로필 */}
+      {/* 프로필 카드 */}
       <div className="profile-with-insta">
         <ProfileCard
           imageSrc={typeImageUrl2}
@@ -112,7 +111,7 @@ export default function YouProfile({ userId: propUserId, onClose }) {
         />
       </div>
 
-      {/* ✅ 매칭에서 넘어온 경우에만 플러팅 패널 */}
+      {/* 플러팅 패널 (매칭 카드 눌렀을 때만) */}
       {showFlirtingPanel && (
         <FlirtingPanel
           targetUserId={userId}
