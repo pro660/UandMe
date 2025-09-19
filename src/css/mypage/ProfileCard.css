@@ -61,7 +61,7 @@
 
 /* 이미지 영역 (흰색 원 + 그림자) */
 .profile-card-image-wrap {
-  margin-top: 3rem;
+  margin-top: 4rem;
   width: 160px;
   height: 160px;
   border-radius: 50%;
@@ -179,7 +179,7 @@
 
 /* ── 뒷면 ─────────────────────────── */
 .profile-card-back {
-  background-color: #ffe3f4;
+  background-color: #FF60A5;
   transform: rotateY(180deg); /* 좌우 뒤집힘 */
   padding: 1rem;
 }
@@ -190,7 +190,7 @@
   font-size: 1.1rem;
   margin-top: 2rem;
   margin-bottom: 0.8rem;
-  color: #444;
+  color: #fff;
 }
 
 /* 뒷면 리스트 */
@@ -199,7 +199,7 @@
   list-style: none;
   padding: 0.8rem 0.9rem;
   margin: 2rem auto;
-  background: transparent;
+  background: #fff;
   border-radius: 1rem;
 }
 .profile-card-back-list li {
@@ -213,12 +213,13 @@
   border-bottom: none;
 }
 .profile-card-back-list .label {
-  color: #888;
-  font-size: 0.9rem;
+  color: #575757;
+  font-size: 0.8rem;
 }
 .profile-card-back-list .value {
-  color: #444;
+  color: #575757;
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 /* 카드 내부 인스타 버튼 */

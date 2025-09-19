@@ -1,7 +1,7 @@
 :root {
   --pink: #FF69C3;
   --pink-deep: #E8048D;
-  --text: #3d3d3d;
+  --text: #575757;
   --muted: #8F8F8F;
   --bg: #fff;
 }
@@ -90,7 +90,7 @@
 }
 .result-desc {
   margin: 0;
-  color: var(--muted);
+  color: #575757;
   font-size: .78rem;
 }
 

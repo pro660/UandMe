@@ -21,6 +21,7 @@ import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
 import ChatRoomDummy from "./jsx/chat/ChatRoomDummy";
+import DummyResultPage from "./jsx/signup/DummyResultPage";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -49,7 +50,7 @@ function AppRouter() {
             path="/"
             element={
               <ProtectedRoute>
-              <Home />
+                <Home />
               </ProtectedRoute>
             }
           />
@@ -94,6 +95,7 @@ function AppRouter() {
             }
           />
           <Route path="/chat-dummy" element={<ChatRoomDummy />} />
+          <Route path="/dummy-result" element={<DummyResultPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

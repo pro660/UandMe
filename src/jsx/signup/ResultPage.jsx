@@ -6,9 +6,10 @@ import ProfileCard from "../mypage/ProfileCard.jsx";
 
 import "../../css/signup/ResultPage.css";
 
-export default function ResultPage({ hideHomeButton = false }) {
+export default function ResultPage({ hideHomeButton = false, user: propUser }) {
   const navigate = useNavigate();
-  const user = useUserStore((s) => s.user);
+  const storeUser = useUserStore((s) => s.user);
+  const user = propUser || storeUser; // ✅ 더미 주입 시 propUser 우선
 
   if (!user) {
     return (
@@ -50,7 +51,6 @@ export default function ResultPage({ hideHomeButton = false }) {
     <div className="result-page">
       <div className="arch-box" aria-hidden="true" />
 
-      {/* 홈 버튼 (조건부) */}
       {!hideHomeButton && (
         <button
           className="home-btn"
@@ -62,7 +62,6 @@ export default function ResultPage({ hideHomeButton = false }) {
       )}
 
       <div className="profile-with-insta">
-        {/* ✅ 인스타 수정/링크 처리는 ProfileCard가 알아서 함 */}
         <ProfileCard
           imageSrc={typeImageUrl2}
           name={name}
