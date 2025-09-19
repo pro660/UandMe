@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import api from "../../api/axios";
 import Matching from "./Matching";
 import Card from "./Card";
-import Nohuman from "./Nohuman"; // ✅ 추가
 
 const normalizeList = (data) => {
   if (Array.isArray(data)) return data;
@@ -47,31 +46,24 @@ export default function MatchingEntry() {
   // ✅ 에러 처리
   if (err) {
     const msg = err?.response?.data?.message || err.message;
-    return (
-      <div style={{ padding: "1.6rem", color: "#ff4d4f" }}>
-        문제 발생: {msg}
-      </div>
-    );
+    return <div style={{ padding: "1.6rem", color: "#ff4d4f" }}>문제 발생: {msg}</div>;
   }
 
   return (
     <AnimatePresence mode="sync">
       {!loading && (
         <motion.div
-          key={
-            initialList.length > 0
-              ? "card"
-              : "nohuman" // ✅ 빈 배열이면 Nohuman 표시
-          }
+          key={initialList.length > 0 ? "card" : "matching"}
           {...fade}
         >
           {initialList.length > 0 ? (
             <Card initialCandidates={initialList} />
           ) : (
-            <Nohuman />
+            <Matching />
           )}
         </motion.div>
       )}
+      {/* ✅ 로딩 동안은 기존 화면 유지 (아예 아무것도 안 바꿈) */}
     </AnimatePresence>
   );
 }

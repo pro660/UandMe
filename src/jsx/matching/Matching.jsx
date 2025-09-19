@@ -1,7 +1,7 @@
-// src/jsx/matching/Matching.jsx
 import React, { useRef, useState, useEffect } from "react";
 import api from "../../api/axios";
 import Card from "./Card";
+import Nohuman from "./Nohuman"; // ✅ 추가
 import "../../css/matching/Matching.css";
 
 import starImg from "../../image/matching/star.svg";
@@ -28,10 +28,9 @@ export default function Matching() {
   const [goCard, setGoCard] = useState(false);
   const [resultList, setResultList] = useState([]);
 
-  // ====== 데모 슬롯 애니메이션 ======
+  // ====== 슬롯 애니메이션 관련 ======
   const PLACEHOLDER_COUNT = 3;
   const N = PLACEHOLDER_COUNT;
-
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
   useEffect(() => { centerRef.current = center; }, [center]);
@@ -161,7 +160,11 @@ export default function Matching() {
     }
   };
 
+  // ✅ 결과 분기 처리
   if (goCard) {
+    if (resultList.length === 0) {
+      return <Nohuman />; // 👉 빈 배열이면 안내 화면
+    }
     return <Card initialCandidates={resultList} />;
   }
 
@@ -180,23 +183,18 @@ export default function Matching() {
           onMouseUp={onEnd}
           onMouseLeave={onEnd}
         >
-          <>
-            <div className="slot" style={{ transform: `translate(calc(-50% + ${-2 * SPREAD + dx}px), -50%)` }}>
+          {/* 데모 카드 5장 */}
+          {[...Array(5)].map((_, idx) => (
+            <div
+              key={idx}
+              className="slot"
+              style={{
+                transform: `translate(calc(-50% + ${(-2 + idx) * SPREAD + dx}px), -50%)`,
+              }}
+            >
               <div className="card-m"><CardBodyDemo /></div>
             </div>
-            <div className="slot" style={{ transform: `translate(calc(-50% + ${-1 * SPREAD + dx}px), -50%)` }}>
-              <div className="card-m"><CardBodyDemo /></div>
-            </div>
-            <div className="slot" style={{ transform: `translate(calc(-50% + ${0 * SPREAD + dx}px), -50%)` }}>
-              <div className="card-m"><CardBodyDemo /></div>
-            </div>
-            <div className="slot" style={{ transform: `translate(calc(-50% + ${1 * SPREAD + dx}px), -50%)` }}>
-              <div className="card-m"><CardBodyDemo /></div>
-            </div>
-            <div className="slot" style={{ transform: `translate(calc(-50% + ${2 * SPREAD + dx}px), -50%)` }}>
-              <div className="card-m"><CardBodyDemo /></div>
-            </div>
-          </>
+          ))}
         </div>
 
         <div className="cta-wrap">
