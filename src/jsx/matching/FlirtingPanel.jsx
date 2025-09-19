@@ -1,20 +1,22 @@
 // src/jsx/common/FlirtingPanel.jsx
 import { useEffect, useState } from "react";
 import api from "../../api/axios.js";
-import "../../css/signup/ResultPage.css"; // 스타일은 기존 CSS 재활용
+import useUserStore from "../../api/userStore.js"; // ✅ 추가
+import "../../css/signup/ResultPage.css";
 
 export default function FlirtingPanel({ targetUserId, onSent }) {
   const [alreadySent, setAlreadySent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ 모달 열릴 때 상태 확인
+  // ✅ zustand store
+  const { user, setUser } = useUserStore();
+
   useEffect(() => {
     if (!targetUserId) return;
 
     const checkStatus = async () => {
       try {
         const resp = await api.get(`/signals/${targetUserId}/status`);
-        // 서버 응답: { alreadySent: true/false }
         setAlreadySent(resp.data.alreadySent === true);
       } catch (err) {
         console.error("❌ 플러팅 상태 확인 실패:", err);
@@ -24,12 +26,20 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
     checkStatus();
   }, [targetUserId]);
 
-  // ✅ 플러팅 보내기
   const handleSend = async () => {
     try {
       setLoading(true);
       await api.post(`/signals/${targetUserId}`);
-      setAlreadySent(true); // 바로 상태 반영
+      setAlreadySent(true);
+
+      // ✅ zustand에서 차감 반영
+      if (user?.signalCredits > 0) {
+        setUser({
+          ...user,
+          signalCredits: user.signalCredits - 1,
+        });
+      }
+
       if (onSent) onSent();
     } catch (err) {
       console.error("❌ 플러팅 실패:", err);
@@ -54,7 +64,7 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
         <ul className="note-list">
           <li>기본 횟수: ‘신호 보내기’ 3회, ‘매칭’ 3회</li>
           <li>추가 횟수: 부스 쿠폰 등록 시 추가 가능</li>
-          <li>쿠폰 혜택: 쿠폰 등록 시 '신호 보내기' 및 '매칭 횟수'가 각 5회씩 추가됩니다.</li>
+          <li>쿠폰 혜택: 쿠폰 등록 시 각 5회씩 추가됩니다.</li>
         </ul>
       </div>
     </div>

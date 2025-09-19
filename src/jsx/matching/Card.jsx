@@ -5,8 +5,9 @@ import "../../css/matching/Card.css";
 
 import starImg from "../../image/matching/star.svg";
 import useMatchingStore from "../../api/matchingStore";
+import useUserStore from "../../api/userStore"; // ✅ 유저 스토어 불러오기
 import NoHuman from "./Nohuman";
-import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 모달로 띄울 컴포넌트
+import YouProfile from "../mypage/YouProfile.jsx";
 
 const FIXED_STARS = [
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
@@ -21,7 +22,8 @@ export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
 
-  const [selectedUserId, setSelectedUserId] = useState(null); // ✅ 모달 상태
+  const { user, setUser } = useUserStore(); // ✅ user & setter
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const N = candidates.length;
 
   // ✅ 모달 열릴 때 body 스크롤 막기
@@ -32,7 +34,7 @@ export default function Card() {
       document.body.style.overflow = "auto";
     }
     return () => {
-      document.body.style.overflow = "auto"; // 안전 복원
+      document.body.style.overflow = "auto";
     };
   }, [selectedUserId]);
 
@@ -149,8 +151,13 @@ export default function Card() {
     }
   };
 
-  // 다시 매칭하기 API
+  // 다시 매칭하기 API + 크레딧 차감
   const handleRematch = async () => {
+    if (user?.matchCredits <= 0) {
+      alert("매칭 기회가 없습니다!");
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await api.post("/match/start", {});
@@ -164,6 +171,12 @@ export default function Card() {
       if (typeof setCandidates === "function") {
         setCandidates(nextList);
       }
+
+      // ✅ 크레딧 차감
+      setUser({
+        ...user,
+        matchCredits: Math.max(0, (user.matchCredits ?? 0) - 1),
+      });
 
       setCenter(0);
       setDx(0);
@@ -382,12 +395,12 @@ export default function Card() {
         <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
           <div
             className="modal-content"
-            onClick={(e) => e.stopPropagation()} // 모달 내부 클릭 시 닫힘 방지
+            onClick={(e) => e.stopPropagation()}
           >
             <YouProfile
               userId={selectedUserId}
               onClose={() => setSelectedUserId(null)}
-              fromMatching={true} // ✅ 매칭에서 열릴 때만 플러팅 버튼 보이도록
+              fromMatching={true}
             />
           </div>
         </div>
