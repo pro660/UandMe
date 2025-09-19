@@ -62,9 +62,9 @@ function AppRouter() {
           <Route
             path="/infoform"
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <InfoForm />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />
           <Route
