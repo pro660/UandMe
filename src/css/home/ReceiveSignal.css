@@ -25,8 +25,8 @@
 }
 
 .receive-profile-placeholder {
-  width: 1rem;
-  height: 1rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 50%;
   background: #f3f3f3;
   overflow: hidden;
@@ -37,6 +37,7 @@
   width: 40%;
   height: 40%;
   object-fit: cover;
+  display: block;
 }
 
 .receive-text-info {
