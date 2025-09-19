@@ -25,6 +25,11 @@
   border-radius: 12px;
 }
 
+/* 모달 내부에서는 풀뷰 높이 제거해서 자연스럽게 */
+.modal-content .result-page {
+  min-height: auto;                 /* ✅ 모달에서는 내용 높이만 */
+}
+
 .home-btn {
   position: fixed;
   top: 1rem;
