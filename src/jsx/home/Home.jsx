@@ -2,8 +2,8 @@ import "../../css/home/Home.css";
 import FlirtingTabs from "./FlirtingTabs";
 import Logo from "../../image/loginPage/logo.svg"; // 로고 import
 import MatchingBanner from "../../image/home/match.svg";
-import Map from "../../image/home/map.svg";
-import MapInfo from "../../image/home/mapinfo.svg";
+import Map from "../../image/home/map.png";
+import MapInfo from "../../image/home/mapinfo.png";
 import QandA from "../../image/home/q&a.svg";
 
 import DrinkMenu from "../home/DrinkMenu";
