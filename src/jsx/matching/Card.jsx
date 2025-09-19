@@ -7,7 +7,6 @@ import "../../css/matching/Card.css";
 import starImg from "../../image/matching/star.svg";
 import useUserStore from "../../api/userStore";
 import YouProfile from "../mypage/YouProfile.jsx";
-import FlirtingPanel from "../matching/FlirtingPanel.jsx";
 
 const FIXED_STARS = [
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
@@ -324,9 +323,6 @@ export default function Card({ initialCandidates = [] }) {
                 onClose={() => setSelectedUserId(null)}
                 fromMatching={true}
               />
-              <div style={{ marginTop: "1.2rem" }}>
-                <FlirtingPanel targetUserId={selectedUserId} />
-              </div>
             </div>
           </div>,
           document.body
