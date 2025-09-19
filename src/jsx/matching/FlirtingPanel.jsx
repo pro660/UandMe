@@ -8,8 +8,11 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
   const [alreadySent, setAlreadySent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // zustand store
-  const { user, setUser } = useUserStore();
+  // ✅ 필요한 값만 구독(리렌더 최소화)
+  const { signalCredits, updateCredits } = useUserStore((s) => ({
+    signalCredits: s.user?.signalCredits ?? 0,
+    updateCredits: s.updateCredits,
+  }));
 
   useEffect(() => {
     if (!targetUserId) return;
@@ -21,7 +24,12 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
         if (!alive) return;
         setAlreadySent(resp?.data?.alreadySent === true);
       } catch (err) {
-        console.error("❌ 플러팅 상태 확인 실패:", err);
+        // ✅ 404면 "아직 안 보냄"으로 간주 (콘솔 에러 제거)
+        if (err?.response?.status === 404) {
+          if (alive) setAlreadySent(false);
+        } else {
+          console.error("❌ 플러팅 상태 확인 실패:", err);
+        }
       }
     })();
 
@@ -33,38 +41,29 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
   const handleSend = async () => {
     if (!targetUserId || alreadySent || loading) return;
 
-    const credits = user?.signalCredits ?? 0;
-    if (credits <= 0) {
+    if (signalCredits <= 0) {
       alert("신호 기회가 없습니다! 부스 쿠폰 등록 시 추가됩니다.");
       return;
     }
 
-    // ✅ 확인창: '확인'일 때만 진행
-    const ok = window.confirm(
-      "플러팅을 보내시겠습니까?\n신호 1회가 차감됩니다."
-    );
-    if (!ok) return;
+    if (!window.confirm("플러팅을 보내시겠습니까?\n신호 1회가 차감됩니다.")) return;
 
     try {
       setLoading(true);
-
       await api.post(`/signals/${targetUserId}`);
 
-      // 서버 성공 시 로컬 상태 업데이트
       setAlreadySent(true);
-      setUser((prev) => ({
-        ...prev,
-        signalCredits: Math.max(0, (prev?.signalCredits ?? 0) - 1),
-      }));
 
+      // ✅ 전용 액션으로 안전 차감(음수 방지)
+      updateCredits({ signalCredits: Math.max(0, signalCredits - 1) });
+
+      onSent?.(targetUserId);
       alert("플러팅을 보냈습니다!");
-      if (onSent) onSent();
     } catch (err) {
       const status = err?.response?.status;
-      const msg = err?.response?.data?.message;
+      const msg = err?.response?.data?.message || "";
 
-      // 서버에서 이미 보낸 상대라고 응답한 경우
-      if (status === 409 || /already/i.test(msg ?? "")) {
+      if (status === 409 || /already/i.test(msg)) {
         setAlreadySent(true);
         alert("이미 이 상대에게 플러팅을 보냈어요.");
       } else {
@@ -82,6 +81,7 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
         className={`flirting-cta ${alreadySent ? "done" : ""}`}
         onClick={handleSend}
         disabled={alreadySent || loading}
+        type="button"
       >
         {alreadySent ? "플러팅 완료" : loading ? "보내는 중..." : "플러팅 하기"}
       </button>

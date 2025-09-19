@@ -5,18 +5,27 @@ import { persist } from "zustand/middleware";
 const useUserStore = create(
   persist(
     (set, get) => ({
-      user: null,                  // { accessToken, ... } 등 서버 유저 정보
-      jwt: null,                   // (옵션) 서버 JWT 별도 보관 시
-      firebaseCustomToken: null,   // (옵션) Firebase Custom Token
+      user: null,                  // { accessToken, ... } 포함
+      jwt: null,
+      firebaseCustomToken: null,
       isInitialized: false,
 
-      // 전체 교체 (replace)
-      setUser: (userInfo) => {
-        console.log("🟢 [UserStore] setUser (replace):", userInfo);
-        set({ user: userInfo });
+      // ✅ 객체 또는 함수(updater) 모두 허용
+      setUser: (userOrUpdater) => {
+        if (typeof userOrUpdater === "function") {
+          set((state) => {
+            const prev = state.user || {};
+            const next = userOrUpdater(prev) || {};
+            console.log("🟢 [UserStore] setUser (updater):", next);
+            return { user: next };
+          });
+        } else {
+          console.log("🟢 [UserStore] setUser (replace):", userOrUpdater);
+          set({ user: userOrUpdater });
+        }
       },
 
-      // 부분 병합 (merge)
+      // 부분 병합
       updateUser: (patch) => {
         const prev = get().user || {};
         const next = { ...prev, ...patch };
@@ -24,15 +33,15 @@ const useUserStore = create(
         set({ user: next });
       },
 
-      // ⬇️ accessToken만 안전하게 교체 (axios 리프레시에서 사용 권장)
+      // ✅ accessToken만 교체(리프레시에서 사용)
       setAccessToken: (accessToken) => {
         const prev = get().user || {};
         const next = { ...prev, accessToken };
-        console.log("🟢 [UserStore] setAccessToken:", accessToken ? "SET" : "EMPTY");
+        console.log("🟢 [UserStore] setAccessToken:", !!accessToken);
         set({ user: next });
       },
 
-      // 크레딧 전용 업데이트
+      // 크레딧 전용
       updateCredits: ({ matchCredits, signalCredits }) => {
         const prev = get().user || {};
         const next = {
@@ -42,28 +51,19 @@ const useUserStore = create(
           signalCredits:
             signalCredits !== undefined ? signalCredits : prev.signalCredits,
         };
-        console.log(
-          "🟢 [UserStore] updateCredits:",
-          { matchCredits, signalCredits },
-          "=>",
-          next
-        );
+        console.log("🟢 [UserStore] updateCredits:", { matchCredits, signalCredits }, "=>", next);
         set({ user: next });
       },
 
-      // JWT 저장(선택)
       setJwt: (jwt) => {
         console.log("🟢 [UserStore] setJwt:", !!jwt);
         set({ jwt });
       },
-
-      // Firebase Custom Token 저장(선택)
       setFirebaseCustomToken: (firebaseCustomToken) => {
         console.log("🟢 [UserStore] setFirebaseCustomToken:", !!firebaseCustomToken);
         set({ firebaseCustomToken });
       },
 
-      // 로그아웃/초기화
       clearUser: () => {
         console.log("🔴 [UserStore] clearUser");
         set({ user: null, jwt: null, firebaseCustomToken: null });
@@ -80,7 +80,6 @@ const useUserStore = create(
     }),
     {
       name: "user-storage",
-      // 필요 시 persist 설정 확장 가능(예: version/migrate/partialize 등)
     }
   )
 );
