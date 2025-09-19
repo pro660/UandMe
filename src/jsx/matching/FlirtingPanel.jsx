@@ -1,21 +1,39 @@
-import React, { useState } from "react";
-import api from "../../api/axios";
+// src/jsx/common/FlirtingPanel.jsx
+import { useEffect, useState } from "react";
+import api from "../../api/axios.js";
+import "../../css/signup/ResultPage.css"; // 스타일은 기존 CSS 재활용
 
-/** 프로필카드 아래에 표시되는 플러팅 CTA + 안내 박스 */
 export default function FlirtingPanel({ targetUserId, onSent }) {
+  const [alreadySent, setAlreadySent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
 
-  const handleFlirt = async () => {
-    if (!targetUserId || loading || sent) return;
-    setLoading(true);
+  // ✅ 모달 열릴 때 상태 확인
+  useEffect(() => {
+    if (!targetUserId) return;
+
+    const checkStatus = async () => {
+      try {
+        const resp = await api.get(`/signals/${targetUserId}/status`);
+        // 서버 응답: { alreadySent: true/false }
+        setAlreadySent(resp.data.alreadySent === true);
+      } catch (err) {
+        console.error("❌ 플러팅 상태 확인 실패:", err);
+      }
+    };
+
+    checkStatus();
+  }, [targetUserId]);
+
+  // ✅ 플러팅 보내기
+  const handleSend = async () => {
     try {
+      setLoading(true);
       await api.post(`/signals/${targetUserId}`);
-      setSent(true);
-      onSent?.();
-    } catch (e) {
-      console.error(e);
-      alert("플러팅 전송에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      setAlreadySent(true); // 바로 상태 반영
+      if (onSent) onSent();
+    } catch (err) {
+      console.error("❌ 플러팅 실패:", err);
+      alert("플러팅을 보낼 수 없습니다. 다시 시도해 주세요.");
     } finally {
       setLoading(false);
     }
@@ -24,21 +42,18 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
   return (
     <div className="flirting-panel">
       <button
-        className={`flirting-cta ${sent ? "done" : ""}`}
-        onClick={handleFlirt}
-        disabled={loading || sent}
-        type="button"
-        aria-label="플러팅 보내기"
+        className={`flirting-cta ${alreadySent ? "done" : ""}`}
+        onClick={handleSend}
+        disabled={alreadySent || loading}
       >
-        {sent ? "플러팅 완료!" : loading ? "전송 중..." : "플러팅 하기"}
+        {alreadySent ? "플러팅 완료" : loading ? "보내는 중..." : "플러팅 하기"}
       </button>
 
       <div className="flirting-note">
-        <div className="note-title">신호/매칭 횟수 및 연장 방법</div>
+        <p className="note-title">신호/매칭 안내</p>
         <ul className="note-list">
-          <li>기본 횟수: ‘신호 보내기’ 3회, ‘매칭 횟수’ 3회로 제한됩니다.</li>
-          <li>추가 횟수: 축제 중 ‘멋쟁이 사자처럼’ 부스 음료 구매 시 쿠폰으로 추가 기회를 얻을 수 있어요.</li>
-          <li>쿠폰 혜택: 쿠폰 등록 시 ‘신호 보내기’ 및 ‘매칭 횟수’가 각 5회씩 추가됩니다.</li>
+          <li>기본 횟수: ‘신호 보내기’ 3회, ‘매칭’ 3회</li>
+          <li>추가 횟수: 부스 쿠폰 등록 시 추가 가능</li>
         </ul>
       </div>
     </div>
