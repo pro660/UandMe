@@ -1,14 +1,13 @@
 .empty-message {
   display: flex;
-  align-items: flex-start;   /* 위쪽 정렬 */
-  justify-content: center;   /* 가로 중앙 */
+  align-items: flex-start; /* 위쪽 정렬 */
+  justify-content: center; /* 가로 중앙 */
   height: 100%;
-  padding-top: 14rem;         /* 위에서 조금 내려오기 */
+  padding-top: 14rem; /* 위에서 조금 내려오기 */
   text-align: center;
   color: #999;
   font-size: 0.95rem;
 }
-
 
 .sent-card {
   display: flex;
@@ -32,6 +31,10 @@
   background: #f3f3f3; /* 나중에 이미지 채울 자리 */
   overflow: hidden;
   flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-img {
