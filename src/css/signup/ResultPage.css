@@ -229,7 +229,8 @@
   color: #3a3a3a;
   line-height: 1.45;
   box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  font-size: 0.85rem;       /* ✅ 글씨 크기 축소 */
+  font-size: 0.75rem;       /* ✅ 글씨 크기 축소 */
+  margin-bottom: 1rem;
 }
 .flirting-note .note-title {
   font-weight: 800;
@@ -239,6 +240,6 @@
 .flirting-note .note-list {
   margin: 0;
   padding-left: 1.1rem;
-  font-size: 0.85rem;       /* ✅ 목록 글씨도 작게 */
+  font-size: 0.65rem;       /* ✅ 목록 글씨도 작게 */
 }
 .flirting-note .note-list li { margin: .25rem 0; }
