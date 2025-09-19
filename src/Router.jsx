@@ -20,9 +20,7 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
-import PageFade from "./jsx/common/PageFade.jsx";
-
-// ✅ 레이아웃 컴포넌트
+// 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
   const hiddenPaths = ["/login", "/infoform", "/result", "/qpage"];
@@ -33,12 +31,7 @@ function Layout({ children }) {
   return (
     <>
       {!shouldHide && <Header />}
-
-      {/* 여기서 children을 PageFade로 감싸줌 */}
-      <div className="content-wrap" style={{ position: "relative", minHeight: "100%" }}>
-        <PageFade>{children}</PageFade>
-      </div>
-
+      {children}
       {!shouldHide && <Menu />}
     </>
   );
@@ -110,7 +103,7 @@ function AppRouter() {
           />
           <Route path="/loading" element={<Loader />} />
 
-          {/* ✅ 채팅방 라우트 */}
+          {/* ✅ 채팅방 라우트: URL에서 roomId 추출 + 현재 로그인 유저 ID 전달 */}
           <Route
             path="/chat/:roomId"
             element={
