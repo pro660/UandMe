@@ -1,0 +1,34 @@
+:root { /* 네 프로젝트가 10px=1rem이면 이미 OK, 아니면 아래 줄 유지 */
+  font-size: 62.5%;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg, #fff);
+}
+
+.content-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  overflow: clip;
+}
+@supports not (overflow: clip) {
+  .content-wrap { overflow: hidden; }
+}
+
+/* 본문 카드 느낌 + iOS 엣지 그림자 */
+.ios-screen {
+  background: var(--page-bg, #fff);
+  box-shadow: -1.2rem 0 2.8rem -1.2rem rgba(0,0,0,0.12);
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-screen, .content-wrap * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

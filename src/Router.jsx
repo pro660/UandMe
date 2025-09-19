@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import PageTransitionsIOS from "./jsx/common/PageTransitionsIOS";
 
 import ProtectedRoute from "./ProtectedRoute";
 import ChatRoomGuard from "./jsx/chat/ChatRoomGuard";
@@ -28,10 +29,30 @@ function Layout({ children }) {
     hiddenPaths.includes(location.pathname) ||
     location.pathname.startsWith("/chat/");
 
+  // 전환을 끄고 싶은 경로(예: 로딩, 풀스크린 뷰 등)
+  const noAnimate = location.pathname.startsWith("/loading");
+
+  // 채팅 룸에서 스와이프-백 비활성화(입력/제스처 충돌 방지)
+  const swipeBack = !location.pathname.startsWith("/chat");
+
   return (
     <>
       {!shouldHide && <Header />}
-      {children}
+
+      {/* 본문만 전환되게 컨테이너 추가 */}
+      <div
+        className="content-wrap"
+        style={{ position: "relative", minHeight: "100%" }}
+      >
+        {noAnimate ? (
+          children
+        ) : (
+          <PageTransitionsIOS swipeBack={swipeBack}>
+            {children}
+          </PageTransitionsIOS>
+        )}
+      </div>
+
       {!shouldHide && <Menu />}
     </>
   );

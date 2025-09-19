@@ -1,6 +1,4 @@
-/* 한국어 폴백 */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap");
-
+/* InfoForm.css */
 /* ===== 테마 변수 ===== */
 :root {
   --bg: #fff;
@@ -19,6 +17,8 @@
   --space-lg: 1.25rem;
 
   --ui-font: "AlimamaFangYuanVF", "Noto Sans KR", system-ui;
+
+  --sheet-height: 88vh;
 }
 
 /* 화면 컨테이너 */
@@ -49,14 +49,13 @@
 }
 
 .page-subtitle {
-  margin: 0.5rem 0 4rem;   /* 제목과 약간 간격 */
-  text-align: center;      /* 제목과 동일하게 중앙정렬 */
+  margin: 0.5rem 0 4rem; /* 제목과 약간 간격 */
+  text-align: center; /* 제목과 동일하게 중앙정렬 */
   font-size: 0.8rem;
   font-weight: 500;
   color: red;
   font-family: var(--ui-font);
 }
-
 
 /* 공통 필드 */
 .info-form {
@@ -69,8 +68,8 @@
   flex-direction: column;
   gap: 0.5rem;
   padding-top: -2rem;
-  margin-top: -1rem;
-  margin-bottom: 0.5rem;
+  margin-top: -2rem;
+  margin-bottom: 1.5rem;
 }
 
 .field-label {
@@ -261,6 +260,12 @@
   margin: 2.5rem 0 2.5rem 0;
 }
 
+.mbti {
+  display: flex;
+
+  border: 2px solid black;
+}
+
 /* select 공통 */
 .select-input {
   width: 100%;
@@ -389,16 +394,18 @@
   border-top-right-radius: 16px;
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.12);
   z-index: 1000;
-  max-height: 70vh;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.2s ease;
+  max-height: var(--sheet-height);
 }
 .sheet-header {
+  /* 헤더 높이를 고정해줘야 본문 높이 계산이 정확함 */
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1rem 0.5rem;
+  padding: 0 1rem;
   border-bottom: 1px solid var(--line);
   font-family: var(--ui-font);
 }
@@ -417,6 +424,9 @@
 .sheet-body {
   overflow: auto;
   padding: 0.5rem 0.75rem;
+  /* 시트 전체 높이 - 헤더 높이 - 하단 안전영역 여백 */
+  max-height: calc(var(--sheet-height) - 56px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
 }
 .sheet-footer {
   padding: 0.75rem 1rem 1rem;
@@ -586,4 +596,96 @@
 }
 .submit-hint .msg {
   opacity: 0.9;
+}
+
+/* ===== MBTI slider layout ===== */
+.mbti-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 8px;
+}
+.mbti-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  gap: 12px;
+}
+
+.mbti-end {
+  font-weight: 700;
+  color: #666;
+  text-align: center;
+  width: 24px;
+}
+.mbti-end.is-picked {
+  color: #e53935; /* 선택된 알파벳 빨간색 */
+}
+
+/* range 기본트랙을 "회색 바", thumb을 "핑크 원"으로 */
+.mbti-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e5e5; /* 회색 바 */
+  outline: none;
+  width: 100%;
+  position: relative;
+}
+.mbti-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ff69c3; /* 핑크색 원 */
+  border: 0;
+  position: relative;
+  top: -2px; /* 바 중앙에 thumb 배치 */
+}
+.mbti-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ff5aa5;
+  border: 0;
+}
+
+/* 확인 버튼 */
+.mbti-confirm {
+  margin-top: 22px;
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 700;
+  color: #fff;
+  background: #ff5aa5; /* 기본 핑크 */
+  opacity: 0.4;
+}
+.mbti-confirm.is-enabled {
+  opacity: 1;
+}
+.mbti-confirm.is-disabled {
+  pointer-events: none;
+}
+
+/* iOS/안드 포함: 모바일 폭에서만 입력 컨트롤 16px 고정 */
+@media (max-width: 480px) {
+  /* 범위를 폼 루트로 한정하면 다른 페이지에 영향 X */
+  .profile-root input,
+  .profile-root select,
+  .profile-root textarea,
+  .profile-root .text-input,
+  .profile-root .select-input {
+    font-size: 16px !important; /* 확대 방지 핵심 */
+    line-height: 1.2; /* 커서 높이/줄간 보정 */
+  }
+
+  /* 플레이스홀더도 같이 맞추면 깔끔 */
+  .profile-root input::placeholder,
+  .profile-root .text-input::placeholder {
+    font-size: 16px;
+  }
 }
