@@ -38,13 +38,15 @@
 
   display: flex;
   align-items: center;
+  justify-content: space-between; /* ✅ 버튼과 타이틀 분리 */
   padding: 12px;
   background: #fff;
   border-bottom: 1px solid #eee;
   font-weight: bold;
 
-  z-index: 1100; /* 입력바보다 낮게 */
+  z-index: 2000; /* ✅ 모달 오버레이보다 위 */
 }
+
 
 .chatroom-header .back-btn {
   margin-right: 12px;
@@ -222,25 +224,19 @@
   background: #fff;
   border-radius: 12px;
 }
-
-.chatroom-header {
-  position: relative;
-  z-index: 20; /* ✅ 오버레이보다 위로 */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.8rem 1rem;
-  background: #fff;
-  border-bottom: 1px solid #eee;
-}
-
+/* 나가기 버튼 */
 .leave-btn {
-  padding: 0.4rem 0.8rem; /* ✅ 클릭 영역 확보 */
+  padding: 6px 12px;       /* ✅ 클릭 영역 확보 */
   border-radius: 6px;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
   font-weight: 600;
-  transition: background 0.2s;
+  color: #e74c3c;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .leave-btn:hover {
-  background: rgba(231, 76, 60, 0.1);
+  background: rgba(231, 76, 60, 0.08);
 }
