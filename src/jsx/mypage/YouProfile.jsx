@@ -1,21 +1,18 @@
 // src/jsx/mypage/YouProfile.jsx
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import ProfileCard from "../mypage/ProfileCard.jsx";
 import api from "../../api/axios.js";
 import FlirtingPanel from "../matching/FlirtingPanel.jsx";
 import "../../css/signup/ResultPage.css";
 
-export default function YouProfile({ userId: propUserId, onClose }) {
+export default function YouProfile({ userId: propUserId, onClose, fromMatching = false }) {
   // 라우트 접근 시 :userId, 모달 접근 시 prop.userId 사용
   const { userId: routeUserId } = useParams();
   const userId = propUserId || routeUserId;
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const location = useLocation();
-  const showFlirtingPanel = location.state?.showFlirtingPanel === true || !!propUserId;
-  // 👉 모달로 열릴 때는 propUserId가 있으므로 플러팅 버튼 자동 표시
 
   useEffect(() => {
     if (!userId) return;
@@ -111,8 +108,8 @@ export default function YouProfile({ userId: propUserId, onClose }) {
         />
       </div>
 
-      {/* 플러팅 패널 (매칭 카드 눌렀을 때만) */}
-      {showFlirtingPanel && (
+      {/* ✅ 플러팅 패널: 매칭 카드에서 열렸을 때만 표시 */}
+      {fromMatching && (
         <FlirtingPanel
           targetUserId={userId}
           onSent={() => alert(`${name} 님에게 플러팅을 보냈습니다!`)}

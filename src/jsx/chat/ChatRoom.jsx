@@ -219,7 +219,10 @@ export default function ChatRoom() {
     const text = input.trim();
     if (!text) return;
     if (!Number.isFinite(myIdNum) || !roomId) return;
-    if (!Array.isArray(roomInfo?.participants) || roomInfo.participants.length < 2)
+    if (
+      !Array.isArray(roomInfo?.participants) ||
+      roomInfo.participants.length < 2
+    )
       return;
 
     setSending(true);
@@ -243,7 +246,11 @@ export default function ChatRoom() {
         });
 
         tx.update(roomRef, {
-          lastMessage: { text, senderId: myIdNum, createdAt: serverTimestamp() },
+          lastMessage: {
+            text,
+            senderId: myIdNum,
+            createdAt: serverTimestamp(),
+          },
           [`unread.${String(receiverIdNum)}`]: increment(1),
         });
       });
@@ -379,7 +386,9 @@ export default function ChatRoom() {
           type="button"
           className="send-btn"
           onClick={sendMessage}
-          disabled={sending || !input.trim() || !Number.isFinite(myIdNum) || !roomId}
+          disabled={
+            sending || !input.trim() || !Number.isFinite(myIdNum) || !roomId
+          }
           aria-busy={sending}
         >
           <FaArrowUp size={20} color="white" />
@@ -390,7 +399,11 @@ export default function ChatRoom() {
       {showProfile && peerIdNum != null && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <YouProfile userId={peerIdNum} onClose={() => setShowProfile(false)} />
+            <YouProfile
+              userId={peerIdNum}
+              onClose={() => setShowProfile(false)}
+              fromMatching={false} // ✅ 채팅방에서는 플러팅 버튼 숨김
+            />
           </div>
         </div>
       )}

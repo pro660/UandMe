@@ -379,11 +379,15 @@ export default function Card() {
 
       {/* ✅ 모달 */}
       {selectedUserId && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()} // 모달 내부 클릭 시 닫힘 방지
+          >
             <YouProfile
               userId={selectedUserId}
               onClose={() => setSelectedUserId(null)}
+              fromMatching={true} // ✅ 매칭에서 열릴 때만 플러팅 버튼 보이도록
             />
           </div>
         </div>

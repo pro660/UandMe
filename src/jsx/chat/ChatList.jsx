@@ -6,6 +6,9 @@ import useUserStore from "../../api/userStore";
 import useChatStore from "../../api/chatStore";
 import WarningIcon from "../../image/home/warning.svg";
 import Loader from "../common/Loader";
+import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 추가
+
+import "../../css/chat/ChatList.css";
 
 export default function ChatList() {
   const { rooms, setRooms, deletedRoomIds, clearDeletedRoom } = useChatStore();
@@ -13,6 +16,10 @@ export default function ChatList() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
+
+  // ✅ 프로필 모달 상태
+  const [showProfile, setShowProfile] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     if (!user?.userId) return;
@@ -24,24 +31,20 @@ export default function ChatList() {
 
     setLoading(true);
     const unsub = onSnapshot(q, (snapshot) => {
-      // ✅ 1) 현재 존재하는 방들 (Firestore 기준)
       const activeRooms = snapshot.docs.map((doc) => ({
         roomId: doc.id,
         ...doc.data(),
       }));
 
-      // ✅ 2) 다시 생긴 방은 삭제목록에서 제거
       const activeIds = new Set(activeRooms.map((r) => r.roomId));
       deletedRoomIds.forEach((rid) => {
         if (activeIds.has(rid)) clearDeletedRoom(rid);
       });
 
-      // ✅ 3) 여전히 삭제 상태인 방들만 표시
       const deletedRooms = deletedRoomIds
         .filter((rid) => !activeIds.has(rid))
         .map((rid) => ({ roomId: rid, deleted: true }));
 
-      // ✅ 4) 합치고 정렬: 삭제된 방은 항상 맨 아래
       const combined = [...activeRooms, ...deletedRooms].sort((a, b) => {
         if (a.deleted && !b.deleted) return 1;
         if (!a.deleted && b.deleted) return -1;
@@ -70,7 +73,6 @@ export default function ChatList() {
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
       {rooms.length === 0 ? (
-        // ✅ 빈 상태 UI
         <div style={{ textAlign: "center", color: "#666", marginTop: "100px" }}>
           <img
             src={WarningIcon}
@@ -91,30 +93,34 @@ export default function ChatList() {
         </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {rooms.map((room) =>
-            room.deleted ? (
-              // 🔴 삭제된 방
+          {rooms.map((room) => {
+            if (room.deleted) {
+              return (
+                <li
+                  key={room.roomId}
+                  style={{
+                    padding: "12px 8px",
+                    borderBottom: "1px solid #eee",
+                    color: "#c0392b",
+                    fontStyle: "italic",
+                    background: "#fceaea",
+                    borderRadius: "6px",
+                    marginBottom: "6px",
+                    cursor: "not-allowed",
+                    opacity: 0.8,
+                  }}
+                >
+                  ❌ 이 채팅방은 삭제되었습니다
+                </li>
+              );
+            }
+
+            const peer = room.peers?.[String(user.userId)];
+            const unreadCount = room.unread?.[String(user.userId)] || 0;
+
+            return (
               <li
                 key={room.roomId}
-                style={{
-                  padding: "12px 8px",
-                  borderBottom: "1px solid #eee",
-                  color: "#c0392b",
-                  fontStyle: "italic",
-                  background: "#fceaea",
-                  borderRadius: "6px",
-                  marginBottom: "6px",
-                  cursor: "not-allowed",
-                  opacity: 0.8,
-                }}
-              >
-                ❌ 이 채팅방은 삭제되었습니다
-              </li>
-            ) : (
-              // ✅ 정상 방
-              <li
-                key={room.roomId}
-                onClick={() => navigate(`/chat/${room.roomId}`)}
                 style={{
                   cursor: "pointer",
                   display: "flex",
@@ -123,11 +129,12 @@ export default function ChatList() {
                   padding: "12px 8px",
                   borderBottom: "1px solid #eee",
                 }}
+                onClick={() => navigate(`/chat/${room.roomId}`)} // ✅ 리스트 클릭 → 채팅방 이동
               >
-                {/* 왼쪽: 프로필 + 이름 + 마지막 메시지 */}
+                {/* 왼쪽: 프로필 + 이름 + 메시지 */}
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <img
-                    src={room.peers?.[String(user.userId)]?.typeImageUrl}
+                    src={peer?.typeImageUrl}
                     alt="프로필"
                     style={{
                       width: "48px",
@@ -135,6 +142,12 @@ export default function ChatList() {
                       borderRadius: "50%",
                       objectFit: "cover",
                       marginRight: "12px",
+                      cursor: "pointer",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation(); // ✅ 채팅방 이동 막기
+                      setSelectedUserId(peer?.userId);
+                      setShowProfile(true);
                     }}
                   />
                   <div>
@@ -145,8 +158,7 @@ export default function ChatList() {
                         marginBottom: "4px",
                       }}
                     >
-                      {room.peers?.[String(user.userId)]?.nickname ||
-                        room.peers?.[String(user.userId)]?.name}
+                      {peer?.nickname || peer?.name}
                     </div>
                     <div
                       style={{
@@ -163,7 +175,7 @@ export default function ChatList() {
                   </div>
                 </div>
 
-                {/* 오른쪽: 시간 + 안읽음 뱃지 */}
+                {/* 오른쪽: 시간 + 안읽음 */}
                 <div style={{ textAlign: "right", marginLeft: "8px" }}>
                   <div
                     style={{
@@ -183,7 +195,7 @@ export default function ChatList() {
                       : ""}
                   </div>
 
-                  {room.unread?.[String(user.userId)] > 0 && (
+                  {unreadCount > 0 && (
                     <div
                       style={{
                         marginTop: "4px",
@@ -198,14 +210,27 @@ export default function ChatList() {
                         textAlign: "center",
                       }}
                     >
-                      {room.unread?.[String(user.userId)]}
+                      {unreadCount}
                     </div>
                   )}
                 </div>
               </li>
-            )
-          )}
+            );
+          })}
         </ul>
+      )}
+
+      {/* ✅ 프로필 모달 */}
+      {showProfile && selectedUserId && (
+        <div className="modal-overlay" onClick={() => setShowProfile(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <YouProfile
+              userId={selectedUserId}
+              onClose={() => setShowProfile(false)}
+              fromMatching={false} // 리스트 → 플러팅 버튼 없음
+            />
+          </div>
+        </div>
       )}
     </div>
   );
