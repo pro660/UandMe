@@ -6,12 +6,15 @@ import api from "../../api/axios.js";
 import FlirtingPanel from "../matching/FlirtingPanel.jsx";
 import "../../css/signup/ResultPage.css";
 
-export default function YouProfile({ onClose }) {
-  const { userId } = useParams();
+export default function YouProfile({ userId: propUserId, onClose }) {
+  const { userId: routeUserId } = useParams();
+  const userId = propUserId || routeUserId; // ✅ 모달 → prop 사용, 라우터 접근 → params 사용
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const location = useLocation();
-  const showFlirtingPanel = location.state?.showFlirtingPanel === true; // ✅ 조건부
+  const showFlirtingPanel = location.state?.showFlirtingPanel === true;
 
   useEffect(() => {
     if (!userId) return;
@@ -19,6 +22,7 @@ export default function YouProfile({ onClose }) {
     const fetchUser = async () => {
       try {
         setLoading(true);
+        console.log("📡 API 호출: /users/", userId); // ✅ 디버그 로그
         const resp = await api.get(`/users/${userId}`);
         setUser(resp.data);
       } catch (err) {
