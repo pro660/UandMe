@@ -1,13 +1,22 @@
 // src/jsx/SentSignalList.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../css/home/SentSignalList.css";
-import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 경로 프로젝트에 맞게 수정
+import YouProfile from "../mypage/YouProfile.jsx"; // 경로 확인
 
-export default function SentSignalList({ signals, onOpenProfile }) {
-  // ✅ 모달 상태
+export default function SentSignalList({ signals /*, onOpenProfile */ }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null); // 초기 렌더용(옵션)
+
+  // ✅ 모달 열릴 때 배경 스크롤 잠금 (ChatRoom 느낌 유지)
+  useEffect(() => {
+    if (profileOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev || "auto";
+      };
+    }
+  }, [profileOpen]);
 
   const formatRelativeTime = (isoString) => {
     if (!isoString) return "";
@@ -28,20 +37,16 @@ export default function SentSignalList({ signals, onOpenProfile }) {
   };
 
   const handleOpen = (signal) => {
-    const isDeclined = signal.status === "DECLINED";
+    if (signal.status === "DECLINED") return;
     const uid = signal.toUser?.userId;
-    if (isDeclined || !uid) return;
+    if (!uid) return;
 
-    // 부모가 onOpenProfile을 넘겨줬다면 그대로 위임 (호환성 유지)
-    if (typeof onOpenProfile === "function") {
-      onOpenProfile(uid);
-      return;
-    }
-
-    // ✅ 내부 모달 오픈
     setSelectedUserId(uid);
-    setSelectedUser(signal.toUser || null); // 초기 데이터 전달(YouProfile이 추가 fetch 해도 OK)
     setProfileOpen(true);
+
+    // ❗ ChatRoom 스타일로 내부 모달을 항상 사용
+    // 만약 상위에서 onOpenProfile을 계속 쓰고 싶다면 여기서 호출 추가 가능
+    // onOpenProfile?.(uid);
   };
 
   if (!signals || signals.length === 0) {
@@ -59,11 +64,7 @@ export default function SentSignalList({ signals, onOpenProfile }) {
               key={signal.signalId}
               className={`sent-card ${isDeclined ? "sent-declined" : ""}`}
             >
-              {/* ✅ DECLINED 아닐 때만 클릭 가능 */}
-              <div
-                className="sent-info"
-                onClick={() => handleOpen(signal)}
-              >
+              <div className="sent-info" onClick={() => handleOpen(signal)}>
                 <div className="sent-profile-placeholder">
                   {signal.toUser?.typeImageUrl2 || signal.toUser?.typeImageUrl3 ? (
                     <img
@@ -90,14 +91,24 @@ export default function SentSignalList({ signals, onOpenProfile }) {
         })}
       </div>
 
-      {/* ✅ 내부에서 띄우는 YouProfile 모달 (부모에서 onOpenProfile 안 넘긴 경우에만) */}
-      {typeof onOpenProfile !== "function" && (
-        <YouProfile
-          open={profileOpen}
-          onClose={() => setProfileOpen(false)}
-          userId={selectedUserId}          // 서버에서 상세 fetch 하는 컴포넌트라면 이걸 사용
-          initialUser={selectedUser}       // 선택: 초깃값으로 미리 채우기(컴포넌트 prop 이름 맞춰 변경)
-        />
+      {/* ✅ ChatRoom과 같은 마크업: modal-overlay / modal-content */}
+      {profileOpen && selectedUserId && (
+        <div
+          className="modal-overlay"
+          onClick={() => setProfileOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <YouProfile
+              userId={selectedUserId}
+              onClose={() => setProfileOpen(false)} // X 버튼 닫힘
+            />
+          </div>
+        </div>
       )}
     </>
   );
