@@ -10,7 +10,7 @@ import YouProfile from "../mypage/YouProfile.jsx"; // ✅ 모달로 띄울 컴�
 
 const FIXED_STARS = [
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
-  { id: 1, left: 10, top: 50, size: 80, rot: 0, op: 0.5 },
+  { id: 1, left: 10, top: 50, size: 80, rot: 0.5, op: 0.5 },
   { id: 2, left: 88, top: 37, size: 110, rot: 0, op: 0.6 },
 ];
 
@@ -21,10 +21,22 @@ export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
 
-  const [selectedUserId, setSelectedUserId] = useState(null); // ✅ 모달용 상태
+  const [selectedUserId, setSelectedUserId] = useState(null); // ✅ 모달 상태
   const N = candidates.length;
 
-  // 문자열 길이 절반에서 줄바꿈
+  // ✅ 모달 열릴 때 body 스크롤 막기
+  useEffect(() => {
+    if (selectedUserId) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto"; // 안전 복원
+    };
+  }, [selectedUserId]);
+
+  // 문자열 길이의 절반 근처에서 줄바꿈
   function breakAtHalf(text) {
     const raw = (text ?? "").trim();
     const arr = Array.from(raw);
@@ -89,7 +101,7 @@ export default function Card() {
   const xTwoRight = SPREAD / 2 + dx;
   const otherIdx = wrap(center + 1, N);
 
-  // 드래그
+  // 드래그 핸들러
   const onStart = (x) => {
     if (hasOne) return;
     dragging.current = true;
@@ -185,7 +197,7 @@ export default function Card() {
   // 카드 내부
   const CardBody = ({ item = {} }) => {
     const {
-      userId, // ✅ candidateId → userId
+      userId,
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
@@ -365,7 +377,7 @@ export default function Card() {
         </div>
       </div>
 
-      {/* ✅ 모달: selectedUserId 있을 때만 */}
+      {/* ✅ 모달 */}
       {selectedUserId && (
         <div className="modal-overlay">
           <div className="modal-content">

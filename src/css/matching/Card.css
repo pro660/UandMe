@@ -243,15 +243,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 2000;
+  overflow: hidden; /* ✅ 배경 스크롤 방지 */
 }
 
+/* 모달 컨텐츠 */
 .modal-content {
   width: 90%;
   max-width: 640px;
-  max-height: 90vh;
-  background: white;
+  max-height: 90vh; /* ✅ 화면 기준 높이 제한 */
+  background: #fff;
   border-radius: 16px;
-  overflow-y: auto;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* ✅ 모달 내부만 스크롤 */
+  -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
 }
