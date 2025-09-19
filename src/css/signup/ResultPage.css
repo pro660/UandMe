@@ -21,8 +21,6 @@
     );
   color: var(--text);
   box-sizing: border-box;
-
-  border-radius: 12px;
 }
 
 /* 모달 내부에서는 풀뷰 높이 제거해서 자연스럽게 */

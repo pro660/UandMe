@@ -5,7 +5,7 @@ import "../../css/matching/Card.css";
 
 import starImg from "../../image/matching/star.svg";
 import useMatchingStore from "../../api/matchingStore";
-import useUserStore from "../../api/userStore"; // ✅ 유저 스토어 불러오기
+import useUserStore from "../../api/userStore";
 import NoHuman from "./Nohuman";
 import YouProfile from "../mypage/YouProfile.jsx";
 
@@ -22,49 +22,36 @@ export default function Card() {
   const candidates = useMatchingStore((s) => s.candidates) || [];
   const setCandidates = useMatchingStore((s) => s.setCandidates);
 
-  const { user, setUser } = useUserStore(); // ✅ user & setter
+  const { user, setUser } = useUserStore();
   const [selectedUserId, setSelectedUserId] = useState(null);
   const N = candidates.length;
 
   // ✅ 모달 열릴 때 body 스크롤 막기
   useEffect(() => {
-    if (selectedUserId) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    document.body.style.overflow = selectedUserId ? "hidden" : "auto";
+    return () => (document.body.style.overflow = "auto");
   }, [selectedUserId]);
 
-  // 문자열 길이의 절반 근처에서 줄바꿈
+  // 문자열 절반 줄바꿈
   function breakAtHalf(text) {
     const raw = (text ?? "").trim();
     const arr = Array.from(raw);
     const n = arr.length;
     if (n < 2) return raw;
-
     const mid = Math.floor(n / 2);
     const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
-
     let idx = mid;
     for (let d = 0; d <= Math.min(8, n - 1); d++) {
-      const L = mid - d,
-        R = mid + d;
-      if (L > 0 && isBreak(arr[L])) {
-        idx = L + 1;
+      if (mid - d > 0 && isBreak(arr[mid - d])) {
+        idx = mid - d + 1;
         break;
       }
-      if (R < n - 1 && isBreak(arr[R])) {
-        idx = R + 1;
+      if (mid + d < n - 1 && isBreak(arr[mid + d])) {
+        idx = mid + d + 1;
         break;
       }
     }
-
-    const head = arr.slice(0, idx).join("");
-    const tail = arr.slice(idx).join("");
-    return `${head}\n${tail}`;
+    return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
   }
 
   // 상태 관리
@@ -78,15 +65,12 @@ export default function Card() {
   const [snapping, setSnapping] = useState(false);
   const [dir, setDir] = useState("");
   const [loading, setLoading] = useState(false);
-
   const dragging = useRef(false);
   const lastX = useRef(0);
 
-  if (N === 0) {
-    return <NoHuman />;
-  }
+  if (N === 0) return <NoHuman />;
 
-  // 카드 치수
+  // 카드 크기
   const CARD_W = rem(13);
   const GAP = rem(1.5);
   const SPREAD = CARD_W + GAP;
@@ -98,12 +82,11 @@ export default function Card() {
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
-  // N=2 전용
   const xTwoLeft = -SPREAD / 2 + dx;
   const xTwoRight = SPREAD / 2 + dx;
   const otherIdx = wrap(center + 1, N);
 
-  // 드래그 핸들러
+  // 드래그
   const onStart = (x) => {
     if (hasOne) return;
     dragging.current = true;
@@ -111,33 +94,12 @@ export default function Card() {
     setDir("");
     lastX.current = x;
   };
-
   const onMove = (x) => {
     if (!dragging.current) return;
     const delta = x - lastX.current;
     lastX.current = x;
-    const nextDx = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, dx + delta));
-    setDx(nextDx);
+    setDx(Math.max(-MAX_DRAG, Math.min(MAX_DRAG, dx + delta)));
   };
-
-  const completeSlide = (sign) => {
-    if (N <= 1) return;
-    setSnapping(true);
-    setDir(sign < 0 ? "dir-left" : "dir-right");
-    setDx(sign * SPREAD);
-    window.setTimeout(() => {
-      const nextCenter =
-        sign < 0
-          ? wrap(centerRef.current + 1, N)
-          : wrap(centerRef.current - 1, N);
-      centerRef.current = nextCenter;
-      setCenter(nextCenter);
-      setSnapping(false);
-      setDx(0);
-      setDir("");
-    }, SNAP_MS);
-  };
-
   const onEnd = () => {
     if (!dragging.current) return;
     dragging.current = false;
@@ -150,14 +112,29 @@ export default function Card() {
       setTimeout(() => setSnapping(false), SNAP_MS);
     }
   };
+  const completeSlide = (sign) => {
+    if (N <= 1) return;
+    setSnapping(true);
+    setDir(sign < 0 ? "dir-left" : "dir-right");
+    setDx(sign * SPREAD);
+    setTimeout(() => {
+      const nextCenter =
+        sign < 0
+          ? wrap(centerRef.current + 1, N)
+          : wrap(centerRef.current - 1, N);
+      setCenter(nextCenter);
+      setSnapping(false);
+      setDx(0);
+      setDir("");
+    }, SNAP_MS);
+  };
 
-  // 다시 매칭하기 API + 크레딧 차감
+  // 다시 매칭 (크레딧 차감 포함)
   const handleRematch = async () => {
     if (user?.matchCredits <= 0) {
       alert("매칭 기회가 없습니다!");
       return;
     }
-
     try {
       setLoading(true);
       const res = await api.post("/match/start", {});
@@ -167,10 +144,7 @@ export default function Card() {
         : Array.isArray(payload?.candidates)
         ? payload.candidates
         : [];
-
-      if (typeof setCandidates === "function") {
-        setCandidates(nextList);
-      }
+      if (typeof setCandidates === "function") setCandidates(nextList);
 
       // ✅ 크레딧 차감
       setUser({
@@ -182,10 +156,7 @@ export default function Card() {
       setDx(0);
       setSnapping(false);
       setDir("");
-
-      if (!nextList.length) {
-        alert("새 매칭 결과가 없습니다.");
-      }
+      if (!nextList.length) alert("새 매칭 결과가 없습니다.");
     } catch (err) {
       console.error(err);
       alert("매칭 시작 요청에 실패했습니다.");
@@ -193,19 +164,6 @@ export default function Card() {
       setLoading(false);
     }
   };
-
-  // 슬롯 좌표
-  const xFarLeft = -2 * SPREAD + dx;
-  const xLeft = -1 * SPREAD + dx;
-  const xCenter = 0 * SPREAD + dx;
-  const xRight = +1 * SPREAD + dx;
-  const xFarRight = +2 * SPREAD + dx;
-
-  // 인덱스
-  const idxFarLeft = wrap(center - 2, N);
-  const idxLeft = wrap(center - 1, N);
-  const idxRight = wrap(center + 1, N);
-  const idxFarRight = wrap(center + 2, N);
 
   // 카드 내부
   const CardBody = ({ item = {} }) => {
@@ -223,7 +181,6 @@ export default function Card() {
         className="card-click-area"
         onClick={() => setSelectedUserId(userId)} // ✅ 모달 오픈
       >
-        {/* 배경 별 */}
         <div className="card-stars" aria-hidden="true">
           {FIXED_STARS.map((s) => (
             <img
@@ -242,14 +199,10 @@ export default function Card() {
             />
           ))}
         </div>
-
-        {/* 프로필 이미지 */}
         <div className="img-frame">
           <img src={typeImageUrl} alt={name} draggable={false} />
         </div>
-
-        {/* 텍스트 */}
-        <div className="arch" aria-hidden={false}>
+        <div className="arch">
           <div className="arch-content">
             <p className="name">{name}</p>
             <p className="major">{department}</p>
@@ -259,6 +212,18 @@ export default function Card() {
       </div>
     );
   };
+
+  // 슬롯 좌표
+  const xFarLeft = -2 * SPREAD + dx;
+  const xLeft = -1 * SPREAD + dx;
+  const xCenter = 0 * SPREAD + dx;
+  const xRight = +1 * SPREAD + dx;
+  const xFarRight = +2 * SPREAD + dx;
+
+  const idxFarLeft = wrap(center - 2, N);
+  const idxLeft = wrap(center - 1, N);
+  const idxRight = wrap(center + 1, N);
+  const idxFarRight = wrap(center + 2, N);
 
   return (
     <>
@@ -302,7 +267,6 @@ export default function Card() {
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
-
               <div
                 className="slot slot-right"
                 style={{
@@ -329,7 +293,6 @@ export default function Card() {
                   <CardBody item={candidates[idxFarLeft]} />
                 </div>
               </div>
-
               <div
                 className="slot slot-left"
                 style={{
@@ -340,7 +303,6 @@ export default function Card() {
                   <CardBody item={candidates[idxLeft]} />
                 </div>
               </div>
-
               <div
                 className="slot slot-center"
                 style={{
@@ -351,7 +313,6 @@ export default function Card() {
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
-
               <div
                 className="slot slot-right"
                 style={{
@@ -362,7 +323,6 @@ export default function Card() {
                   <CardBody item={candidates[idxRight]} />
                 </div>
               </div>
-
               <div
                 className="slot slot-far-right"
                 style={{
@@ -393,10 +353,7 @@ export default function Card() {
       {/* ✅ 모달 */}
       {selectedUserId && (
         <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <YouProfile
               userId={selectedUserId}
               onClose={() => setSelectedUserId(null)}
