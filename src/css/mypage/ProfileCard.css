@@ -61,16 +61,14 @@
 
 /* 이미지 영역 (흰색 원 + 그림자) */
 .profile-card-image-wrap {
-  margin-top: 2rem;
-  width: 250px;
-  height: 250px;
-  border-radius: 50%;
+  margin-top: 0rem;
+  width: 220px;
+  height: 220px;
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .profile-card-image {
