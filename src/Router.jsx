@@ -27,8 +27,8 @@ function PageFade({ children }) {
 
   const variants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 0.35 } }, // ⬅️ 0.35s
-    exit: { opacity: 0, transition: { duration: 0.35 } }, // ⬅️ 동일하게
+    animate: { opacity: 1, transition: { duration: 0.35 } },
+    exit: { opacity: 0, transition: { duration: 0.35 } },
   };
 
   return (
@@ -41,10 +41,8 @@ function PageFade({ children }) {
         exit="exit"
         style={{
           width: "100%",
-          height: "100%",
           background: "#fff",
-          position: "absolute",
-          inset: 0,
+          // position: "absolute", // ❌ 빼주면 레이아웃 정상
         }}
       >
         {children}
@@ -67,7 +65,7 @@ function Layout({ children }) {
 
       <div
         className="content-wrap"
-        style={{ position: "relative", minHeight: "100%", overflow: "hidden" }}
+        style={{ position: "relative", minHeight: "100vh", overflow: "hidden", background:"#fff" }}
       >
         <PageFade>{children}</PageFade>
       </div>
