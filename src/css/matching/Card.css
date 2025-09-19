@@ -252,7 +252,7 @@
   width: 90%;
   max-width: 640px;
   max-height: 90vh; /* ✅ 화면 기준 높이 제한 */
-  background: #fff;
+  background: transparent;
   border-radius: 16px;
   position: relative;
   display: flex;

@@ -21,6 +21,8 @@
     );
   color: var(--text);
   box-sizing: border-box;
+
+  border-radius: 12px;
 }
 
 .home-btn {

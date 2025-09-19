@@ -223,7 +223,7 @@
   max-height: 90vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background: #fff;
+  background: transparent;
   border-radius: 12px;
 }
 /* 나가기 버튼 */
