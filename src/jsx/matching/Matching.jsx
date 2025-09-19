@@ -9,7 +9,7 @@ import "../../css/matching/Matching.css";
 import starImg from "../../image/matching/star.svg";
 import unKnownImg from "../../image/matching/unknown.svg";
 
-const FIXED_STARS = [
+const FIXED_STARS = [ // 회색 흐릿한 별 이미지 위치 지정
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
   { id: 1, left: 10, top: 50, size: 80, rot: 0, op: 0.5 },
   { id: 2, left: 88, top: 37, size: 110, rot: 0, op: 0.6 },
@@ -153,7 +153,7 @@ export default function Matching() {
   useEffect(() => () => stopPreSpin(), []);
 
   // ====== 매칭 시작 (최소 스핀 시간 보장) ======
-  const DEV_FAKE_ON_FAIL = true;    // 실패 시 데모 데이터 사용
+  const DEV_FAKE_ON_FAIL = false;    // 실패 시 데모 데이터 사용
   const MIN_SPIN_MS = 1800;         // ✅ 최소 스핀 시간(밀리초) — 여기만 조절하면 됨
 
   const startMatching = async () => {
@@ -225,7 +225,7 @@ export default function Matching() {
           onMouseUp={onEnd}
           onMouseLeave={onEnd}
         >
-          <>
+          <> {/* 카드 관련 div */}
             <div className="slot" style={{ transform: `translate(calc(-50% + ${xFarLeft}px), -50%)` }}>
               <div className="card-m"><CardBodyDemo /></div>
             </div>
@@ -244,6 +244,7 @@ export default function Matching() {
           </>
         </div>
 
+        {/* 매칭하기 버튼 */}
         <div className="cta-wrap">
           <button
             type="button"

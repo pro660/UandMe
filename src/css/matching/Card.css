@@ -17,7 +17,11 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #f9fafb;
+  background: linear-gradient(
+    to right,
+    #FFF2FA 40%,
+    #FFCBEA 86%
+  );
 
   flex-direction: column;
 }
