@@ -21,6 +21,8 @@ import ResultPage from "./jsx/signup/ResultPage";
 import Loader from "./jsx/common/Loader";
 import ChatRoom from "./jsx/chat/ChatRoom";
 
+import "./css/common/pageTransitions.css"
+
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
