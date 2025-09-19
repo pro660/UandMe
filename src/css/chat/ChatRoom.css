@@ -205,16 +205,18 @@
 /* 모달 */
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 56px; /* ✅ 헤더 높이만큼 띄우기 (헤더 높이에 맞춰 조정) */
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.4);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  z-index: 2000; /* 입력바 위로 */
+  z-index: 2000;
 }
-
 .modal-content {
   width: 90%;
   max-width: 480px;
