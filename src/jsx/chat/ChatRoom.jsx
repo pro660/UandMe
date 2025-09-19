@@ -14,10 +14,10 @@ import {
   runTransaction,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../../libs/firebase";
-import { auth } from "../../libs/firebase";
+import { db, auth } from "../../libs/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import useUserStore from "../../api/userStore";
+import useChatStore from "../../api/chatStore";
 import { FaArrowUp } from "react-icons/fa";
 import "../../css/chat/ChatRoom.css";
 import YouProfile from "../mypage/YouProfile.jsx";
@@ -26,6 +26,8 @@ export default function ChatRoom() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { user } = useUserStore();
+
+  const { addDeletedRoom } = useChatStore(); // ✅ 삭제 방 id 기록
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -43,15 +45,13 @@ export default function ChatRoom() {
   const inputRef = useRef(null);
   const inputWrapperRef = useRef(null);
 
-  // 🔐 Firebase Auth 준비
+  // Firebase Auth 준비
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, () => {
-      setAuthReady(true);
-    });
+    const unsub = onAuthStateChanged(auth, () => setAuthReady(true));
     return unsub;
   }, []);
 
-  // ✅ body 스크롤 막기
+  // body 스크롤 막기
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -59,7 +59,7 @@ export default function ChatRoom() {
     };
   }, []);
 
-  // ✅ 방 정보 불러오기
+  // 방 정보 불러오기
   useEffect(() => {
     if (!authReady || !roomId) return;
     const roomRef = doc(db, "chatRooms", roomId);
@@ -92,7 +92,26 @@ export default function ChatRoom() {
 
   const peerData = peerIdNum != null ? peersByUserId[peerIdNum] ?? null : null;
 
-  // ✅ 유틸 함수들 (useCallback으로 감싸기)
+  // ✅ 방 삭제 (나가기)
+  async function handleLeaveRoom() {
+    if (!roomId) return;
+    const ok = window.confirm(
+      "채팅방을 나가면 대화 내용이 모두 삭제됩니다. 나가시겠습니까?"
+    );
+    if (!ok) return;
+
+    try {
+      const roomRef = doc(db, "chatRooms", roomId);
+      await deleteDoc(roomRef);
+      addDeletedRoom(roomId); // ✅ persist에 기록
+      navigate("/chat");
+    } catch (err) {
+      console.error("채팅방 삭제 실패:", err);
+      alert("채팅방을 나갈 수 없습니다.");
+    }
+  }
+
+  // === 메시지 관련 함수들 ===
   const isNearBottom = useCallback(() => {
     const el = messagesWrapRef.current;
     if (!el) return true;
@@ -136,7 +155,7 @@ export default function ChatRoom() {
     [roomId, myIdStr, myIdNum, markAsRead]
   );
 
-  // ✅ 메시지 구독
+  // 메시지 구독
   useEffect(() => {
     if (!authReady || !roomId) return;
 
@@ -166,7 +185,7 @@ export default function ChatRoom() {
     return () => unsub();
   }, [authReady, roomId, myIdNum, maybeMarkAsRead, smartScrollToBottom]);
 
-  // ✅ 포커스/가시성 변화 시 읽음 처리
+  // 포커스/가시성 변화 시 읽음 처리
   useEffect(() => {
     const onFocusOrVisible = () => maybeMarkAsRead(messages);
     window.addEventListener("focus", onFocusOrVisible);
@@ -177,14 +196,14 @@ export default function ChatRoom() {
     };
   }, [messages, maybeMarkAsRead]);
 
-  // ✅ 최초 입장 시 읽음 처리
+  // 최초 입장 시 읽음 처리
   useEffect(() => {
     if (authReady && roomId && myIdStr) {
       markAsRead(roomId, myIdStr);
     }
   }, [authReady, roomId, myIdStr, markAsRead]);
 
-  // ✅ iOS 키보드 대응
+  // iOS 키보드 대응
   useEffect(() => {
     const handleResize = () => {
       if (!chatroomRef.current || !inputWrapperRef.current) return;
@@ -258,24 +277,6 @@ export default function ChatRoom() {
     }
   }
 
-  // ✅ 방 삭제 (나가기)
-  async function handleLeaveRoom() {
-    if (!roomId) return;
-    const ok = window.confirm(
-      "채팅방을 나가면 대화 내용이 모두 삭제됩니다. 나가시겠습니까?"
-    );
-    if (!ok) return;
-
-    try {
-      const roomRef = doc(db, "chatRooms", roomId);
-      await deleteDoc(roomRef);
-      navigate("/chat");
-    } catch (err) {
-      console.error("채팅방 삭제 실패:", err);
-      alert("채팅방을 나갈 수 없습니다.");
-    }
-  }
-
   return (
     <div className="chatroom" ref={chatroomRef}>
       {/* 상단 헤더 */}
@@ -283,6 +284,7 @@ export default function ChatRoom() {
         <button className="back-btn" onClick={() => navigate("/chat")}>
           ←
         </button>
+
         {peerData ? (
           <div
             style={{

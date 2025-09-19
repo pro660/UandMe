@@ -4,13 +4,11 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../libs/firebase";
 import useUserStore from "../../api/userStore";
 import useChatStore from "../../api/chatStore";
-
-// ⚠️ 경고 아이콘
 import WarningIcon from "../../image/home/warning.svg";
-import Loader from "../common/Loader"; // ✅ 로더 컴포넌트
+import Loader from "../common/Loader";
 
 export default function ChatList() {
-  const { rooms, setRooms } = useChatStore();
+  const { rooms, setRooms, deletedRoomIds, clearDeletedRoom } = useChatStore();
   const { user } = useUserStore();
   const navigate = useNavigate();
 
@@ -25,43 +23,39 @@ export default function ChatList() {
     );
 
     setLoading(true);
-    const unsub = onSnapshot(
-      q,
-      { includeMetadataChanges: true },
-      (snapshot) => {
-        let updatedRooms = [];
+    const unsub = onSnapshot(q, (snapshot) => {
+      // ✅ 1) 현재 존재하는 방들 (Firestore 기준)
+      const activeRooms = snapshot.docs.map((doc) => ({
+        roomId: doc.id,
+        ...doc.data(),
+      }));
 
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "removed") {
-            updatedRooms.push({
-              roomId: change.doc.id,
-              deleted: true,
-            });
-          } else {
-            updatedRooms.push({
-              roomId: change.doc.id,
-              ...change.doc.data(),
-            });
-          }
-        });
+      // ✅ 2) 다시 생긴 방은 삭제목록에서 제거
+      const activeIds = new Set(activeRooms.map((r) => r.roomId));
+      deletedRoomIds.forEach((rid) => {
+        if (activeIds.has(rid)) clearDeletedRoom(rid);
+      });
 
-        // ✅ 정렬: 삭제된 방은 무조건 맨 아래, 나머지는 최신순
-        updatedRooms.sort((a, b) => {
-          if (a.deleted && !b.deleted) return 1;
-          if (!a.deleted && b.deleted) return -1;
+      // ✅ 3) 여전히 삭제 상태인 방들만 표시
+      const deletedRooms = deletedRoomIds
+        .filter((rid) => !activeIds.has(rid))
+        .map((rid) => ({ roomId: rid, deleted: true }));
 
-          const aTime = a.lastMessage?.createdAt?.seconds || 0;
-          const bTime = b.lastMessage?.createdAt?.seconds || 0;
-          return bTime - aTime;
-        });
+      // ✅ 4) 합치고 정렬: 삭제된 방은 항상 맨 아래
+      const combined = [...activeRooms, ...deletedRooms].sort((a, b) => {
+        if (a.deleted && !b.deleted) return 1;
+        if (!a.deleted && b.deleted) return -1;
+        const at = a.lastMessage?.createdAt?.seconds || 0;
+        const bt = b.lastMessage?.createdAt?.seconds || 0;
+        return bt - at;
+      });
 
-        setRooms(updatedRooms);
-        setLoading(false);
-      }
-    );
+      setRooms(combined);
+      setLoading(false);
+    });
 
     return () => unsub();
-  }, [user?.userId, setRooms]);
+  }, [user?.userId, setRooms, deletedRoomIds, clearDeletedRoom]);
 
   if (loading) {
     return (
@@ -76,13 +70,8 @@ export default function ChatList() {
       <h2 style={{ marginBottom: "15px" }}>내 채팅방</h2>
 
       {rooms.length === 0 ? (
-        <div
-          style={{
-            textAlign: "center",
-            color: "#666",
-            marginTop: "100px",
-          }}
-        >
+        // ✅ 빈 상태 UI
+        <div style={{ textAlign: "center", color: "#666", marginTop: "100px" }}>
           <img
             src={WarningIcon}
             alt="경고 아이콘"
@@ -104,6 +93,7 @@ export default function ChatList() {
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {rooms.map((room) =>
             room.deleted ? (
+              // 🔴 삭제된 방
               <li
                 key={room.roomId}
                 style={{
@@ -115,12 +105,13 @@ export default function ChatList() {
                   borderRadius: "6px",
                   marginBottom: "6px",
                   cursor: "not-allowed",
-                  opacity: 0.7,
+                  opacity: 0.8,
                 }}
               >
                 ❌ 이 채팅방은 삭제되었습니다
               </li>
             ) : (
+              // ✅ 정상 방
               <li
                 key={room.roomId}
                 onClick={() => navigate(`/chat/${room.roomId}`)}
