@@ -6,6 +6,7 @@ import useUserStore from "./api/userStore.js";
 
 import { auth } from "./libs/firebase";
 import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
+import Loader from "./jsx/common/Loader.jsx"; // ✅ 로더 임포트
 
 export default function App() {
   const { isInitialized, setInitialized } = useUserStore();
@@ -45,7 +46,20 @@ export default function App() {
   }, [setInitialized]);
 
   // 🔒 인증/부팅 둘 다 준비되면 렌더
-  if (!isInitialized || !authReady) return <div>Loading...</div>;
+  if (!isInitialized || !authReady) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="App">
