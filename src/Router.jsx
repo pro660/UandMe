@@ -9,7 +9,7 @@ import Menu from "./jsx/common/Menu2";
 
 import Home from "./jsx/home/Home";
 import ChatList from "./jsx/chat/ChatList";
-import Matching from "./jsx/matching/Matching";
+import MatchingEntry from "./jsx/matching/MatchingEntry.jsx";
 import MyPage from "./jsx/mypage/MyPage";
 
 import LoginPage from "./jsx/signup/LoginPage";
@@ -55,7 +55,7 @@ function AppRouter() {
             }
           />
           <Route path="/chat" element={<ChatList />} />
-          <Route path="/matching" element={<Matching />} />
+          <Route path="/matching" element={<MatchingEntry />} />
           <Route path="/mypage" element={<MyPage />} />
 
           {/* 회원가입(정보 입력 페이지) */}
