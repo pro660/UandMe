@@ -1,5 +1,6 @@
 // src/jsx/matching/Card.jsx
 import React, { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import api from "../../api/axios.js";
 import "../../css/matching/Card.css";
 
@@ -28,7 +29,7 @@ export default function Card() {
 
   // ✅ 모달 열릴 때 body 스크롤 막기
   useEffect(() => {
-    document.body.style.overflow = selectedUserId ? "hidden" : "auto";
+    document.body.style.overflow = selectedUserId != null ? "hidden" : "auto";
     return () => (document.body.style.overflow = "auto");
   }, [selectedUserId]);
 
@@ -98,7 +99,10 @@ export default function Card() {
     if (!dragging.current) return;
     const delta = x - lastX.current;
     lastX.current = x;
-    setDx(Math.max(-MAX_DRAG, Math.min(MAX_DRAG, dx + delta)));
+    setDx((prev) => {
+      const next = prev + delta;
+      return Math.max(-MAX_DRAG, Math.min(MAX_DRAG, next));
+    });
   };
   const onEnd = () => {
     if (!dragging.current) return;
@@ -149,7 +153,7 @@ export default function Card() {
       // ✅ 크레딧 차감
       setUser({
         ...user,
-        matchCredits: Math.max(0, (user.matchCredits ?? 0) - 1),
+        matchCredits: Math.max(0, (user?.matchCredits ?? 0) - 1),
       });
 
       setCenter(0);
@@ -168,20 +172,43 @@ export default function Card() {
   // 카드 내부
   const CardBody = ({ item = {} }) => {
     const {
-      userId,
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
       typeImageUrl,
     } = item;
-    const msgText = breakAtHalf(introduce);
+
+    // 다양한 서버 응답 키 커버
+    const uid = item?.userId ?? item?.id ?? item?.targetUserId ?? null;
+
+    const msgText = breakAtHalf(introduce ?? "");
 
     return (
       <div
         className="card-click-area"
-        onClick={() => setSelectedUserId(userId)} // ✅ 모달 오픈
+        role="button"
+        tabIndex={0}
+        // ⛔️ 드래그 핸들러로 이벤트가 전파되지 않게 차단
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        // ✅ 탭/클릭 시 모달 열기 (모바일 대응)
+        onMouseUp={(e) => {
+          e.stopPropagation();
+          setSelectedUserId(uid);
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          setSelectedUserId(uid);
+        }}
+        onKeyUp={(e) => {
+          if (e.key === "Enter" || e.key === " ") setSelectedUserId(uid);
+        }}
       >
-        <div className="card-stars" aria-hidden="true">
+        <div
+          className="card-stars"
+          aria-hidden="true"
+          style={{ pointerEvents: "none" }} // 장식이 클릭을 가로채지 않도록
+        >
           {FIXED_STARS.map((s) => (
             <img
               key={s.id}
@@ -350,18 +377,26 @@ export default function Card() {
         </div>
       </div>
 
-      {/* ✅ 모달 */}
-      {selectedUserId && (
-        <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <YouProfile
-              userId={selectedUserId}
-              onClose={() => setSelectedUserId(null)}
-              fromMatching={true}
-            />
-          </div>
-        </div>
-      )}
+      {/* ✅ 모달: null 체크 + 포털 */}
+      {selectedUserId != null &&
+        createPortal(
+          <div
+            className="modal-overlay"
+            onClick={() => setSelectedUserId(null)}
+          >
+            <div
+              className="modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <YouProfile
+                userId={selectedUserId}
+                onClose={() => setSelectedUserId(null)}
+                fromMatching={true}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

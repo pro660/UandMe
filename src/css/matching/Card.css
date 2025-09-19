@@ -264,3 +264,5 @@
     margin-top: 56px;
 
 }
+
+.card-stars, .card-stars .star { pointer-events: none; }
