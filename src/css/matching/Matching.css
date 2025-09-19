@@ -1,0 +1,194 @@
+:root{
+  --arch-height: 45%;
+  --arch-radius: 44px;
+}
+
+/* ===== 제목 ===== */
+.title-m {
+  background-color: #f9fafb;
+  text-align: center;
+  padding-top: 5rem;
+  margin-bottom: -13rem;
+}
+
+/* ===== 루트 ===== */
+.card-root-m {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(
+    to right,
+    #FFF2FA 40%,
+    #FFCBEA 86%
+  );
+  flex-direction: column;
+}
+
+/* ===== 래퍼 ===== */
+.card-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  height: 22rem;
+  touch-action: pan-y;
+  user-select: none;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+/* 스냅(손 뗄 때만) 부드럽게 */
+.card-wrap.snapping .slot { transition: transform .26s ease; }
+.card-wrap.snapping.dir-left  .slot { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
+.card-wrap.snapping.dir-right .slot { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
+
+/* ===== 슬롯 ===== */
+.slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 13rem;      /* 카드 폭 */
+  height: 19.5rem;   /* 카드 높이 */
+  display: grid;
+  place-items: center;
+  will-change: transform;
+}
+
+/* ===== 카드 ===== */
+.matching-scope .card-m {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background:
+    
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.6) 0%,
+      rgba(255,255,255,0.4) 20%,
+      rgba(255,255,255,0.0) 100%
+    ),
+    
+    linear-gradient(
+      to right,
+      rgba(0,0,0,0.10) 0%,
+      rgba(0,0,0,0.10) 11%,
+      rgba(0,0,0,0.00) 50%,
+      rgba(0,0,0,0.10) 89%,
+      rgba(0,0,0,0.10) 100%
+    ),
+    /* ③ 바탕: 라디얼 그레이 (이미지처럼) */
+    radial-gradient(circle at 35% 40%, #707070 11%, #EDEDED 100%);
+  border-radius: 1rem;
+  box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+  padding: 1rem;
+  backface-visibility: hidden;
+  overflow: hidden;
+  will-change: transform;
+}
+
+/* 배경 별 */
+.matching-scope .card-stars { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+.matching-scope .card-stars .star {
+  position: absolute;
+  user-select: none;
+  filter: invert(0) saturate(200%) brightness(1.8) contrast(2)
+          drop-shadow(0 2px 3px rgba(1,1,1,0.5));
+}
+
+/* ===== 카드 안쪽 하단 아치 ===== */
+.matching-scope .card-m .arch-m{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--arch-height);
+  background: #fff;
+  border-top-left-radius:  var(--arch-radius);
+  border-top-right-radius: var(--arch-radius);
+  z-index: -1;
+}
+
+/* 아치 내부 텍스트 */
+.matching-scope .arch-content{
+  position: relative;
+  z-index: 1;
+  height: 0rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* introduce 줄바꿈 반영 */
+.matching-scope .arch-m .msg { white-space: pre-line; }
+
+.matching-scope .arch-content .name {
+  margin-top: 11rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color:#575757;
+}
+.matching-scope .arch-content .major {
+  margin-top: 0rem;
+  margin-bottom: 0.8rem;
+  font-size: .75rem;
+  font-weight: 200;
+  color: #575757;
+}
+.matching-scope .arch-content .msg {
+  font-size: .8rem;
+  font-weight: 100;
+  color: #575757;
+}
+
+/* ===== 이미지 ===== */
+.matching-scope .img-frame-m {
+  width: 12.5rem;
+  height: 12.5rem;
+  margin-top: -1rem;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* CTA 버튼 영역 */
+.cta-wrap{
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 10vh;
+}
+.cta-btn{
+  width: 90vw;
+  height: 7vh;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #FF69C3, #E8048D);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 24px rgba(216,77,174,.28);
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+.cta-btn:active { transform: scale(.98); }
+.cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  .card-wrap.snapping .slot { transition: none; }
+}
+
+/* 모바일 보정 */
+@media (max-width: 380px) {
+  .title{
+    padding-top: 2.5rem;
+    margin-bottom: -8rem;
+  }
+}
