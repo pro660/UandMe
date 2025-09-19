@@ -6,7 +6,11 @@ import api from "../../api/axios.js";
 import FlirtingPanel from "../matching/FlirtingPanel.jsx";
 import "../../css/signup/ResultPage.css";
 
-export default function YouProfile({ userId: propUserId, onClose, fromMatching }) {
+export default function YouProfile({
+  userId: propUserId,
+  onClose,
+  fromMatching,
+}) {
   const { userId: routeUserId } = useParams();
   // ✅ propUserId 최우선
   const userId = propUserId ?? routeUserId;
@@ -31,15 +35,44 @@ export default function YouProfile({ userId: propUserId, onClose, fromMatching }
   }, [userId]);
 
   if (loading) return <div className="result-page">불러오는 중...</div>;
-  if (!user) return <div className="result-page">상대방 정보를 불러올 수 없어요.</div>;
+  if (!user)
+    return <div className="result-page">상대방 정보를 불러올 수 없어요.</div>;
 
-  const { name, department, studentNo, birthYear, gender, typeTitle, typeContent, typeImageUrl2, styleSummary, recommendedPartner, tags, instagramUrl, introduce } = user;
+  const {
+    name,
+    department,
+    studentNo,
+    birthYear,
+    gender,
+    typeTitle,
+    typeContent,
+    typeImageUrl2,
+    styleSummary,
+    recommendedPartner,
+    tags,
+    instagramUrl,
+    introduce,
+    mbti,
+    egenType,
+  } = user;
 
   return (
     <div className="result-page" style={{ position: "relative" }}>
       {onClose && (
-        <button className="close-btn" onClick={onClose}
-          style={{ position: "absolute", top: "1rem", right: "1rem", fontSize: "1.5rem", background: "none", border: "none", cursor: "pointer", color: "black" }}>
+        <button
+          className="close-btn"
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            fontSize: "1.5rem",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "black",
+          }}
+        >
           ✕
         </button>
       )}
@@ -55,12 +88,17 @@ export default function YouProfile({ userId: propUserId, onClose, fromMatching }
           introduce={introduce}
           instagramUrl={instagramUrl}
           readOnly={true}
+          mbti={mbti}
+          egenType={egenType}
         />
       </div>
 
       {/* ✅ 매칭에서 열릴 때만 플러팅 버튼 */}
       {fromMatching && (
-        <FlirtingPanel targetUserId={userId} onSent={() => alert(`${name} 님에게 플러팅을 보냈습니다!`)} />
+        <FlirtingPanel
+          targetUserId={userId}
+          onSent={() => alert(`${name} 님에게 플러팅을 보냈습니다!`)}
+        />
       )}
 
       <div className="result-info">
@@ -88,7 +126,9 @@ export default function YouProfile({ userId: propUserId, onClose, fromMatching }
 
       <div className="result-tags">
         {tags?.map((tag, idx) => (
-          <span key={idx} className="tag">#{tag}</span>
+          <span key={idx} className="tag">
+            #{tag}
+          </span>
         ))}
       </div>
     </div>

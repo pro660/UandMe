@@ -5,7 +5,7 @@ import { persist } from "zustand/middleware";
 const useUserStore = create(
   persist(
     (set, get) => ({
-      user: null,                  // { accessToken, ... } 포함
+      user: null, // { accessToken, ... } 포함
       jwt: null,
       firebaseCustomToken: null,
       isInitialized: false,
@@ -51,7 +51,12 @@ const useUserStore = create(
           signalCredits:
             signalCredits !== undefined ? signalCredits : prev.signalCredits,
         };
-        console.log("🟢 [UserStore] updateCredits:", { matchCredits, signalCredits }, "=>", next);
+        console.log(
+          "🟢 [UserStore] updateCredits:",
+          { matchCredits, signalCredits },
+          "=>",
+          next
+        );
         set({ user: next });
       },
 
@@ -60,7 +65,10 @@ const useUserStore = create(
         set({ jwt });
       },
       setFirebaseCustomToken: (firebaseCustomToken) => {
-        console.log("🟢 [UserStore] setFirebaseCustomToken:", !!firebaseCustomToken);
+        console.log(
+          "🟢 [UserStore] setFirebaseCustomToken:",
+          !!firebaseCustomToken
+        );
         set({ firebaseCustomToken });
       },
 

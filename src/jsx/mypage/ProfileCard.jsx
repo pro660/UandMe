@@ -29,6 +29,8 @@ export default function ProfileCard({
   readOnly = false,
   introduce,
   instagramUrl,
+  mbti,
+  egenType
 }) {
   const user = useUserStore((s) => s.user);
 
@@ -333,8 +335,8 @@ export default function ProfileCard({
               <li><span className="label">학번</span><span className="value">{studentNo}</span></li>
               <li><span className="label">출생년도</span><span className="value">{birthYear}</span></li>
               <li><span className="label">성별</span><span className="value">{gender}</span></li>
-              <li><span className="label">MBTI</span><span className="value">{/* TODO: 실제 MBTI 필드로 교체 */}</span></li>
-              <li><span className="label">성향</span><span className="value">{/* TODO: 실제 성향 필드로 교체 */}</span></li>
+              <li><span className="label">MBTI</span><span className="value">{mbti}</span></li>
+              <li><span className="label">성향</span><span className="value">{egenType}</span></li>
             </ul>
           </div>
         </div>

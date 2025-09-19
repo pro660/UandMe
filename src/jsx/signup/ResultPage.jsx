@@ -45,6 +45,8 @@ export default function ResultPage({ hideHomeButton = false, user: propUser }) {
     recommendedPartner,
     tags,
     instagramUrl,
+    mbti,
+    egenType
   } = user;
 
   return (
@@ -70,6 +72,8 @@ export default function ResultPage({ hideHomeButton = false, user: propUser }) {
           birthYear={birthYear}
           gender={gender}
           instagramUrl={instagramUrl}
+          mbti={mbti}
+          egenType={egenType}
         />
       </div>
 

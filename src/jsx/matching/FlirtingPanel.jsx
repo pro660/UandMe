@@ -1,5 +1,5 @@
 // src/jsx/common/FlirtingPanel.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios.js";
 import useUserStore from "../../api/userStore.js";
 import "../../css/signup/ResultPage.css";
@@ -8,25 +8,35 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
   const [alreadySent, setAlreadySent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ 필요한 값만 구독(리렌더 최소화)
-  const { signalCredits, updateCredits } = useUserStore((s) => ({
-    signalCredits: s.user?.signalCredits ?? 0,
-    updateCredits: s.updateCredits,
-  }));
+  // ✅ 필요한 값만 각각 구독 (객체 리턴 X)
+  const signalCredits = useUserStore((s) => s.user?.signalCredits ?? 0);
+  const updateCredits = useUserStore((s) => s.updateCredits);
 
+  // ✅ 마운트/targetUserId 변경시에만 상태 조회
   useEffect(() => {
     if (!targetUserId) return;
 
-    let alive = true;
+    let cancelled = false;
+    const controller = new AbortController();
+
     (async () => {
       try {
-        const resp = await api.get(`/signals/${targetUserId}/status`);
-        if (!alive) return;
-        setAlreadySent(resp?.data?.alreadySent === true);
+        const resp = await api.get(`/signals/${targetUserId}/status`, {
+          signal: controller.signal,
+        });
+        if (cancelled) return;
+
+        const next = resp?.data?.alreadySent === true;
+        // 값이 바뀔 때만 set → 루프 방지
+        setAlreadySent((prev) => (prev === next ? prev : next));
       } catch (err) {
-        // ✅ 404면 "아직 안 보냄"으로 간주 (콘솔 에러 제거)
+        if (cancelled) return;
+
+        // 404 = 아직 안 보냄
         if (err?.response?.status === 404) {
-          if (alive) setAlreadySent(false);
+          setAlreadySent((prev) => (prev === false ? prev : false));
+        } else if (err?.name === "CanceledError" || err?.name === "AbortError") {
+          // 취소된 요청 무시
         } else {
           console.error("❌ 플러팅 상태 확인 실패:", err);
         }
@@ -34,11 +44,12 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
     })();
 
     return () => {
-      alive = false;
+      cancelled = true;
+      controller.abort();
     };
   }, [targetUserId]);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!targetUserId || alreadySent || loading) return;
 
     if (signalCredits <= 0) {
@@ -50,12 +61,16 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
 
     try {
       setLoading(true);
-      await api.post(`/signals/${targetUserId}`);
+      const resp = await api.post(`/signals/${targetUserId}`);
+
+      // 서버가 남은 크레딧을 주면 그 값 사용, 아니면 -1
+      const left =
+        typeof resp?.data?.remainingCredits === "number"
+          ? resp.data.remainingCredits
+          : Math.max(0, (signalCredits ?? 0) - 1);
 
       setAlreadySent(true);
-
-      // ✅ 전용 액션으로 안전 차감(음수 방지)
-      updateCredits({ signalCredits: Math.max(0, signalCredits - 1) });
+      updateCredits({ signalCredits: left }); // ✅ 객체 인자
 
       onSent?.(targetUserId);
       alert("플러팅을 보냈습니다!");
@@ -73,7 +88,7 @@ export default function FlirtingPanel({ targetUserId, onSent }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [targetUserId, alreadySent, loading, signalCredits, updateCredits, onSent]);
 
   return (
     <div className="flirting-panel">
