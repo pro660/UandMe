@@ -61,7 +61,7 @@
 
 /* 이미지 영역 (흰색 원 + 그림자) */
 .profile-card-image-wrap {
-  margin-top: 0rem;
+  margin-top: 1rem;
   width: 220px;
   height: 220px;
   background: transparent;
