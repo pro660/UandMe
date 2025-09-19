@@ -122,17 +122,90 @@
 }
 
 .booth-map {
-  background: #e0e0e0; /* 회색 박스 대체 */
-  border-radius: 0.8rem;
+  background: #fff; /* 흰색 배경 */
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 250px;
+  padding-bottom: 20px;
 }
 
 .booth-map img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+}
+
+.booth-map-info {
+  background: #fff; /* 흰색 배경 */
+  border-top: 1px solid black;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 210px;
+}
+
+.booth-map-info img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Q&A 버튼 섹션 */
+.QandA {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -3rem;
+}
+
+.QandA-btn {
+  width: 85%;
+  min-height: 72px;           /* 고정 높이 대신 최소 높이 */
+  height: 10vh;               /* 원래 값 유지 */
+  max-height: 120px;
+  display: flex;              /* ✅ 텍스트와 이미지를 좌우 배치 */
+  align-items: center;
+  justify-content: space-between; /* ✅ 왼쪽 텍스트, 오른쪽 이미지 */
+  gap: 1rem;
+  background: linear-gradient(to right, #FFEDF8 40%, #F6B7DD 100%);
+  color: #575757;
+  border-radius: 1.5rem;
+  margin-bottom: 10rem;
+  padding: 1rem 1.25rem;     
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 왼쪽 텍스트들 줄바꿈 정리 */
+.QandA-btn .Q-title {
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+.QandA-btn .Q-subtitle {
+  line-height: 1.2;
+  opacity: 0.85;
+}
+
+.QandA-btn img {
+  flex: 0 0 auto;      
+  height: 100%;         
+  max-height: 80px;     
+  width: 10;         
+  margin-left: auto;   
+  object-fit: contain; 
+}
+
+/* 반응형: 작은 화면에서 이미지 조금 더 작게 */
+@media (max-width: 480px) {
+  .QandA-btn {
+    padding: 0.9rem 1rem;
+  }
+  .QandA-btn img {
+    height: 100%;
+    max-height: 64px;
+  }
 }

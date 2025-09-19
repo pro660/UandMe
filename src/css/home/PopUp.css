@@ -1,0 +1,116 @@
+:root{
+  --pink:#E8048D;
+  --text:#222;
+  --muted:#777;
+  --card:#ffffff;
+  --overlay:rgba(30,30,30,.6);
+}
+
+/* 오버레이 (짙은 회색) */
+.popup-overlay{
+  position:fixed; inset:0;
+  background:var(--overlay);
+  display:flex; align-items:center; justify-content:center;
+  z-index:999;
+  backdrop-filter: blur(1px);
+}
+
+/* 팝업 박스 */
+.popup{
+  position:relative;
+  width:min(92vw, 560px);
+  max-height:85vh;
+  background:var(--card);
+  border-radius:20px;
+  box-shadow:0 16px 40px rgba(0,0,0,.28);
+  padding:1.2rem 1.2rem 1.4rem;
+  display:flex; flex-direction:column; overflow:hidden;
+  animation:popup-fade .18s ease-out, popup-pop .18s ease-out;
+  
+}
+
+/* 상단 제목 */
+.popup-headline{
+  margin: .2rem 0rem 0.8rem;
+  padding-bottom: 0.6rem; 
+  text-align:center;
+  font-size:1.1rem; font-weight:800; color:var(--text);
+  border-bottom: 1px solid gray;
+}
+
+/* 닫기 버튼 */
+.popup-close{
+  position:absolute; top:.4rem; right:.6rem;
+  width:40px; height:40px; border:0; background:transparent;
+  border-radius:10px; font-size:1.6rem; line-height:1; color:#444; cursor:pointer;
+}
+.popup-close:hover{ background: rgba(0,0,0,.06); }
+
+/* 내용 스크롤 영역 */
+.popup-content{
+  overflow:auto; -webkit-overflow-scrolling:touch;
+  padding:1rem 1rem 1rem 1rem;
+}
+
+/* 인트로 */
+.policy .intro-title{
+  font-size:1rem; font-weight:900; color:var(--text); margin:.2rem 0 .5rem;
+}
+.policy .intro p{ color:#444; line-height:1.55; margin:.4rem 0; font-size: 13px;}
+.policy .hl{ color:var(--pink); }
+
+/* 질문 제목(Q.) */
+.policy .q{
+  margin:1.2rem 0 .5rem;
+  color:var(--pink); font-size:1rem; font-weight:900;
+}
+
+/* 보조 설명 */
+.policy .lead{ color:var(--pink); margin:.2rem 0 .6rem; font-weight: 100;
+font-size: 0.8rem;}
+
+.label {
+    color: var(--pink)
+}
+
+/* 하트 불릿 리스트 */
+.heart-list{ list-style:none; padding:0; margin:.2rem 0 .4rem; }
+.heart-list li{
+  position:relative; padding-left:1.4rem; margin:.4rem 0;
+  color:#444; line-height:1.5; font-size: 0.8rem;
+}
+
+.heart-list li::before{
+  content:"❤";
+  position:absolute; left:0; top:.05rem;
+  font-size:1rem; color:var(--pink);
+}
+
+.important { 
+    text-decoration: underline;
+}
+
+.other p {
+    font-size: 0.8rem;
+}
+
+.pinktext{
+    color: var(--pink);
+}
+
+.pinkptext {
+    color: var(--pink);
+}
+
+/* 작은 화면(iPhone SE 등) */
+@media (max-width: 375px){
+  .popup{ width:94vw; padding:1rem; border-radius:16px; }
+  .popup-headline{ font-size:1.04rem; }
+  .popup-close{ width:36px; height:36px; font-size:1.4rem; }
+  .policy .intro-title{ font-size:.98rem; }
+  .policy .q{ font-size:.98rem; }
+}
+
+/* 애니메이션 */
+@keyframes popup-fade{ from{opacity:0} to{opacity:1} }
+@keyframes popup-pop{ from{ transform:translateY(6px) scale(.98) } to{ transform:none } }

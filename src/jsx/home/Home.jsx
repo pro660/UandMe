@@ -2,11 +2,18 @@ import "../../css/home/Home.css";
 import FlirtingTabs from "./FlirtingTabs";
 import Logo from "../../image/loginPage/logo.svg"; // 로고 import
 import MatchingBanner from "../../image/home/match.svg";
+import Map from "../../image/home/map.svg";
+import MapInfo from "../../image/home/mapinfo.svg";
+import QandA from "../../image/home/q&a.svg";
 
 import DrinkMenu from "../home/DrinkMenu";
+import PopUp from "./PopUp";
 import { Link } from "react-router-dom"; // 추가
+import React, { useState } from "react"; 
 
 function Home() {
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
   return (
     <>
       <section className="hero">
@@ -51,10 +58,32 @@ function Home() {
           </h3>
           <div className="booth-map">
             {/* 나중에 이미지 바꿔치기 가능 */}
-            <img src={Logo} alt="부스 위치 이미지" />
+            <img src={Map} alt="부스 위치 이미지" />
+          </div>
+          <div className="booth-map-info">
+            <img src={MapInfo} alt="부스 번호 이미지" />
           </div>
         </div>
       </section>
+
+      {/* Q&A 버튼 섹션 */}
+      <section className="QandA">
+        <button
+          className="QandA-btn"
+          onClick={() => setIsPopupOpen(true)}      // ✅ 팝업 열기
+          type="button"
+        >
+          <div className="QandA-text">
+            <div className="Q-title" style={{fontSize: "20px", fontWeight: "bold"}}>FAQ</div>
+            <div className="Q-subtitle" style={{fontSize: "14px"}}>
+              자주 묻는 질문 및 개인정보 처리방침
+            </div>
+          </div>
+          <img src={QandA} alt="큐엔에이 이미지" />
+        </button>
+      </section>
+      {/* 팝업 */}
+      <PopUp open={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
     </>
   );
 }

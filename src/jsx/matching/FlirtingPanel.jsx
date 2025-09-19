@@ -1,49 +1,76 @@
 // src/jsx/common/FlirtingPanel.jsx
 import { useEffect, useState } from "react";
 import api from "../../api/axios.js";
-import useUserStore from "../../api/userStore.js"; // ✅ 추가
+import useUserStore from "../../api/userStore.js";
 import "../../css/signup/ResultPage.css";
 
 export default function FlirtingPanel({ targetUserId, onSent }) {
   const [alreadySent, setAlreadySent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ zustand store
+  // zustand store
   const { user, setUser } = useUserStore();
 
   useEffect(() => {
     if (!targetUserId) return;
 
-    const checkStatus = async () => {
+    let alive = true;
+    (async () => {
       try {
         const resp = await api.get(`/signals/${targetUserId}/status`);
-        setAlreadySent(resp.data.alreadySent === true);
+        if (!alive) return;
+        setAlreadySent(resp?.data?.alreadySent === true);
       } catch (err) {
         console.error("❌ 플러팅 상태 확인 실패:", err);
       }
-    };
+    })();
 
-    checkStatus();
+    return () => {
+      alive = false;
+    };
   }, [targetUserId]);
 
   const handleSend = async () => {
+    if (!targetUserId || alreadySent || loading) return;
+
+    const credits = user?.signalCredits ?? 0;
+    if (credits <= 0) {
+      alert("신호 기회가 없습니다! 부스 쿠폰 등록 시 추가됩니다.");
+      return;
+    }
+
+    // ✅ 확인창: '확인'일 때만 진행
+    const ok = window.confirm(
+      "플러팅을 보내시겠습니까?\n신호 1회가 차감됩니다."
+    );
+    if (!ok) return;
+
     try {
       setLoading(true);
+
       await api.post(`/signals/${targetUserId}`);
+
+      // 서버 성공 시 로컬 상태 업데이트
       setAlreadySent(true);
+      setUser((prev) => ({
+        ...prev,
+        signalCredits: Math.max(0, (prev?.signalCredits ?? 0) - 1),
+      }));
 
-      // ✅ zustand에서 차감 반영
-      if (user?.signalCredits > 0) {
-        setUser({
-          ...user,
-          signalCredits: user.signalCredits - 1,
-        });
-      }
-
+      alert("플러팅을 보냈습니다!");
       if (onSent) onSent();
     } catch (err) {
-      console.error("❌ 플러팅 실패:", err);
-      alert("플러팅을 보낼 수 없습니다. 다시 시도해 주세요.");
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message;
+
+      // 서버에서 이미 보낸 상대라고 응답한 경우
+      if (status === 409 || /already/i.test(msg ?? "")) {
+        setAlreadySent(true);
+        alert("이미 이 상대에게 플러팅을 보냈어요.");
+      } else {
+        console.error("❌ 플러팅 실패:", err);
+        alert(msg || "플러팅을 보낼 수 없습니다. 다시 시도해 주세요.");
+      }
     } finally {
       setLoading(false);
     }
