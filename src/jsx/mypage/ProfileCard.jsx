@@ -7,6 +7,18 @@ import editIcon from "../../image/home/edit.svg";
 import { ReactComponent as InstaIcon } from "../../image/home/instagram.svg";
 import InstaAdd from "../mypage/InstaAdd.jsx";
 
+// 쿼리스트링(캐시버스터 등) 무시하고 경로만 비교해 루프 방지
+function normalizeUrl(u) {
+  if (!u) return "";
+  try {
+    const url = new URL(u, window.location.origin);
+    return url.origin + url.pathname;
+  } catch {
+    // 상대경로, data:, blob: 등은 그대로 사용
+    return u;
+  }
+}
+
 export default function ProfileCard({
   imageSrc,
   name = "홍길동",
@@ -25,9 +37,7 @@ export default function ProfileCard({
 
   // 소개 수정
   const [isEditing, setIsEditing] = useState(false);
-  const [editingIntroduce, setEditingIntroduce] = useState(
-    user?.introduce || ""
-  );
+  const [editingIntroduce, setEditingIntroduce] = useState(user?.introduce || "");
   const [saving, setSaving] = useState(false);
 
   // 인스타 수정 모달
@@ -38,8 +48,19 @@ export default function ProfileCard({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  // 🔒 imageSrc → localImage 동기화 시 가드: 실제로 달라질 때만 set
   useEffect(() => {
-    setLocalImage(imageSrc || "");
+    if (typeof imageSrc !== "string") {
+      if (!imageSrc && localImage) setLocalImage("");
+      return;
+    }
+    const nextN = normalizeUrl(imageSrc);
+    const curN = normalizeUrl(localImage);
+    if (nextN && nextN !== curN) {
+      setLocalImage(imageSrc);
+    }
+    // localImage를 의존성에 넣으면 다시 루프가 생길 수 있어 의도적으로 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc]);
 
   const handleSaveIntroduce = async () => {
@@ -119,8 +140,10 @@ export default function ProfileCard({
       // 2) 내 프로필 이미지로 반영
       await api.put("/users/me/profile-image", { imageUrl });
 
-      // ★ 3) 업로드 성공 시 즉시 서버 URL로 교체 (blob 미리보기 URL은 더 이상 사용하지 않음)
-      setLocalImage(imageUrl);
+      // 3) 서버 URL로 즉시 교체(값이 바뀐 경우에만)
+      const nextN = normalizeUrl(imageUrl);
+      const curN = normalizeUrl(localImage);
+      if (nextN !== curN) setLocalImage(imageUrl);
 
       // 4) 최신 프로필 재조회 후 store 업데이트
       const refreshed = await api.get("/users/me/profile");
@@ -132,10 +155,8 @@ export default function ProfileCard({
       setLocalImage(prev);
     } finally {
       setUploading(false);
-      // 이제 <img>는 서버 URL을 바라보고 있어서 revoke해도 끊기지 않음
-      URL.revokeObjectURL(previewUrl);
-      // 같은 파일 재선택 가능하도록 input 초기화
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      URL.revokeObjectURL(previewUrl); // 이제 <img>는 서버 URL을 보니 안전
+      if (fileInputRef.current) fileInputRef.current.value = ""; // 같은 파일 재선택 가능
     }
   };
 
@@ -234,10 +255,7 @@ export default function ProfileCard({
 
               {/* ✅ 중앙 ‘사진 첨부’ 버튼 (읽기 전용 아닐 때만) */}
               {!readOnly && (
-                <div
-                  className="avatar-upload-btn"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className="avatar-upload-btn" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     className="avatar-upload-circle"
@@ -246,7 +264,7 @@ export default function ProfileCard({
                   >
                     {/* 카메라 아이콘 (inline SVG) */}
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M9.5 3h5l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.3L9.5 3zm2.5 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0-2a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" />
+                      <path d="M9.5 3h5l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.3L9.5 3zm2.5 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0-2a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
                     </svg>
                   </button>
                 </div>
@@ -266,10 +284,7 @@ export default function ProfileCard({
 
               {/* 업로드 중 오버레이 */}
               {uploading && (
-                <div
-                  className="avatar-uploading"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className="avatar-uploading" onClick={(e) => e.stopPropagation()}>
                   <div className="avatar-spinner" />
                 </div>
               )}
@@ -314,30 +329,12 @@ export default function ProfileCard({
           <div className="profile-card-back">
             <div className="profile-card-back-title">프로필 정보</div>
             <ul className="profile-card-back-list">
-              <li>
-                <span className="label">학과</span>
-                <span className="value">{department}</span>
-              </li>
-              <li>
-                <span className="label">학번</span>
-                <span className="value">{studentNo}</span>
-              </li>
-              <li>
-                <span className="label">출생년도</span>
-                <span className="value">{birthYear}</span>
-              </li>
-              <li>
-                <span className="label">성별</span>
-                <span className="value">{gender}</span>
-              </li>
-              <li>
-                <span className="label">MBTI</span>
-                <span className="value">{gender}</span>
-              </li>
-              <li>
-                <span className="label">성향</span>
-                <span className="value">{gender}</span>
-              </li>
+              <li><span className="label">학과</span><span className="value">{department}</span></li>
+              <li><span className="label">학번</span><span className="value">{studentNo}</span></li>
+              <li><span className="label">출생년도</span><span className="value">{birthYear}</span></li>
+              <li><span className="label">성별</span><span className="value">{gender}</span></li>
+              <li><span className="label">MBTI</span><span className="value">{/* TODO: 실제 MBTI 필드로 교체 */}</span></li>
+              <li><span className="label">성향</span><span className="value">{/* TODO: 실제 성향 필드로 교체 */}</span></li>
             </ul>
           </div>
         </div>

@@ -1,102 +1,125 @@
-// src/jsx/common/FlirtingPanel.jsx
-import { useEffect, useState } from "react";
+// src/jsx/home/FlirtingTabs.jsx
+import React, { useState, useEffect } from "react";
+import "../../css/home/FlirtingTabs.css";
+import SentSignalList from "./SentSignalList";
+import ReceiveSignal from "./ReceiveSignal";
+import Accept from "./Accept";
+import Modal from "../common/Modal";
+import YouProfile from "../mypage/YouProfile";
 import api from "../../api/axios.js";
-import useUserStore from "../../api/userStore.js";
-import "../../css/signup/ResultPage.css";
 
-export default function FlirtingPanel({ targetUserId, onSent }) {
-  const [alreadySent, setAlreadySent] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function FlirtingTabs() {
+  const [activeTab, setActiveTab] = useState("sent");
+  const [sentSignals, setSentSignals] = useState([]);
+  const [receivedSignals, setReceivedSignals] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [openProfile, setOpenProfile] = useState(false);
 
-  // 필요한 값만 선택 구독
-  const { signalCredits, updateCredits } = useUserStore((s) => ({
-    signalCredits: s.user?.signalCredits ?? 0,
-    updateCredits: s.updateCredits,
-  }));
-
-  // 상태 조회
   useEffect(() => {
-    if (!targetUserId) return;
+    fetchSentSignals();
+    fetchReceivedSignals();
+  }, []);
 
-    let alive = true;
-    (async () => {
-      try {
-        const resp = await api.get(`/signals/${targetUserId}/status`);
-        if (!alive) return;
-        const next = resp?.data?.alreadySent === true;
-        setAlreadySent((prev) => (prev === next ? prev : next));
-      } catch (err) {
-        // 404 => 아직 보낸 기록 없음
-        if (err?.response?.status === 404) {
-          if (alive) setAlreadySent(false);
-        } else {
-          console.error("❌ 플러팅 상태 확인 실패:", err);
-        }
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [targetUserId]);
-
-  const handleSend = async () => {
-    if (!targetUserId || alreadySent || loading) return;
-
-    if (signalCredits <= 0) {
-      alert("신호 기회가 없습니다! 부스 쿠폰 등록 시 추가됩니다.");
-      return;
-    }
-
-    if (!window.confirm("플러팅을 보내시겠습니까?\n신호 1회가 차감됩니다.")) {
-      return;
-    }
-
+  const fetchSentSignals = async () => {
     try {
-      setLoading(true);
-      await api.post(`/signals/${targetUserId}`);
-
-      setAlreadySent(true);
-      // 안전 차감(음수 방지)
-      updateCredits({ signalCredits: Math.max(0, signalCredits - 1) });
-
-      onSent?.(targetUserId);
-      alert("플러팅을 보냈습니다!");
+      const resp = await api.get("/signals/sent");
+      setSentSignals(resp.data || []);
     } catch (err) {
-      const status = err?.response?.status;
-      const msg = err?.response?.data?.message || "";
-
-      if (status === 409 || /already/i.test(msg)) {
-        setAlreadySent(true);
-        alert("이미 이 상대에게 플러팅을 보냈어요.");
-      } else {
-        console.error("❌ 플러팅 실패:", err);
-        alert(msg || "플러팅을 보낼 수 없습니다. 다시 시도해 주세요.");
-      }
-    } finally {
-      setLoading(false);
+      console.error("❌ 보낸 신호 불러오기 실패:", err);
     }
   };
 
-  return (
-    <div className="flirting-panel">
-      <button
-        type="button"
-        className={`flirting-cta ${alreadySent ? "done" : ""}`}
-        onClick={handleSend}
-        disabled={alreadySent || loading}
-      >
-        {alreadySent ? "플러팅 완료" : loading ? "보내는 중..." : "플러팅 하기"}
-      </button>
+  const fetchReceivedSignals = async () => {
+    try {
+      const resp = await api.get("/signals/received");
+      setReceivedSignals(resp.data || []);
+    } catch (err) {
+      console.error("❌ 받은 신호 불러오기 실패:", err);
+    }
+  };
 
-      <div className="flirting-note">
-        <p className="note-title">신호/매칭 안내</p>
-        <ul className="note-list">
-          <li>기본 횟수: ‘신호 보내기’ 3회, ‘매칭’ 3회</li>
-          <li>추가 횟수: 부스 쿠폰 등록 시 추가 가능</li>
-          <li>쿠폰 혜택: 쿠폰 등록 시 각 5회씩 추가됩니다.</li>
-        </ul>
+  const acceptSignal = async (signalId) => {
+    try {
+      await api.post(`/signals/accept/${signalId}`);
+      fetchReceivedSignals();
+      setOpenModal(false);
+    } catch (err) {
+      console.error("❌ 신호 수락 실패:", err);
+    }
+  };
+
+  const declineSignal = async (signalId) => {
+    try {
+      await api.post(`/signals/decline/${signalId}`);
+      fetchReceivedSignals();
+    } catch (err) {
+      console.error("❌ 신호 거절 실패:", err);
+    }
+  };
+
+  // ✅ 공통 프로필 열기 함수
+  const handleOpenProfile = (userId) => {
+    setSelectedUserId(userId);
+    setOpenProfile(true);
+  };
+
+  return (
+    <div className="flirting-tabs">
+      {/* 상단 탭 */}
+      <div className="tab-header">
+        <button
+          className={`tab-btn ${activeTab === "sent" ? "active" : ""}`}
+          onClick={() => setActiveTab("sent")}
+        >
+          내가 보낸 플러팅
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "received" ? "active" : ""}`}
+          onClick={() => setActiveTab("received")}
+        >
+          나에게 온 플러팅
+        </button>
       </div>
+
+      {/* 컨텐츠 */}
+      <div className={`tab-content ${activeTab}-tab`}>
+        {activeTab === "sent" ? (
+          <SentSignalList signals={sentSignals} onOpenProfile={handleOpenProfile} />
+        ) : (
+          <ReceiveSignal
+            signals={receivedSignals}
+            onAccept={(id) =>
+              setOpenModal(receivedSignals.find((s) => s.signalId === id))
+            }
+            onReject={declineSignal}
+            onOpenProfile={handleOpenProfile}
+          />
+        )}
+      </div>
+
+      {/* 수락 모달 */}
+      {openModal && (
+        <Accept
+          open={true}
+          onClose={() => setOpenModal(false)}
+          onAccept={() => acceptSignal(openModal.signalId)}
+          onReject={() => declineSignal(openModal.signalId)}
+          user={{
+            name: openModal.fromUser?.name,
+            department: openModal.fromUser?.department,
+            avatar: openModal.fromUser?.typeImageUrl2 || "",
+            createdAt: openModal.createdAt,
+          }}
+        />
+      )}
+
+      {/* 프로필 모달 */}
+      {openProfile && (
+        <Modal onClose={() => setOpenProfile(false)}>
+          <YouProfile userId={selectedUserId} />
+        </Modal>
+      )}
     </div>
   );
 }
