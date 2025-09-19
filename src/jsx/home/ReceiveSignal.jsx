@@ -41,7 +41,7 @@ export default function ReceiveSignal({ signals, onAccept, onReject, onOpenProfi
               className="receive-info"
               onClick={() => !isDeclined && userId && onOpenProfile(userId)}
             >
-              <div className="profile-placeholder">
+              <div className="receive-profile-placeholder">
                 {signal.fromUser?.typeImageUrl2 && (
                   <img
                     src={signal.fromUser.typeImageUrl2}

@@ -41,7 +41,7 @@ export default function SentSignalList({ signals, onOpenProfile }) {
               className="sent-info"
               onClick={() => !isDeclined && userId && onOpenProfile(userId)}
             >
-              <div className="profile-placeholder">
+              <div className="sent-profile-placeholder">
                 {signal.toUser?.typeImageUrl2 || signal.toUser?.typeImageUrl3 ? (
                   <img
                     src={signal.toUser.typeImageUrl2 || signal.toUser.typeImageUrl3}
