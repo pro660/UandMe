@@ -222,3 +222,25 @@
   background: #fff;
   border-radius: 12px;
 }
+
+.chatroom-header {
+  position: relative;
+  z-index: 20; /* ✅ 오버레이보다 위로 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.leave-btn {
+  padding: 0.4rem 0.8rem; /* ✅ 클릭 영역 확보 */
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.leave-btn:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
