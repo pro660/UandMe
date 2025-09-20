@@ -3,36 +3,51 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import "../../css/mypage/InstaAdd.css";
 
-export default function InstaAdd({ onClose, onSave, defaultId = "" }) {
+export default function InstaAdd({
+  onClose,
+  onSave,
+  defaultId = "",
+  allowEmpty = true, // ✅ 빈값 저장(연결 해제) 허용
+}) {
   const [instaId, setInstaId] = useState("");
 
-  // URL → ID 추출 함수
-  const extractInstaId = (url) => {
-    if (!url) return "";
-    try {
-      const u = new URL(url);
-      return u.pathname.replace("/", "").trim(); // "/abcd/" → "abcd"
-    } catch {
-      // url이 그냥 아이디만 들어왔을 경우
-      return url.replace("https://instagram.com/", "").replace("/", "").trim();
-    }
+  // 입력 정규화: URL/앞의 @/끝 슬래시 제거 → username만 남기기
+  const normalize = (raw) => {
+    if (!raw) return "";
+    let s = String(raw).trim();
+    if (!s) return "";
+
+    // URL 형태면 username 추출
+const m = s.match(/^https?:\/\/(www\.)?instagram\.com\/([^/?#]+)/i);    if (m && m[2]) s = m[2];
+
+    // 앞의 @ 제거, 끝의 / 제거
+    s = s.replace(/^@+/, "").replace(/\/+$/, "");
+    return s;
   };
 
-  // 모달 열릴 때 defaultId 처리
+  // 모달 열릴 때 defaultId 정규화 반영
   useEffect(() => {
-    setInstaId(extractInstaId(defaultId));
+    setInstaId(normalize(defaultId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!instaId.trim()) return;
-    if (onSave) onSave(instaId.trim()); // 서버에 아이디만 전달
-    if (onClose) onClose(); // 저장 후 닫기
+    const value = normalize(instaId);
+
+    // ❗ 기존: if (!instaId.trim()) return;  → 제거
+    if (!value && !allowEmpty) {
+      alert("인스타그램 아이디를 입력해주세요.");
+      return;
+    }
+
+    onSave?.(value); // ✅ 빈 문자열이면 상위에서 '연결 해제'로 처리
+    onClose?.();
   };
 
   const modal = (
-    <div className="insta-modal-backdrop">
-      <div className="insta-modal">
+    <div className="insta-modal-backdrop" role="dialog" aria-modal="true">
+      <div className="insta-modal" role="document">
         {/* 헤더 */}
         <div className="insta-modal-header">
           <h2>인스타그램을 추가하세요</h2>
@@ -49,7 +64,8 @@ export default function InstaAdd({ onClose, onSave, defaultId = "" }) {
         {/* 본문 */}
         <form className="insta-modal-body" onSubmit={handleSubmit}>
           <label htmlFor="insta-input" className="insta-label">
-            인스타그램 아이디를 입력하세요.
+            인스타그램 아이디 또는 URL을 입력하세요{" "}
+            <span className="hint">(비우면 해제)</span>
           </label>
 
           <div className="insta-input-wrapper">
@@ -59,13 +75,24 @@ export default function InstaAdd({ onClose, onSave, defaultId = "" }) {
               type="text"
               value={instaId}
               onChange={(e) => setInstaId(e.target.value)}
-              placeholder="username"
+              placeholder="username 또는 https://instagram.com/username"
+              autoFocus
             />
           </div>
 
-          <button type="submit" className="insta-save-btn">
-            저장
-          </button>
+          <div className="insta-actions">
+            <button
+              type="button"
+              className="insta-cancel-btn"
+              onClick={onClose}
+            >
+              취소
+            </button>
+            {/* 🔹 disabled 조건 없음: 빈값도 저장 가능 */}
+            <button type="submit" className="insta-save-btn">
+              저장
+            </button>
+          </div>
         </form>
       </div>
     </div>

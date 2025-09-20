@@ -19,6 +19,16 @@ function normalizeUrl(u) {
   }
 }
 
+// 인스타 입력 정규화: URL/앞의 @ 제거
+function normalizeInstagramInput(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  const m = s.match(/^https?:\/\/(www\.)?instagram\.com\/([^/?#]+)/i);
+  if (m && m[2]) return m[2].replace(/^@/, "");
+  return s.replace(/^@/, "");
+}
+
 export default function ProfileCard({
   imageSrc,
   name = "홍길동",
@@ -30,7 +40,7 @@ export default function ProfileCard({
   introduce,
   instagramUrl,
   mbti,
-  egenType
+  egenType,
 }) {
   const user = useUserStore((s) => s.user);
 
@@ -39,7 +49,9 @@ export default function ProfileCard({
 
   // 소개 수정
   const [isEditing, setIsEditing] = useState(false);
-  const [editingIntroduce, setEditingIntroduce] = useState(user?.introduce || "");
+  const [editingIntroduce, setEditingIntroduce] = useState(
+    user?.introduce || ""
+  );
   const [saving, setSaving] = useState(false);
 
   // 인스타 수정 모달
@@ -83,15 +95,38 @@ export default function ProfileCard({
     }
   };
 
-  // 인스타 저장
-  const handleSaveInstagram = async (instaId) => {
+  // ✅ 인스타 저장 (빈 값 = 연결 해제)
+  const handleSaveInstagram = async (rawInsta) => {
+    const instaId = normalizeInstagramInput(rawInsta);
+
     try {
+      if (!instaId) {
+        // 1) DELETE 시도 (있다면 가장 깔끔)
+        try {
+          await api.delete("/users/me/instagram");
+        } catch {
+          // 2) null로 PUT 시도
+          try {
+            await api.put("/users/me/instagram", { instagram: null });
+          } catch {
+            // 3) 마지막 수단: 빈 문자열로 PUT
+            await api.put("/users/me/instagram", { instagram: "" });
+          }
+        }
+
+        const resp = await api.get("/users/me/profile");
+        useUserStore.getState().updateUser(resp.data);
+        alert("인스타그램 연결을 해제했어요.");
+        return;
+      }
+
+      // 값이 있으면 저장
       await api.put("/users/me/instagram", { instagram: instaId });
       const resp = await api.get("/users/me/profile");
       useUserStore.getState().updateUser(resp.data);
       alert("인스타그램이 저장되었습니다!");
     } catch (err) {
-      console.error("❌ 인스타그램 저장 실패:", err);
+      console.error("❌ 인스타그램 저장/해제 실패:", err);
       alert("저장 중 오류가 발생했습니다.");
     }
   };
@@ -257,7 +292,10 @@ export default function ProfileCard({
 
               {/* ✅ 중앙 ‘사진 첨부’ 버튼 (읽기 전용 아닐 때만) */}
               {!readOnly && (
-                <div className="avatar-upload-btn" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="avatar-upload-btn"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     type="button"
                     className="avatar-upload-circle"
@@ -266,7 +304,7 @@ export default function ProfileCard({
                   >
                     {/* 카메라 아이콘 (inline SVG) */}
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M9.5 3h5l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.3L9.5 3zm2.5 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0-2a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
+                      <path d="M9.5 3h5l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3.3L9.5 3zm2.5 14.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zm0-2a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" />
                     </svg>
                   </button>
                 </div>
@@ -286,7 +324,10 @@ export default function ProfileCard({
 
               {/* 업로드 중 오버레이 */}
               {uploading && (
-                <div className="avatar-uploading" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="avatar-uploading"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="avatar-spinner" />
                 </div>
               )}
@@ -331,12 +372,30 @@ export default function ProfileCard({
           <div className="profile-card-back">
             <div className="profile-card-back-title">프로필 정보</div>
             <ul className="profile-card-back-list">
-              <li><span className="label">학과</span><span className="value">{department}</span></li>
-              <li><span className="label">학번</span><span className="value">{studentNo}</span></li>
-              <li><span className="label">출생년도</span><span className="value">{birthYear}</span></li>
-              <li><span className="label">성별</span><span className="value">{gender}</span></li>
-              <li><span className="label">MBTI</span><span className="value">{mbti}</span></li>
-              <li><span className="label">성향</span><span className="value">{egenType}</span></li>
+              <li>
+                <span className="label">학과</span>
+                <span className="value">{department}</span>
+              </li>
+              <li>
+                <span className="label">학번</span>
+                <span className="value">{studentNo}</span>
+              </li>
+              <li>
+                <span className="label">출생년도</span>
+                <span className="value">{birthYear}</span>
+              </li>
+              <li>
+                <span className="label">성별</span>
+                <span className="value">{gender}</span>
+              </li>
+              <li>
+                <span className="label">MBTI</span>
+                <span className="value">{mbti}</span>
+              </li>
+              <li>
+                <span className="label">성향</span>
+                <span className="value">{egenType}</span>
+              </li>
             </ul>
           </div>
         </div>
@@ -347,7 +406,8 @@ export default function ProfileCard({
         <InstaAdd
           defaultId={instagramUrl}
           onClose={() => setShowInstaModal(false)}
-          onSave={handleSaveInstagram}
+          onSave={(v) => handleSaveInstagram(v ?? "")} // ✅ 빈값도 전달 (해제)
+          allowEmpty={true}
         />
       )}
     </div>
