@@ -52,6 +52,8 @@
   align-items: center;
   justify-content: flex-start;
 
+  padding-top: 4rem;
+
   background-image: url("../../image/home/profilecard.svg");
   background-size: 160%;     /* 카드 영역에 꽉 채움 */
   background-repeat: no-repeat;
