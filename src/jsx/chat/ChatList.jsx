@@ -143,7 +143,7 @@ export default function ChatList() {
                       {/* 왼쪽 */}
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <img
-                          src={peer?.typeImageUrl}
+                          src={peer?.typeImageUrl2}
                           alt="프로필"
                           style={{
                             width: "48px",

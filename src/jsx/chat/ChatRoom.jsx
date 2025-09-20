@@ -304,7 +304,7 @@ export default function ChatRoom() {
             onClick={() => setShowProfile(true)}
           >
             <img
-              src={peerData.typeImageUrl}
+              src={peerData.typeImageUrl2}
               alt="avatar"
               style={{
                 width: "36px",
@@ -352,7 +352,7 @@ export default function ChatRoom() {
             <div key={msg.id} className={`chat-msg ${isMe ? "me" : "other"}`}>
               {!isMe && (
                 <img
-                  src={senderData.typeImageUrl}
+                  src={senderData.typeImageUrl2}
                   alt="avatar"
                   className="avatar"
                   onClick={() => setShowProfile(true)}
