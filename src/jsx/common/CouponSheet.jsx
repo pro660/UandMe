@@ -172,17 +172,15 @@ export default function CouponSheet({ open, onClose }) {
 
         <ul className="coupon-bullets">
           <li>
-            매칭은 <b>단 두번</b>만 가능합니다.
-          </li>
-          <li>
             더 많은 만남을 원하신다면, 축제날 ‘멋쟁이 사자처럼’ 부스를 방문해
             음료와 함께 <b>특별한 쿠폰</b>을 받아보세요.
           </li>
+          <li>
+            매칭과 플러팅 기회를 <b>다섯 번씩</b> 더 드립니다.
+          </li>
         </ul>
 
-        {message && (
-          <p className="coupon-message error">{message}</p>
-        )}
+        {message && <p className="coupon-message error">{message}</p>}
 
         <button
           className={`coupon-submit ${isValid ? "is-active" : "is-disabled"}`}
