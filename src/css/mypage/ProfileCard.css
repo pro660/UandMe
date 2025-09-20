@@ -55,7 +55,7 @@
   padding-top: 3rem;
 
   background-image: url("../../image/home/profilecard.svg");
-  background-size: 150%;     /* 카드 영역에 꽉 채움 */
+  background-size: 145%;     /* 카드 영역에 꽉 채움 */
   background-repeat: no-repeat;
   background-position: center;
   scale: (1.1);
