@@ -53,10 +53,10 @@
   justify-content: flex-start;
 
   background-image: url("../../image/home/profilecard.svg");
-  background-size: 130%;     /* 카드 영역에 꽉 채움 */
+  background-size: 100%;     /* 카드 영역에 꽉 채움 */
   background-repeat: no-repeat;
   background-position: center;
-  scale: (1.1);
+  scale: (1);
 }
 
 /* === 원형 아바타 공통 === */
