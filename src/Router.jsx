@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "./ProtectedRoute";
 import ChatRoomGuard from "./jsx/chat/ChatRoomGuard";
@@ -22,6 +22,7 @@ import ChatRoom from "./jsx/chat/ChatRoom";
 
 import ChatRoomDummy from "./jsx/chat/ChatRoomDummy";
 import DummyResultPage from "./jsx/signup/DummyResultPage";
+import Ranking from "./jsx/ranking/Ranking";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -37,6 +38,28 @@ function Layout({ children }) {
       {children}
       {!shouldHide && <Menu />}
     </>
+  );
+}
+
+/** 랭킹 라우트용 래퍼: 학과 */
+function RankingDeptPage() {
+  const navigate = useNavigate();
+  return (
+    <Ranking
+      mode="dept"
+      onClickTopRight={() => navigate("/ranking/mbti")}
+    />
+  );
+}
+
+/** 랭킹 라우트용 래퍼: MBTI */
+function RankingMbtiPage() {
+  const navigate = useNavigate();
+  return (
+    <Ranking
+      mode="mbti"
+      onClickTopRight={() => navigate("/ranking/dept")}
+    />
   );
 }
 
@@ -62,9 +85,9 @@ function AppRouter() {
           <Route
             path="/infoform"
             element={
-              // <ProtectedRoute>
+              <ProtectedRoute>
                 <InfoForm />
-              // </ProtectedRoute>
+              </ProtectedRoute>
             }
           />
           <Route
@@ -96,6 +119,11 @@ function AppRouter() {
           />
           <Route path="/chat-dummy" element={<ChatRoomDummy />} />
           <Route path="/dummy-result" element={<DummyResultPage />} />
+
+          {/* ✅ 랭킹 라우트 */}
+          <Route path="/ranking" element={<Navigate to="/ranking/dept" replace />} />
+          <Route path="/ranking/dept" element={<RankingDeptPage />} />
+          <Route path="/ranking/mbti" element={<RankingMbtiPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
