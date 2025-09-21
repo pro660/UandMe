@@ -143,6 +143,7 @@
   font-size: 0.8rem;
   line-height: 1;
   color: var(--text);
+  margin-left: -0.5rem;
 }
 .text-input::placeholder {
   color: #b0b6bd;
@@ -686,6 +687,6 @@
   /* 플레이스홀더도 같이 맞추면 깔끔 */
   .profile-root input::placeholder,
   .profile-root .text-input::placeholder {
-    font-size: 16px;
+    font-size: 13px;
   }
 }
