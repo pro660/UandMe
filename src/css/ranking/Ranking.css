@@ -80,15 +80,20 @@ button{cursor:pointer}
 
 /* 상위 3위 프로필 */
 .podium-heads{
-  display:flex; align-items:flex-end; justify-content:center;
-  gap:15px;
-  margin:14px 0 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* 시상대와 동일한 3등분 */
+  align-items: end;                   /* 하단 기준 정렬 (세로는 기존 translateY로 제어) */
+  margin: 14px auto 8px;              /* 가운데 정렬 */
+  width: 100%;
+  max-width: 300px;                   /* 시상대(.podium)와 동일한 최대폭 */
+  gap: 0;
 }
 
 .podium-head{
   position: relative; z-index: 3;
   display:flex; flex-direction:column; align-items:center; gap:6px;
-  transform: none;  
+  transform: none;
+  justify-self: center;  
 }
 
 /* 등수별로 시상대 높이 차이만큼 내리기 */
@@ -130,9 +135,10 @@ button{cursor:pointer}
 .ph-badge{
   position:absolute; bottom:-6px; right:-6px;
   width:28px; height:28px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
+  display: none !important; align-items:center; justify-content:center;
   background:#fff; color:#c31b84; font-weight:800; font-size:.9rem;
   box-shadow:0 4px 12px rgba(0,0,0,.14);
+  
 }
 .ph-badge.rank-1{ background:gold; color:#7a1b60; }
 .ph-badge.rank-2{ background:silver; color:#6b6b6b; }
