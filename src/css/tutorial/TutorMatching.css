@@ -1,0 +1,279 @@
+:root{
+  --arch-height: 45%;
+  --arch-radius: 44px;
+}
+
+/* ===== 제목 ===== */
+.title-m {
+  background-color: #f9fafb;
+  text-align: center;
+  padding-top: 5rem;
+  margin-bottom: -13rem;
+  color: #575757;
+}
+
+/* ===== 루트 ===== */
+.card-root-m {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(to right, #FFF2FA 40%, #FFCBEA 86%);
+  flex-direction: column;
+}
+
+/* ===== 카드 래퍼 ===== */
+.card-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  height: 22rem;
+  user-select: none;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+/* ===== 슬롯(정적 3장 배치에 사용) ===== */
+.slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 13rem;      /* 카드 폭 */
+  height: 19.5rem;   /* 카드 높이 */
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%); /* 기본 중앙 */
+}
+
+/* ===== 카드 ===== */
+.matching-scope .card-m {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.0) 100%),
+    linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.10) 11%, rgba(0,0,0,0.00) 50%, rgba(0,0,0,0.10) 89%, rgba(0,0,0,0.10) 100%),
+    radial-gradient(circle at 35% 40%, #707070 11%, #EDEDED 100%);
+  border-radius: 1rem;
+  box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+/* 배경 별 */
+.matching-scope .card-stars { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+.matching-scope .card-stars .star {
+  position: absolute;
+  user-select: none;
+  filter: invert(0) saturate(200%) brightness(1.8) contrast(2)
+          drop-shadow(0 2px 3px rgba(1,1,1,0.5));
+}
+
+/* ===== 카드 안쪽 하단 아치 ===== */
+.matching-scope .card-m .arch-m{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--arch-height);
+  background: #fff;
+  border-top-left-radius:  var(--arch-radius);
+  border-top-right-radius: var(--arch-radius);
+  z-index: -1;
+}
+
+/* 아치 내부 텍스트 및 프로필 */
+.matching-scope .arch-content{
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.matching-scope .arch-m .msg { white-space: pre-line; }
+.matching-scope .arch-content .name {
+  margin-top: 11rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color:#575757;
+}
+.matching-scope .arch-content .major {
+  margin-top: 0rem;
+  margin-bottom: 0.8rem;
+  font-size: .75rem;
+  font-weight: 200;
+  color: #575757;
+}
+.matching-scope .arch-content .msg {
+  font-size: .8rem;
+  font-weight: 100;
+  color: #575757;
+}
+
+/* ===== 이미지 ===== */
+.matching-scope .img-frame-m {
+  width: 12.5rem;
+  height: 12.5rem;
+  margin-top: -1rem;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* ===== CTA 버튼 영역 ===== */
+.cta-wrap{
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: -10vh;
+  left: 0;
+  right: 0;
+}
+.cta-btn{
+  width: 90vw;
+  height: 7vh;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #FF69C3, #E8048D);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 24px rgba(216,77,174,.28);
+}
+.cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
+
+/* ===== 모달 딤 + 클릭 차단 (버튼/힌트만 예외) ===== */
+.modal-dim{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 9998;
+  pointer-events: auto;
+  touch-action: none;
+}
+.click-blocker{
+  position: fixed; inset: 0;
+  z-index: 9999;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* 버튼/힌트를 딤 위로 올려 클릭 가능하게 */
+.tutorial-alive { position: relative; z-index: 10002; }
+.cta-wrap.tutorial-alive { z-index: 10003; }
+.cta-wrap .cta-btn { position: relative; z-index: 10004; }
+
+/* ====== [교체/추가] 튜토리얼 흰색 박스(말풍선) 스타일 ====== */
+
+/* 매칭 배너와 힌트를 딤 위로 (필요 시 사용) */
+.home-matching-banner { position: relative; z-index: 10000; }
+.matching-banner-text { position: absolute; z-index: 10001; }
+
+/* 히어로 마진 (필요 시 사용) */
+.hero{
+  margin-top: -10rem;
+}
+
+/* 힌트 박스 래퍼: 배너 바로 아래 중앙 정렬 (요청 사양) */
+.tutorial-hint-wrap{
+  position: relative;
+  z-index: 10002;                 /* dim(9998) + blocker(9999)보다 위 */
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;                /* 배너와의 간격 */
+  margin-right: 80px;
+}
+
+/* 힌트 말풍선 박스 (요청 사양) */
+.tutorial-hint{
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.22);
+  padding: 14px 14px 12px;
+  bottom: -2rem;
+}
+
+/* 상단 왼쪽 바깥으로 살짝 튀어나오는 작은 화살표 (요청 사양) */
+.tutorial-hint-caret{
+  position: absolute;
+  top: 112px;                      /* 바깥으로 6px */
+  left: 50px;                     /* 필요 시 14~28px 사이 미세조정 */
+  width: 12px; height: 12px;
+  transform: rotate(45deg);
+}
+
+/* 텍스트 (요청 사양) */
+.tutorial-hint-text{
+  margin: 0 0 10px;
+  font-size: .92rem;
+  line-height: 1.55;
+  color: #575757;
+}
+.tutorial-hint-text .em{ color: #e8048d; font-weight: 800; }
+
+/* 하단 푸터 (요청 사양) */
+.tutorial-hint-footer{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tutorial-hint-next{
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #FF69C3;
+  color: #fff;
+  font-weight: 700;
+  font-size: .9rem;
+  opacity: .8;                    /* 정적 페이지이므로 비활성 느낌 */
+}
+.tutorial-hint-next:disabled{ cursor: default; }
+.tutorial-hint-step{
+  font-size: .86rem;
+  color: #575757;
+}
+
+/* 버튼/힌트를 딤 위로 올려 클릭 가능하게 */
+.tutorial-alive { position: relative; z-index: 10002; }
+.cta-wrap.tutorial-alive { z-index: 10003; }
+.cta-wrap .cta-btn { 
+  position: relative; 
+  z-index: 10004; 
+  pointer-events: none;   /* ✅ 클릭 방지 */
+  opacity: 0.8;           /* ✅ 비활성 느낌 살짝 주기 (선택) */
+}
+
+/* 텍스트 톤 통일 (이미 존재 시 그대로 유지) */
+.hero-content, .hero-content * { color:#575757 !important; fill:#575757 !important; }
+.matching-banner-text, .matching-banner-text * { color:#575757 !important; fill:#575757 !important; }
+
+/* 모바일 보정 */
+@media (max-width: 380px){
+  .title-m{
+    padding-top: 2.5rem;
+    margin-bottom: -8rem;
+  }
+
+  /* 페이지 전체 스크롤 방지 */
+  html, body {
+    height: 100svh;
+    overflow: hidden;             /* 세로 스크롤 막기 */
+    overscroll-behavior: none;    /* iOS/안드로 밴드 방지 */
+  }
+
+  .cta-wrap{
+    bottom: 10vh
+  }
+  .tutorial-hint{
+    bottom: 5rem;
+  }
+}

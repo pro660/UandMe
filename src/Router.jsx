@@ -24,6 +24,9 @@ import ChatRoomDummy from "./jsx/chat/ChatRoomDummy";
 import DummyResultPage from "./jsx/signup/DummyResultPage";
 import Ranking from "./jsx/ranking/Ranking";
 
+import TutorHome from "./jsx/tutorial/TutorHome.jsx"
+import TutorMatching from "./jsx/tutorial/TutorMatching.jsx";
+
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
@@ -124,6 +127,9 @@ function AppRouter() {
           <Route path="/ranking" element={<Navigate to="/ranking/dept" replace />} />
           <Route path="/ranking/dept" element={<RankingDeptPage />} />
           <Route path="/ranking/mbti" element={<RankingMbtiPage />} />
+
+          <Route path="/tutorial/home" element={<TutorHome />} />
+          <Route path="/tutorial/matching" element={<TutorMatching />} />
         </Routes>
       </Layout>
     </BrowserRouter>

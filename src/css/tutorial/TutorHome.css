@@ -1,0 +1,91 @@
+/* ====== 기존 스타일들은 그대로 두고, 아래만 추가/보완 ====== */
+
+/* 매칭 배너와 힌트를 딤 위로 */
+.home-matching-banner { position: relative; z-index: 10000; }
+.matching-banner-text { position: absolute; z-index: 10001; }
+
+/* 힌트 박스 래퍼: 배너 바로 아래 중앙 정렬 */
+.tutorial-hint-wrap{
+  position: relative;
+  z-index: 10002;                 /* dim(9998) + blocker(9999)보다 위 */
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;                /* 배너와의 간격 */
+  width: 80vw;
+  left: 40px;
+}
+
+/* 힌트 말풍선 박스 */
+.tutorial-hint{
+  position: relative;
+  width: 3rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.22);
+  padding: 14px 14px 12px;
+  overflow: visible; 
+}
+
+/* 상단 왼쪽 바깥으로 살짝 튀어나오는 작은 화살표 */
+.tutorial-hint-caret{
+  position: absolute;
+  top: 10px;                      /* 바깥으로 6px */
+  left: 22px;                     /* 필요 시 14~28px 사이 미세조정 */
+  width: 12px; height: 12px;
+  background: #fff;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  box-shadow: -2px -2px 6px rgba(0,0,0,.06);
+  z-index: 2;
+}
+
+/* 텍스트 */
+.tutorial-hint-text{
+  margin: 0 0 10px;
+  font-size: .92rem;
+  line-height: 1.55;
+  color: #575757;
+}
+.tutorial-hint-text .em{ color: #e8048d; font-weight: 800; }
+
+/* 하단 푸터 (다음 버튼/스텝 표시) */
+.tutorial-hint-footer{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tutorial-hint-next{
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #ff69c3;
+  color: #fff;
+  font-weight: 700;
+  font-size: .9rem;
+  opacity: .8;                    /* 정적 페이지이므로 비활성 느낌 */
+}
+.tutorial-hint-next:disabled{ cursor: default; }
+.tutorial-hint-step{
+  font-size: .86rem;
+  color: #575757;
+}
+
+/* 모달 딤/클릭 차단 (기존 유지) */
+.modal-dim{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 9998;
+  pointer-events: auto;
+  touch-action: none;
+}
+.click-blocker{
+  position: fixed; inset: 0;
+  z-index: 9999;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* 텍스트 톤 통일 (이미 존재 시 그대로 유지) */
+.hero-content, .hero-content * { color:#575757 !important; fill:#575757 !important; }
+.matching-banner-text, .matching-banner-text * { color:#575757 !important; fill:#575757 !important; }

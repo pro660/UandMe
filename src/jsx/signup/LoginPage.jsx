@@ -4,18 +4,18 @@ import "../../css/signup/loginPage.css";
 import heartSvg from "../../image/loginPage/heart.svg";
 import logoSvg from "../../image/loginPage/logo.svg";
 import backgroundImage from "../../image/loginPage/background.png";
+import QandA from "../../image/home/q&a.svg";
 import api from "../../api/axios";
 import useUserStore from "../../api/userStore";
 import Loader from "../common/Loader";
+import PopUp from "../home/PopUp";
 
 // 🔑 Firebase Auth
 import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "../../libs/firebase";
 
-const RAW_BASE = (process.env.REACT_APP_API_URL || "").trim();
-const IS_ABS = /^https?:\/\//i.test(RAW_BASE);
-const API_BASE = (IS_ABS ? RAW_BASE : "http://1.201.17.231").replace(/\/+$/, "");
-
+const RAW_BASE = (process.env.REACT_APP_API_BASE_URL || "").trim();
+const API_BASE = RAW_BASE.replace(/\/+$/, ""); // 뒤 슬래시 정리
 const KAKAO_LOGIN_PATH = "/auth/kakao/login";
 const ME_URL = `${API_BASE}/auth/me`;
 
@@ -25,6 +25,7 @@ export default function LoginOrGate() {
   const setUser = useUserStore((s) => s.setUser);
 
   const [busy, setBusy] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // 🔹 쿼리/해시에서 accessToken 추출
   const tokenFromQuery = useMemo(() => {
@@ -161,6 +162,11 @@ export default function LoginOrGate() {
     window.location.assign(url);
   };
 
+  // ✅ 튜토리얼 진입
+  const goTutorial = () => {
+    navigate("/tutorial/home");
+  };
+
   if (busy) {
     return (
       <main className="login-root" role="main" style={{ padding: 24 }}>
@@ -200,7 +206,51 @@ export default function LoginOrGate() {
             카카오로 시작하기
           </button>
         </div>
+
+        {/* ✅ 튜토리얼 버튼 — 핑크 카드 내부 */}
+        <div className="extra-actions" style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            className="tutorial-btn"
+            onClick={goTutorial}
+            style={{
+              width: "100%",
+              height: 48,
+              borderRadius: 10,
+              border: "1.5px solid #E8048D",
+              background: "#fff",
+              color: "#E8048D",
+              fontWeight: 700,
+            }}
+          >
+            튜토리얼 시작하기
+          </button>
+        </div>
       </section>
+
+      {/* FAQ 버튼 섹션 (핑크 카드 밖, 기존 그대로) */}
+      <section className="QandA">
+        <button
+          className="QandA-btn"
+          onClick={() => setIsPopupOpen(true)}
+          type="button"
+        >
+          <div className="QandA-text">
+            <div
+              className="Q-title"
+              style={{ fontSize: "20px", fontWeight: "bold" }}
+            >
+              FAQ
+            </div>
+            <div className="Q-subtitle" style={{ fontSize: "14px" }}>
+              자주 묻는 질문 및 개인정보 처리방침
+            </div>
+          </div>
+          <img src={QandA} alt="큐엔에이 이미지" />
+        </button>
+      </section>
+
+      <PopUp open={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
     </main>
   );
 }

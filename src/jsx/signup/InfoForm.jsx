@@ -1,5 +1,5 @@
 // InfoForm.jsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios.js";
 import "../../css/signup/InfoForm.css";
@@ -230,6 +230,50 @@ export default function InfoForm() {
   const yearNum = Number(year);
   const isYearInvalid =
     !!year && (yearNum < HAKBEON_MIN || yearNum > HAKBEON_MAX);
+
+  /* ------------------ 배경 스크롤 락(바텀시트 열렸을 때) ------------------ */
+  useEffect(() => {
+    const needLock = sheetOpen || sheetOpenMbti;
+    if (!needLock) return;
+
+    // 현재 스크롤 위치 저장
+    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+    // 바디 고정 (iOS 포함)
+    const { style } = document.body;
+    style.position = "fixed";
+    style.top = `-${scrollY}px`;
+    style.left = "0";
+    style.right = "0";
+    style.width = "100%";
+    style.overflow = "hidden";
+
+    // 터치 스크롤 방지(안드/iOS 사파리 보완)
+    const prevent = (e) => {
+      // 시트 내부는 스크롤 허용
+      const el = e.target;
+      const withinSheet =
+        el.closest?.(".sheet-panel") || el.closest?.(".sheet-body");
+      if (!withinSheet) e.preventDefault();
+    };
+    document.addEventListener("touchmove", prevent, { passive: false });
+
+    return () => {
+      // 스타일 복구
+      style.position = "";
+      style.top = "";
+      style.left = "";
+      style.right = "";
+      style.width = "";
+      style.overflow = "";
+
+      // 원래 스크롤 위치로 복귀
+      window.scrollTo(0, scrollY);
+
+      document.removeEventListener("touchmove", prevent);
+    };
+  }, [sheetOpen, sheetOpenMbti]);
+  /* ------------------------------------------------------------------ */
 
   return (
     <main className="profile-root">
