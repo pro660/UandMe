@@ -16,13 +16,13 @@ function mapDeptRanking(apiItems = []) {
   }));
 }
 
-/** ✅ 공통 매핑: MBTI (imageUrl 지원) */
+/** 공통 매핑: MBTI (imageUrl 지원) */
 function mapMbtiRanking(apiItems = []) {
   return apiItems.slice(0, 10).map((it) => ({
     id: it.rank ?? it.mbti ?? Math.random(),
-    deptName: it.mbti ?? "-",        // UI에서 공통 필드 사용
+    deptName: it.mbti ?? "-", // UI 공통 필드 사용
     count: it.count ?? 0,
-    imageUrl: it.imageUrl ?? "",     // 명세에 존재하면 사용, 없으면 폴백
+    imageUrl: it.imageUrl ?? "",
     rank: it.rank ?? null,
     _kind: "mbti",
   }));
@@ -46,8 +46,8 @@ export default function Ranking({ mode = "dept", onClickTopRight }) {
         ? "/stats/rank/department-signals"
         : "/stats/rank/department-matches"
       : activeTab === "flirt"
-        ? "/stats/rank/mbti-signals"
-        : "/stats/rank/mbti-matches";
+      ? "/stats/rank/mbti-signals"
+      : "/stats/rank/mbti-matches";
 
   const topRightLabel = mode === "dept" ? "MBTI 랭킹보기" : "학과 랭킹보기";
 
@@ -57,26 +57,32 @@ export default function Ranking({ mode = "dept", onClickTopRight }) {
     async function load() {
       setLoading(true);
       setErrMsg("");
+      setItems([]);
+
       try {
-        const res = await api.get(path, { signal: controller.signal, noAuth: true });
+        const res = await api.get(path, {
+          signal: controller.signal,
+          noAuth: true,
+        });
         const arr = Array.isArray(res.data) ? res.data : [];
         const mapped = mode === "dept" ? mapDeptRanking(arr) : mapMbtiRanking(arr);
         setItems(mapped);
       } catch (e) {
-        if (controller.signal.aborted) return;
-        const msg =
-          e?.response?.data?.message ||
-          e?.message ||
-          "데이터를 불러오는 중 문제가 발생했어요.";
-        setErrMsg(msg);
+        if (!controller.signal.aborted) {
+          const msg =
+            e?.response?.data?.message ||
+            e?.message ||
+            "데이터를 불러오는 중 문제가 발생했어요.";
+          setErrMsg(msg);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     load();
     return () => controller.abort();
-  }, [mode, path]);
+  }, [mode, activeTab, path]);
 
   // 상단 1~3위, 하단 4~10위 (rank 우선, 없으면 count desc)
   const { top3, tail } = useMemo(() => {
@@ -134,38 +140,31 @@ export default function Ranking({ mode = "dept", onClickTopRight }) {
 
       {/* ===== 하단: 탭 + 랭킹 리스트(4~10위) ===== */}
       <section className="rank-list-wrap">
-        {/* 탭(토글 전환) */}
-        <div className="rank-tabs" role="tablist" aria-label="랭킹 기준">
-          <span
-            className={`switch-text ${activeTab === "flirt" ? "is-active" : ""}`}
+        {/* 언더라인 탭 */}
+        <div
+          className={`rank-tabs tabs-underline ${
+            activeTab === "match" ? "is-match" : "is-flirt"
+          }`}
+          role="tablist"
+          aria-label="랭킹 기준"
+        >
+          <button
+            className={`tab ${activeTab === "flirt" ? "is-active" : ""}`}
             onClick={() => setActiveTab("flirt")}
             role="tab"
             aria-selected={activeTab === "flirt"}
-            tabIndex={0}
           >
             받은 플러팅
-          </span>
-
-          <label className="switch" aria-label="랭킹 기준 토글">
-            <input
-              type="checkbox"
-              checked={activeTab === "match"}
-              onChange={() =>
-                setActiveTab((prev) => (prev === "flirt" ? "match" : "flirt"))
-              }
-            />
-            <span className="slider"></span>
-          </label>
-
-          <span
-            className={`switch-text ${activeTab === "match" ? "is-active" : ""}`}
+          </button>
+          <button
+            className={`tab ${activeTab === "match" ? "is-active" : ""}`}
             onClick={() => setActiveTab("match")}
             role="tab"
             aria-selected={activeTab === "match"}
-            tabIndex={0}
           >
             성사된 매칭
-          </span>
+          </button>
+          <span className="tab-ink" aria-hidden="true" />
         </div>
 
         {/* 로딩 / 에러 / 빈 상태 */}
@@ -245,7 +244,6 @@ function PodiumHead({ rank, item, highlight = false }) {
               {item.deptName}
             </div>
           )}
-          <span className={`ph-badge rank-${rank}`}>{rank}</span>
         </div>
       </div>
 
