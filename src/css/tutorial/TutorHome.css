@@ -1,60 +1,70 @@
-/* ====== 기존 스타일들은 그대로 두고, 아래만 추가/보완 ====== */
-
-/* 매칭 배너와 힌트를 딤 위로 */
-.home-matching-banner { position: relative; z-index: 10000; }
-.matching-banner-text { position: absolute; z-index: 10001; }
-
-/* 힌트 박스 래퍼: 배너 바로 아래 중앙 정렬 */
-.tutorial-hint-wrap{
-  position: relative;
-  z-index: 10002;                 /* dim(9998) + blocker(9999)보다 위 */
-  display: flex;
-  justify-content: center;
-  margin-top: 8px;                /* 배너와의 간격 */
-  width: 80vw;
-  left: 40px;
+/* ====== TutorHome 전용 토큰 ====== */
+:root{
+  --z-dim: 9998;
+  --z-blocker: 9999;
+  --z-spotlight: 10000;
+  --z-spotlight-top: 10001;
+  --z-hint: 10002;
 }
 
-/* 힌트 말풍선 박스 */
-.tutorial-hint{
+/* 배너/텍스트 레이어 */
+.home-matching-banner { position: relative; z-index: var(--z-spotlight); }
+.matching-banner-text { position: absolute; z-index: var(--z-spotlight-top); }
+
+/* 힌트 박스 래퍼: 배너 아래 중앙 정렬 */
+.home-hint-wrap{
   position: relative;
-  width: 3rem;
+  z-index: var(--z-hint);          /* dim/blocker보다 위 */
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 10px;
+  padding: 0 16px;                 /* 모바일 좌우 여백 */
+}
+
+/* 힌트 말풍선(흰색 모달) */
+.home-hint{
+  position: relative;
+  width: min(92vw, 440px);
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(0,0,0,.22);
   padding: 14px 14px 12px;
-  overflow: visible; 
+  overflow: visible;
+  animation: home-hint-pop .18s ease-out;
 }
 
-/* 상단 왼쪽 바깥으로 살짝 튀어나오는 작은 화살표 */
-.tutorial-hint-caret{
+/* 🔼 작은 사각형(화살표) — 모달 '윗쪽'으로 이동(확실히 고정) */
+.home-hint > .home-hint-caret{
   position: absolute;
-  top: 10px;                      /* 바깥으로 6px */
-  left: 22px;                     /* 필요 시 14~28px 사이 미세조정 */
+  top: -6px;                       /* 윗변 밖으로 6px */
+  left: 24px;                      /* 필요 시 16~32px 조정 */
   width: 12px; height: 12px;
   background: #fff;
   transform: rotate(45deg);
   border-radius: 2px;
-  box-shadow: -2px -2px 6px rgba(0,0,0,.06);
   z-index: 2;
+  pointer-events: none;
 }
 
 /* 텍스트 */
-.tutorial-hint-text{
+.home-hint-text{
   margin: 0 0 10px;
   font-size: .92rem;
   line-height: 1.55;
   color: #575757;
+  word-break: keep-all;            /* 한글 줄바꿈 자연스럽게 */
 }
-.tutorial-hint-text .em{ color: #e8048d; font-weight: 800; }
+.home-hint-text .home-hint-em{ color: #e8048d; font-weight: 800; }
 
-/* 하단 푸터 (다음 버튼/스텝 표시) */
-.tutorial-hint-footer{
+/* 하단 푸터 */
+.home-hint-footer{
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
-.tutorial-hint-next{
+.home-hint-next{
   border: 0;
   padding: 8px 14px;
   border-radius: 999px;
@@ -62,30 +72,45 @@
   color: #fff;
   font-weight: 700;
   font-size: .9rem;
-  opacity: .8;                    /* 정적 페이지이므로 비활성 느낌 */
+  opacity: .92;
+  cursor: pointer;
 }
-.tutorial-hint-next:disabled{ cursor: default; }
-.tutorial-hint-step{
+.home-hint-next:disabled{
+  cursor: default;
+  opacity: .7;
+}
+.home-hint-step{
   font-size: .86rem;
   color: #575757;
 }
 
-/* 모달 딤/클릭 차단 (기존 유지) */
-.modal-dim{
+/* 모달 딤/클릭 차단 (홈 전용) */
+.home-modal-dim{
   position: fixed; inset: 0;
   background: rgba(0,0,0,.45);
-  z-index: 9998;
+  z-index: var(--z-dim);
   pointer-events: auto;
   touch-action: none;
 }
-.click-blocker{
+.home-click-blocker{
   position: fixed; inset: 0;
-  z-index: 9999;
+  z-index: var(--z-blocker);
   background: transparent;
   pointer-events: auto;
   touch-action: none;
 }
 
-/* 텍스트 톤 통일 (이미 존재 시 그대로 유지) */
+/* 텍스트 톤 통일 */
 .hero-content, .hero-content * { color:#575757 !important; fill:#575757 !important; }
 .matching-banner-text, .matching-banner-text * { color:#575757 !important; fill:#575757 !important; }
+
+/* 모션 선호도 */
+@media (prefers-reduced-motion: reduce){
+  .home-hint{ animation: none; }
+}
+
+/* 팝 애니메이션 */
+@keyframes home-hint-pop{
+  from{ transform: translateY(4px) scale(.98); opacity: 0; }
+  to{   transform: translateY(0)   scale(1);   opacity: 1; }
+}

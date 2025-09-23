@@ -1,0 +1,196 @@
+/* src/css/common/ConfirmModal.css */
+/* 10px = 1rem 기준(사용자 선호 반영) */
+
+:root {
+  --cm-z: 9999;
+  --cm-backdrop: rgba(0, 0, 0, 0.45);
+  --cm-bg: #ffffff;
+  --cm-text: #111827;
+  --cm-muted: #6b7280;
+  --cm-border: #e5e7eb;
+  --cm-accept: #ff5a91;   /* 앱 포인트 컬러와 톤 맞춤 */
+  --cm-reject: #9ca3af;
+  --cm-radius: 1.6rem;    /* 16px */
+  --cm-shadow: 0 2rem 5rem rgba(0,0,0,0.2);
+}
+
+/* ===== Overlay ===== */
+.confirm-overlay,
+.accept-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--cm-backdrop);
+  display: grid;
+  place-items: center;
+  padding: max(2rem, env(safe-area-inset-top)) 2rem max(2rem, env(safe-area-inset-bottom));
+  overflow: auto;
+}
+
+/* ===== Modal ===== */
+.confirm-modal,
+.accept-modal {
+  width: 100%;
+  max-width: 40rem; /* 400px */
+  background: var(--cm-bg);
+  color: var(--cm-text);
+  border-radius: var(--cm-radius);
+  box-shadow: var(--cm-shadow);
+  border: 0.1rem solid var(--cm-border);
+  transform: translateY(1rem) scale(0.98);
+  opacity: 0;
+  animation: cm-pop 160ms ease-out forwards;
+}
+
+@keyframes cm-pop {
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===== Header ===== */
+.confirm-header,
+.accept-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 2rem;
+  border-bottom: 0.1rem solid var(--cm-border);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--cm-muted);
+  padding: 0.6rem;
+  border-radius: 0.8rem;
+}
+.close-btn:focus-visible { outline: 0.2rem solid var(--cm-accept); outline-offset: 0.2rem; }
+@media (hover: hover) {
+  .close-btn:hover { background: rgba(0,0,0,0.06); }
+}
+
+/* ===== Body ===== */
+.confirm-body,
+.accept-body {
+  text-align: center;
+  padding: 2rem;
+}
+
+.profile-img,
+.profile-placeholder {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 1.2rem;
+}
+
+.profile-img {
+  object-fit: cover;
+  border: 0.2rem solid #fff3;
+  box-shadow: 0 0.6rem 2rem rgba(0,0,0,0.12);
+}
+
+/* Skeleton placeholder */
+.profile-placeholder {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
+  background-size: 400% 100%;
+  animation: cm-shimmer 1.4s ease infinite;
+}
+@keyframes cm-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+.confirm-body h3 {
+  margin: 0.8rem 0 0.4rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.department {
+  font-size: 1.3rem;
+  color: var(--cm-muted);
+}
+
+.created-at {
+  margin-top: 0.4rem;
+  font-size: 1.2rem;
+  color: var(--cm-muted);
+}
+
+.question {
+  margin-top: 1.2rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* ===== Actions ===== */
+.confirm-actions,
+.accept-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.reject-btn,
+.accept-btn {
+  appearance: none;
+  border: 0.1rem solid var(--cm-border);
+  border-radius: 1.2rem;
+  padding: 1.2rem 1rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 80ms ease, filter 120ms ease, background 120ms ease;
+}
+
+.reject-btn {
+  background: transparent;
+  color: var(--cm-text);
+}
+@media (hover: hover) {
+  .reject-btn:hover { background: rgba(0,0,0,0.05); }
+}
+
+.accept-btn {
+  background: var(--cm-accept);
+  border-color: var(--cm-accept);
+  color: #ffffff;
+}
+@media (hover: hover) {
+  .accept-btn:hover { filter: brightness(0.95); }
+}
+
+.reject-btn:active,
+.accept-btn:active {
+  transform: translateY(0.2rem);
+}
+
+.reject-btn:focus-visible,
+.accept-btn:focus-visible {
+  outline: 0.2rem solid var(--cm-accept);
+  outline-offset: 0.2rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .confirm-modal,
+  .accept-modal {
+    width: calc(100% - 4rem);
+  }
+}
+
+/* ===== Motion reduce ===== */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

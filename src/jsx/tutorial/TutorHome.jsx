@@ -38,27 +38,27 @@ function TutorHome() {
         </div>
       </div>
 
-      {/* ✅ 튜토리얼 힌트 박스 */}
-      <div className="tutorial-hint-wrap">
-        <div className="tutorial-hint" role="note" aria-live="polite">
-          <span className="tutorial-hint-caret" aria-hidden="true" />
-          <p className="tutorial-hint-text">
-            <b>‘매칭하기’</b> 버튼을 선택하면, <span className="em">매칭 상대</span>를 탐색할 수 있습니다.
+      {/* ✅ 튜토리얼 힌트 박스 (home- prefix) */}
+      <div className="home-hint-wrap">
+        <div className="home-hint" role="note" aria-live="polite">
+          <span className="home-hint-caret" aria-hidden="true" />
+          <p className="home-hint-text">
+            <b>‘매칭하기’</b> 버튼을 선택하면, <span className="home-hint-em">매칭 상대</span>를 탐색할 수 있습니다.
           </p>
-          <div className="tutorial-hint-footer">
-            <button type="button" className="tutorial-hint-next" onClick={handleNext}>
+          <div className="home-hint-footer">
+            <button type="button" className="home-hint-next" onClick={handleNext}>
               다음
             </button>
-            <span className="tutorial-hint-step">1/8</span>
+            <span className="home-hint-step">1/8</span>
           </div>
         </div>
       </div>
 
       <FlirtingTabs />
 
-      {/* 화면 전체 딤 + 클릭 차단 */}
-      <div className="modal-dim" aria-hidden="true" />
-      <div className="click-blocker" aria-hidden="true" />
+      {/* 화면 전체 딤 + 클릭 차단 (home- prefix) */}
+      <div className="home-modal-dim" aria-hidden="true" />
+      <div className="home-click-blocker" aria-hidden="true" />
     </>
   );
 }
