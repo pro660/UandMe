@@ -1,4 +1,3 @@
-// src/jsx/matching/Card.jsx
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios.js";
@@ -88,6 +87,9 @@ export default function Card({ initialCandidates = [] }) {
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
+  // ✅ 스와이프 허용 여부(3장 이상일 때만 허용)
+  const swipeEnabled = hasThreePlus;
+
   const TWO_MULT = 0.5;
   const xTwoLeft = -SPREAD * TWO_MULT + dx;
   const xTwoRight = SPREAD * TWO_MULT + dx;
@@ -95,7 +97,7 @@ export default function Card({ initialCandidates = [] }) {
 
   // 드래그
   const onStart = (x) => {
-    if (hasOne) return;
+    if (!swipeEnabled) return;
     dragging.current = true;
     movedRef.current = false;
     setSnapping(false);
@@ -103,7 +105,7 @@ export default function Card({ initialCandidates = [] }) {
     lastX.current = x;
   };
   const onMove = (x) => {
-    if (!dragging.current) return;
+    if (!dragging.current || !swipeEnabled) return;
     const delta = x - lastX.current;
     lastX.current = x;
     setDx((prev) => {
@@ -113,7 +115,7 @@ export default function Card({ initialCandidates = [] }) {
     });
   };
   const onEnd = () => {
-    if (!dragging.current) return;
+    if (!dragging.current || !swipeEnabled) return;
     dragging.current = false;
     const absDx = Math.abs(dx);
     const sign = dx < 0 ? -1 : 1;
@@ -128,7 +130,7 @@ export default function Card({ initialCandidates = [] }) {
     }, SNAP_MS);
   };
   const completeSlide = (sign) => {
-    if (N <= 1) return;
+    if (!swipeEnabled) return;
     setSnapping(true);
     setDir(sign < 0 ? "dir-left" : "dir-right");
     setDx(sign * SPREAD);
@@ -226,9 +228,7 @@ export default function Card({ initialCandidates = [] }) {
       acceptText: "보내기",
       rejectText: "취소",
       showUser: !!(targetName || avatar),
-      user: targetName
-        ? { name: targetName, avatar }
-        : null,
+      user: targetName ? { name: targetName, avatar } : null,
       onAccept: async () => {
         setConfirm(null);
         await sendFlirt(targetUserId);
@@ -357,17 +357,6 @@ export default function Card({ initialCandidates = [] }) {
     if (uid != null) setSelectedUserId(uid);
   };
 
-  // ✅ 공통 드래그 핸들러 묶음 (어디서 시작해도 동일하게 동작)
-  const dragHandlers = {
-    onTouchStart: (e) => onStart(e.touches[0].clientX),
-    onTouchMove:  (e) => onMove(e.touches[0].clientX),
-    onTouchEnd:   onEnd,
-    onMouseDown:  (e) => onStart(e.clientX),
-    onMouseMove:  (e) => onMove(e.clientX),
-    onMouseUp:    onEnd,
-    onMouseLeave: onEnd,
-  };
-
   return (
     <>
       <div className="title">
@@ -377,7 +366,20 @@ export default function Card({ initialCandidates = [] }) {
       <div className="card-root">
         <div
           className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
-          {...dragHandlers}  // ✅ 래퍼에도 드래그 핸들러
+          /* ✅ 캡처 단계에서 제스처 처리 + 3장 이상일 때만 동작 */
+          onTouchStartCapture={(e) =>
+            swipeEnabled && onStart(e.touches[0].clientX)
+          }
+          onTouchMoveCapture={(e) => {
+            if (!swipeEnabled) return;
+            onMove(e.touches[0].clientX);
+            if (dragging.current) e.preventDefault();
+          }}
+          onTouchEndCapture={swipeEnabled ? onEnd : undefined}
+          onMouseDownCapture={(e) => swipeEnabled && onStart(e.clientX)}
+          onMouseMoveCapture={(e) => swipeEnabled && onMove(e.clientX)}
+          onMouseUpCapture={swipeEnabled ? onEnd : undefined}
+          onMouseLeaveCapture={swipeEnabled ? onEnd : undefined}
         >
           {/* === N=1 === */}
           {hasOne && (
@@ -387,17 +389,13 @@ export default function Card({ initialCandidates = [] }) {
                 transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
               }}
             >
-              <div
-                className="card"
-                onClick={handleCardClick(candidates[center])}
-                {...dragHandlers}  // ✅ 카드에도 드래그 핸들러
-              >
+              <div className="card" onClick={handleCardClick(candidates[center])}>
                 <CardBody item={candidates[center]} />
               </div>
             </div>
           )}
 
-          {/* === N=2 === */}
+          {/* === N=2 === (스와이프 비활성) */}
           {hasTwo && (
             <>
               <div
@@ -407,11 +405,7 @@ export default function Card({ initialCandidates = [] }) {
                   zIndex: 2,
                 }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[center])}
-                  {...dragHandlers}
-                >
+                <div className="card" onClick={handleCardClick(candidates[center])}>
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
@@ -422,18 +416,14 @@ export default function Card({ initialCandidates = [] }) {
                   zIndex: 1,
                 }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[otherIdx])}
-                  {...dragHandlers}
-                >
+                <div className="card" onClick={handleCardClick(candidates[otherIdx])}>
                   <CardBody item={candidates[otherIdx]} />
                 </div>
               </div>
             </>
           )}
 
-          {/* === N>=3 === */}
+          {/* === N>=3 === (스와이프 활성) */}
           {hasThreePlus && (
             <>
               <div
@@ -445,7 +435,6 @@ export default function Card({ initialCandidates = [] }) {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[idxFarLeft])}
-                  {...dragHandlers}
                 >
                   <CardBody item={candidates[idxFarLeft]} />
                 </div>
@@ -456,11 +445,7 @@ export default function Card({ initialCandidates = [] }) {
                   transform: `translate(calc(-50% + ${xLeft}px), -50%)`,
                 }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[idxLeft])}
-                  {...dragHandlers}
-                >
+                <div className="card" onClick={handleCardClick(candidates[idxLeft])}>
                   <CardBody item={candidates[idxLeft]} />
                 </div>
               </div>
@@ -470,11 +455,7 @@ export default function Card({ initialCandidates = [] }) {
                   transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
                 }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[center])}
-                  {...dragHandlers}
-                >
+                <div className="card" onClick={handleCardClick(candidates[center])}>
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
@@ -484,11 +465,7 @@ export default function Card({ initialCandidates = [] }) {
                   transform: `translate(calc(-50% + ${xRight}px), -50%)`,
                 }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[idxRight])}
-                  {...dragHandlers}
-                >
+                <div className="card" onClick={handleCardClick(candidates[idxRight])}>
                   <CardBody item={candidates[idxRight]} />
                 </div>
               </div>
@@ -501,7 +478,6 @@ export default function Card({ initialCandidates = [] }) {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[idxFarRight])}
-                  {...dragHandlers}
                 >
                   <CardBody item={candidates[idxFarRight]} />
                 </div>
@@ -515,7 +491,7 @@ export default function Card({ initialCandidates = [] }) {
           <button
             type="button"
             className="cta-btn"
-            onClick={openRematchConfirm}   // ✅ 컨펌 후 진행
+            onClick={openRematchConfirm} // ✅ 컨펌 후 진행
             disabled={loading}
           >
             {loading ? "매칭 시작 중..." : "다시 매칭하기"}
@@ -526,10 +502,7 @@ export default function Card({ initialCandidates = [] }) {
       {/* 상세 모달: 프로필 + 플러팅하기 콜백 */}
       {selectedUserId != null &&
         createPortal(
-          <div
-            className="modal-overlay"
-            onClick={() => setSelectedUserId(null)}
-          >
+          <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <YouProfile
                 userId={selectedUserId}

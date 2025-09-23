@@ -17,7 +17,7 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(to right, #FFF2FA 40%, #FFCBEA 86%);
+  background: linear-gradient(to right,#FFF2FA 40%,#FFCBEA 86%);
   flex-direction: column;
 }
 
@@ -27,7 +27,7 @@
   width: 100%;
   max-width: 40rem;
   height: 22rem;
-  touch-action: pan-y;
+  touch-action: none;             /* ✅ 사용자 제스처를 전부 직접 처리 */
   user-select: none;
   overflow: hidden;
   border-radius: 1rem;
@@ -57,20 +57,8 @@
   width: 100%;
   height: 100%;
   background:
-    linear-gradient(
-      to bottom,
-      rgba(255,255,255,0.35) 0%,
-      rgba(255,255,255,0.4) 20%,
-      rgba(251,150,212,0.8) 100%
-    ),
-    linear-gradient(
-      to right,
-      rgba(251,150,212,0.5) 0%,
-      rgba(251,150,212,0.5) 11%,
-      #FFE3F4 50%,
-      rgba(251,150,212,0.5) 89%,
-      rgba(251,150,212,0.5) 100%
-    );
+    linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.4) 20%, rgba(251,150,212,0.8) 100%),
+    linear-gradient(to right, rgba(251,150,212,0.5) 0%, rgba(251,150,212,0.5) 11%, #FFE3F4 50%, rgba(251,150,212,0.5) 89%, rgba(251,150,212,0.5) 100%);
   border-radius: 1rem;
   box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
   display: flex;
@@ -81,20 +69,8 @@
   backface-visibility: hidden;
   overflow: hidden;
   will-change: transform;
-
-  /* ✅ 스와이프 안정화 */
-  pointer-events: auto;
-  touch-action: pan-y;
 }
 
-/* ✅ 카드 내부 자식들이 이벤트를 잡지 않도록 */
-.card * {
-  pointer-events: none;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
-/* 별 배경 */
 .card-stars { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
 .card-stars .star {
   position: absolute;
@@ -105,17 +81,25 @@
 /* ===== 카드 안쪽 하단 아치 ===== */
 .card .arch{
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 0; right: 0; bottom: 0;
   height: var(--arch-height);
   background: #fff;
   border-top-left-radius:  var(--arch-radius);
   border-top-right-radius: var(--arch-radius);
   z-index: -1;
+  pointer-events: none;           /* ✅ 아치에서 시작해도 부모로 이벤트 전달 */
 }
 
-/* 아치 내부 텍스트 */
+/* ===== 콘텐츠는 아치 위로 ===== */
+.card .content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+}
+
 .arch-content{
   position: relative;
   z-index: 1;
@@ -124,6 +108,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  pointer-events: none;           /* ✅ 텍스트 위에서도 스와이프/클릭 보장 */
 }
 
 /* introduce 줄바꿈 반영 */
@@ -147,7 +132,6 @@
   font-weight: 100;
   color: #575757;
 }
-
 .card-stars .star {
   position: absolute;
   user-select: none;
@@ -157,9 +141,8 @@
 /* ===== 이미지/텍스트 ===== */
 .img-wrap { background: transparent; box-shadow: none; }
 .img-frame {
-  width: 8rem;
-  height: 8rem;
-  pointer-events: none;
+  width: 8rem; height: 8rem;
+  pointer-events: none;          /* 이미지도 부모로 터치 전달 */
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -177,15 +160,10 @@
   bottom: 10vh;
 }
 .cta-btn{
-  width: 90vw;
-  height: 7vh;
-  border: 0;
-  border-radius: 999px;
+  width: 90vw; height: 7vh;
+  border: 0; border-radius: 999px;
   background: linear-gradient(90deg, #FF69C3, #E8048D);
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: .2px;
+  color: #fff; font-size: 1rem; font-weight: 700; letter-spacing: .2px;
   box-shadow: 0 10px 24px rgba(216,77,174,.28);
   transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
 }
@@ -193,10 +171,7 @@
 .cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
 
 .no-match {
-  display: flex;
-  text-align: center;
-  justify-content: center;
-  align-items: center;
+  display: flex; text-align: center; justify-content: center; align-items: center;
   margin-top: 10rem;
 }
 
@@ -204,14 +179,12 @@
 @media (prefers-reduced-motion: reduce) {
   .card-wrap.snapping .slot { transition: none; }
 }
+
 @media (max-width: 380px) {
-  .title{
-    padding-top: 2.5rem;
-    margin-bottom: -8rem;
-  }
+  .title{ padding-top: 2.5rem; margin-bottom: -8rem; }
 }
 
-/* ===== Modal ===== */
+/* 모달 */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -219,41 +192,22 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 20000;
+  z-index: 2000;
   overflow: hidden;
-  backdrop-filter: saturate(120%) blur(2px);
 }
 .modal-content {
-  width: min(92vw, 640px);
-  max-height: 88vh;
-  background: #fff;
+  width: 90%;
+  max-width: 640px;
+  max-height: 90vh;
+  background: transparent;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,.28);
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 22px;
-  margin: 0;
-  animation: modal-pop .16s ease-out;
-}
-
-/* 팝 애니메이션 */
-@keyframes modal-pop{
-  from { transform: translateY(4px) scale(.98); opacity: 0; }
-  to   { transform: translateY(0)   scale(1);   opacity: 1; }
-}
-
-/* === Swipe 안정화: 아치/텍스트가 이벤트를 가로채지 않게 === */
-.card .arch,
-.card .arch * {
-  pointer-events: none;
-  touch-action: pan-y;
-}
-.img-frame, .img-frame * {
-  pointer-events: none;
-  touch-action: pan-y;
+  padding: 0;
+  margin-top: 56px;
 }
 
 .card-stars, .card-stars .star { pointer-events: none; }

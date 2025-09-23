@@ -26,11 +26,12 @@ import Ranking from "./jsx/ranking/Ranking";
 
 import TutorHome from "./jsx/tutorial/TutorHome.jsx"
 import TutorMatching from "./jsx/tutorial/TutorMatching.jsx";
+import TutorResult from "./jsx/tutorial/TutorResult.jsx";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
-  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage"];
+  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage","/tutorial/result"];
   const shouldHide =
     hiddenPaths.includes(location.pathname) ||
     location.pathname.startsWith("/chat/");
@@ -130,7 +131,7 @@ function AppRouter() {
 
           <Route path="/tutorial/home" element={<TutorHome />} />
           <Route path="/tutorial/matching" element={<TutorMatching />} />
-          <Route path="/tutorial/result" element={<TutorMatching />} />
+          <Route path="/tutorial/result" element={<TutorResult />} />
         </Routes>
       </Layout>
     </BrowserRouter>

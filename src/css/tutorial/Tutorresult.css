@@ -1,0 +1,184 @@
+:root{
+  --tres-pink-1:#ffd7ee;
+  --tres-pink-2:#f7b3d6;
+  --tres-pink-3:#ff69c3;
+  --tres-pink-4:#e8048d;
+  --tres-text:#575757;
+  --tres-bg:#ffffff;
+  --tres-shadow:0 12px 28px rgba(0,0,0,.18);
+
+  /* 튜토리얼 레이어 우선순위 */
+  --tres-z-dim: 10000;
+  --tres-z-hint: 10002;
+  --tres-z-cta: 10003;
+}
+
+/* 페이지 */
+.tres-page{
+  max-width:100vh;
+  background: radial-gradient(120% 70% at 50% 0%, #ffe8f5 0%, #f9c7e4 55%, #ffffff 70%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  color:var(--tres-text);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* 말풍선 */
+.tres-bubble{
+  position:relative;
+  background:#fff;
+  border-radius:12px;
+  padding:10px 14px;
+  margin-top:20px;
+  box-shadow:var(--tres-shadow);
+}
+.tres-bubble-text{ font-weight:700; }
+.tres-bubble-caret{
+  position:absolute; left:50%; transform:translateX(-50%) rotate(45deg);
+  bottom:-6px; width:12px; height:12px; background:#fff;
+  border-radius:2px;
+}
+
+/* 카드 이미지 */
+.tres-card-img{
+  width:min(90vw, 280px);
+  height:auto;
+  margin-top:18px;
+  display:block;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+/* 아래 큰 곡면 */
+.tres-curve{
+  width:100%;
+  max-width:420px;
+  height:92px;
+  margin-top:18px;
+  background:#fff;
+  border-top-left-radius:180px;
+  border-top-right-radius:180px;
+  box-shadow:0 -8px 10px rgba(0,0,0,.08);
+}
+
+/* CTA 버튼 */
+.tres-cta-wrap{
+  width:100%;
+  max-width:420px;
+  display:flex; justify-content:center;
+  margin-top:-30px;
+}
+.tres-cta-btn{
+  width:min(92vw, 320px);
+  height:48px;
+  border:0; border-radius:999px;
+  font-weight:800; font-size:1rem; letter-spacing:.2px; color:#fff;
+  background:linear-gradient(90deg, var(--tres-pink-3), var(--tres-pink-4));
+  box-shadow:0 10px 24px rgba(216,77,174,.28);
+}
+
+/* 안내 박스 */
+.tres-note{
+  width:min(92vw, 360px);
+  background:#FFF5DB;
+  border:1px solid #ffe1f2;
+  border-radius:12px;
+  padding:14px;
+  margin-top:14px;
+}
+.tres-note-title{
+  margin:0 0 8px; font-size:.92rem; color:gray; font-weight:800;
+}
+.tres-note-text{
+  margin:6px 0; font-size:.7rem; color:#6a6a6a; line-height:1.5;
+}
+
+/* 연애 유형 */
+.tres-type{
+  width:min(92vw, 360px);
+  text-align:center;
+  margin:18px 0 28px;
+}
+.tres-type-lead{ color:#c22a8b; font-weight:800; margin:.5rem 0; font-size:.88rem; }
+.tres-type-name{ color:#e8048d; font-weight:900; margin:.2rem 0; }
+.tres-type-desc{ color:#7b7b7b; margin:.2rem 0; }
+
+/* ===== 튜토리얼: 회색 딤 + 버튼/말풍선만 위로 ===== */
+.tres-modal-dim{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:var(--tres-z-dim);
+  pointer-events:auto;   /* 배경 클릭 차단 */
+  touch-action:none;
+}
+
+/* 버튼을 딤 위로 끌어올림 */
+.tres-tutorial-alive{
+  position:fixed;
+  left:0; right:0; bottom:8vh;
+  margin:0 auto;
+  display:flex; justify-content:center;
+  z-index:var(--tres-z-cta);
+}
+.tres-tutorial-alive .tres-cta-btn{
+  position:relative;
+  z-index:calc(var(--tres-z-cta) + 1);
+}
+
+/* 버튼 위 말풍선 모달 */
+.tres-hint-wrap{
+  position:fixed;
+  left:50%;
+  bottom:calc(8vh + 64px);   /* CTA 버튼 위 여백 */
+  transform:translateX(-50%);
+  z-index:var(--tres-z-hint);
+}
+.tres-hint{
+  position:relative;
+  width:min(92vw, 420px);
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+  padding:14px 14px 12px;
+  animation:tres-pop .18s ease-out;
+}
+.tres-hint-text{
+  margin:0 0 10px;
+  font-size:.92rem; line-height:1.55; color:#575757;
+}
+.tres-hint-footer{
+  display:flex; justify-content:flex-end; align-items:center; gap:8px;
+}
+.tres-hint-close{
+  border:0; padding:8px 14px; border-radius:999px;
+  background:#FF69C3; color:#fff; font-weight:700; font-size:.9rem;
+}
+
+/* 왼쪽-아래 뾰족이(버튼 쪽을 가리킴) */
+.tres-hint-caret{
+  position:absolute;
+  left:18px;   /* 왼쪽 아래 모서리 쪽 */
+  bottom:-6px;
+  transform:rotate(45deg);
+  width:12px; height:12px;
+  background:#fff;
+  border-radius:2px;
+}
+
+/* 접근성: 모션 줄이기 */
+@media (prefers-reduced-motion: reduce){
+  .tres-hint{ animation:none; }
+}
+
+/* 팝 애니메이션 */
+@keyframes tres-pop{
+  from { transform: translateY(2px) scale(.98); opacity:0; }
+  to   { transform: translateY(0)   scale(1);   opacity:1; }
+}
+
+/* 모바일 보정 */
+@media (max-width:380px){
+  .tres-card-img{ width:90vw; }
+  .tres-cta-btn{ height:46px; }
+}
