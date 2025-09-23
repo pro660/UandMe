@@ -5,10 +5,9 @@ import api from "../../api/axios.js";
 import "../../css/matching/Card.css";
 
 import starImg from "../../image/matching/star.svg";
-import useMatchingStore from "../../api/matchingStore";
 import useUserStore from "../../api/userStore";
-import NoHuman from "./Nohuman";
 import YouProfile from "../mypage/YouProfile.jsx";
+import ConfirmModal from "../common/ConfirmModal.jsx"; // ✅ 공통 컨펌 모달
 
 const FIXED_STARS = [
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
@@ -19,44 +18,40 @@ const FIXED_STARS = [
 const rem = (r) => r * 16;
 const wrap = (i, n) => (i + n) % n;
 const getUid = (it) => it?.userId ?? it?.id ?? it?.targetUserId ?? null;
+const normalizeList = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.candidates)) return data.candidates;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
 
-export default function Card() {
-  const candidates = useMatchingStore((s) => s.candidates) || [];
-  const setCandidates = useMatchingStore((s) => s.setCandidates);
-
-  const { user, setUser } = useUserStore();
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const N = candidates.length;
-
-  // ✅ 모달 열릴 때 body 스크롤 막기
+export default function Card({ initialCandidates = [] }) {
+  // ✅ 외부 스토어 없이 내부에서만 관리
+  const [candidates, setCandidates] = useState(() => initialCandidates);
   useEffect(() => {
-    document.body.style.overflow = selectedUserId != null ? "hidden" : "auto";
-    return () => (document.body.style.overflow = "auto");
-  }, [selectedUserId]);
+    setCandidates(Array.isArray(initialCandidates) ? initialCandidates : []);
+  }, [initialCandidates]);
 
-  // 문자열 절반 줄바꿈
-  function breakAtHalf(text) {
-    const raw = (text ?? "").trim();
-    const arr = Array.from(raw);
-    const n = arr.length;
-    if (n < 2) return raw;
-    const mid = Math.floor(n / 2);
-    const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
-    let idx = mid;
-    for (let d = 0; d <= Math.min(8, n - 1); d++) {
-      if (mid - d > 0 && isBreak(arr[mid - d])) {
-        idx = mid - d + 1;
-        break;
-      }
-      if (mid + d < n - 1 && isBreak(arr[mid + d])) {
-        idx = mid + d + 1;
-        break;
-      }
-    }
-    return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
-  }
+  const { user } = useUserStore();
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
-  // 상태 관리
+  // ✅ 공통 컨펌 모달 상태
+  const [confirm, setConfirm] = useState(null);
+  const openConfirm = (opts) =>
+    setConfirm({
+      open: true,
+      title: "확인",
+      message: "진행하시겠습니까?",
+      acceptText: "매칭하기",
+      rejectText: "취소",
+      showUser: false,
+      user: null,
+      onAccept: null,
+      onReject: null,
+      ...opts,
+    });
+
+  // 카드 가로 스와이프 상태
   const [center, setCenter] = useState(0);
   const centerRef = useRef(center);
   useEffect(() => {
@@ -68,24 +63,31 @@ export default function Card() {
   const [dir, setDir] = useState("");
   const [loading, setLoading] = useState(false);
   const dragging = useRef(false);
-  const movedRef = useRef(false); // ⬅️ 드래그로 충분히 움직였는지(탭 가드)
+  const movedRef = useRef(false);
   const lastX = useRef(0);
 
-  if (N === 0) return <NoHuman />;
+  // 모달 열릴 때 body 스크롤 제어
+  useEffect(() => {
+    document.body.style.overflow = selectedUserId != null ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [selectedUserId]);
 
-  // 카드 크기
+  const N = candidates.length;
+  if (N === 0) return null; // 빈 배열이면 상위에서 Matching을 보여줌
+
+  // 카드 배치 파라미터
   const CARD_W = rem(13);
   const GAP = rem(1.5);
   const SPREAD = CARD_W + GAP;
   const SNAP_MS = 260;
   const MAX_DRAG = CARD_W + GAP;
 
-  // 인원수 분기
   const hasOne = N === 1;
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
 
-  // N=2 간격 좀 더 넓혀 살짝 겹침 방지 (필요시 0.8~1.0 사이로 조절)
   const TWO_MULT = 0.5;
   const xTwoLeft = -SPREAD * TWO_MULT + dx;
   const xTwoRight = SPREAD * TWO_MULT + dx;
@@ -106,7 +108,6 @@ export default function Card() {
     lastX.current = x;
     setDx((prev) => {
       const next = Math.max(-MAX_DRAG, Math.min(MAX_DRAG, prev + delta));
-      // 일정 이상 움직이면 "드래그"로 판단 -> 클릭 무시
       if (Math.abs(next) > 12) movedRef.current = true;
       return next;
     });
@@ -122,7 +123,6 @@ export default function Card() {
       setDx(0);
       setTimeout(() => setSnapping(false), SNAP_MS);
     }
-    // 다음 탭을 위해 리셋
     setTimeout(() => {
       movedRef.current = false;
     }, SNAP_MS);
@@ -144,72 +144,155 @@ export default function Card() {
     }, SNAP_MS);
   };
 
-  // 다시 매칭 (크레딧 차감 포함)
-  // 다시 매칭 (크레딧 차감: 후보 있을 때만)
-  const handleRematch = async () => {
+  // ✅ 다시 매칭 시작 (API)
+  const doRematch = async () => {
     const credits = user?.matchCredits ?? 0;
     if (credits <= 0) {
       alert("매칭 기회가 없습니다!");
       return;
     }
-
     try {
       setLoading(true);
-
       const res = await api.post("/match/start", {});
-      const payload = res?.data;
+      const nextList = normalizeList(res?.data);
 
-      // 응답 형태: [ ... ] 또는 { candidates: [...] } 모두 대응
-      const nextList = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.candidates)
-        ? payload.candidates
-        : [];
-
-      // ✅ 후보가 없으면: 아무 것도 바꾸지 말고 안내만
       if (!nextList.length) {
         alert("매칭할 상대가 없습니다. 크레딧은 차감되지 않았습니다.");
         return;
       }
 
-      // ✅ 후보가 있을 때만: 목록 교체 + 크레딧 차감 + 위치 초기화
-      if (typeof setCandidates === "function") setCandidates(nextList);
+      setCandidates(nextList);
 
-      // 스토어 최신값 기준으로 안전하게 차감
-      setUser((prev) => ({
-        ...prev,
-        matchCredits: Math.max(0, (prev?.matchCredits ?? 0) - 1),
-      }));
+      // ✅ 성공 직후 프로필 재조회 → 스토어 최신화
+      try {
+        const refreshed = await api.get("/users/me/profile");
+        if (refreshed?.data) {
+          useUserStore.getState().updateUser(refreshed.data);
+        }
+      } catch (profileErr) {
+        console.warn("⚠️ 프로필 재조회 실패:", profileErr);
+      }
 
-      // 카드 위치/상태 초기화
+      // 위치/상태 초기화
       setCenter(0);
       setDx(0);
       setSnapping(false);
       setDir("");
     } catch (err) {
-      console.error(err);
-      alert("매칭 시작 요청에 실패했습니다.");
+      console.error("❌ 매칭 시작 요청 실패:", err);
+      alert(err?.response?.data?.message || "매칭을 다시 시작할 수 없습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 카드 내부 (순수 렌더)
+  // ✅ 다시 매칭 컨펌 열기
+  const openRematchConfirm = () => {
+    const credits = user?.matchCredits ?? 0;
+    if (credits <= 0) {
+      alert("매칭 기회가 없습니다!");
+      return;
+    }
+    openConfirm({
+      title: "다시 매칭하기",
+      message: `매칭 기회를 사용하여 새로운 상대를 찾습니다.\n현재 보유: ${credits}회\n매칭하시겠습니까?`,
+      acceptText: "매칭하기",
+      rejectText: "취소",
+      onAccept: async () => {
+        setConfirm(null);
+        await doRematch();
+      },
+      onReject: () => setConfirm(null),
+    });
+  };
+
+  // ✅ 플러팅 전송
+  const sendFlirt = async (targetUserId) => {
+    try {
+      await api.post(`/signals/${targetUserId}`);
+      alert("플러팅을 보냈어요!");
+    } catch (err) {
+      console.error("❌ 플러팅 전송 실패:", err);
+      alert(err?.response?.data?.message || "플러팅을 보낼 수 없습니다.");
+    }
+  };
+
+  // ✅ 프로필에서 '플러팅하기' 요청 받기 (YouProfile에서 호출)
+  const handleRequestFlirt = (targetUserId, targetName, avatar) => {
+    if (!targetUserId) return;
+    openConfirm({
+      title: "플러팅 확인",
+      message: `${targetName ?? "상대"}님께 플러팅을 보내시겠습니까?`,
+      acceptText: "보내기",
+      rejectText: "취소",
+      showUser: !!(targetName || avatar),
+      user: targetName
+        ? { name: targetName, avatar }
+        : null,
+      onAccept: async () => {
+        setConfirm(null);
+        await sendFlirt(targetUserId);
+      },
+      onReject: () => setConfirm(null),
+    });
+  };
+
+  // 카드 내부 렌더
+  const breakAtHalf = (text) => {
+    const raw = (text ?? "").trim();
+    const arr = Array.from(raw);
+    const n = arr.length;
+    if (n < 2) return raw;
+    const mid = Math.floor(n / 2);
+    const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
+    let idx = mid;
+    for (let d = 0; d <= Math.min(8, n - 1); d++) {
+      if (mid - d > 0 && isBreak(arr[mid - d])) {
+        idx = mid - d + 1;
+        break;
+      }
+      if (mid + d < n - 1 && isBreak(arr[mid + d])) {
+        idx = mid + d + 1;
+        break;
+      }
+    }
+    return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
+  };
+
   const CardBody = ({ item = {} }) => {
     const {
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
-      typeImageUrl,
+      profileImageUrl, // ✅ 1순위
+      typeImageUrl, // ✅ 2순위
     } = item;
+
     const msgText = breakAtHalf(introduce ?? "");
+
+    const primary = (profileImageUrl ?? "").trim() || null;
+    const fallback = (typeImageUrl ?? "").trim() || null;
+
+    const [imgSrc, setImgSrc] = useState(primary || fallback || null);
+    useEffect(() => {
+      setImgSrc(primary || fallback || null);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [primary, fallback]);
+
+    const handleImgError = () => {
+      if (imgSrc && imgSrc !== fallback && fallback) {
+        setImgSrc(fallback);
+      } else {
+        setImgSrc(null);
+      }
+    };
 
     return (
       <>
         <div
           className="card-stars"
           aria-hidden="true"
-          style={{ pointerEvents: "none" }} // 장식이 클릭을 가로채지 않도록
+          style={{ pointerEvents: "none" }}
         >
           {FIXED_STARS.map((s) => (
             <img
@@ -228,9 +311,22 @@ export default function Card() {
             />
           ))}
         </div>
+
         <div className="img-frame">
-          <img src={typeImageUrl} alt={name} draggable={false} />
+          {imgSrc ? (
+            <img
+              src={imgSrc}
+              alt={name}
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              onError={handleImgError}
+            />
+          ) : (
+            <div className="img-placeholder" aria-hidden="true" />
+          )}
         </div>
+
         <div className="arch">
           <div className="arch-content">
             <p className="name">{name}</p>
@@ -246,36 +342,42 @@ export default function Card() {
   const xFarLeft = -2 * SPREAD + dx;
   const xLeft = -1 * SPREAD + dx;
   const xCenter = 0 * SPREAD + dx;
-  const xRight = +1 * SPREAD + dx;
-  const xFarRight = +2 * SPREAD + dx;
+  const xRight = 1 * SPREAD + dx;
+  const xFarRight = 2 * SPREAD + dx;
 
   const idxFarLeft = wrap(center - 2, N);
   const idxLeft = wrap(center - 1, N);
   const idxRight = wrap(center + 1, N);
   const idxFarRight = wrap(center + 2, N);
 
-  // ⬇️ 카드 클릭(탭) 핸들러: 드래그로 많이 움직였으면 무시, 탭이면 열기
   const handleCardClick = (item) => (e) => {
     e.stopPropagation();
-    if (movedRef.current) return; // 드래그였으면 클릭 무시
+    if (movedRef.current) return;
     const uid = getUid(item);
     if (uid != null) setSelectedUserId(uid);
   };
 
+  // ✅ 공통 드래그 핸들러 묶음 (어디서 시작해도 동일하게 동작)
+  const dragHandlers = {
+    onTouchStart: (e) => onStart(e.touches[0].clientX),
+    onTouchMove:  (e) => onMove(e.touches[0].clientX),
+    onTouchEnd:   onEnd,
+    onMouseDown:  (e) => onStart(e.clientX),
+    onMouseMove:  (e) => onMove(e.clientX),
+    onMouseUp:    onEnd,
+    onMouseLeave: onEnd,
+  };
+
   return (
     <>
-      <div className="title">원하는 상대에게 플러팅하세요</div>
+      <div className="title">
+        프로필 사진을 눌러 <br /> 원하는 상대에게 플러팅하세요
+      </div>
 
       <div className="card-root">
         <div
           className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
-          onTouchStart={(e) => !hasOne && onStart(e.touches[0].clientX)}
-          onTouchMove={(e) => !hasOne && onMove(e.touches[0].clientX)}
-          onTouchEnd={onEnd}
-          onMouseDown={(e) => !hasOne && onStart(e.clientX)}
-          onMouseMove={(e) => !hasOne && onMove(e.clientX)}
-          onMouseUp={onEnd}
-          onMouseLeave={onEnd}
+          {...dragHandlers}  // ✅ 래퍼에도 드래그 핸들러
         >
           {/* === N=1 === */}
           {hasOne && (
@@ -288,6 +390,7 @@ export default function Card() {
               <div
                 className="card"
                 onClick={handleCardClick(candidates[center])}
+                {...dragHandlers}  // ✅ 카드에도 드래그 핸들러
               >
                 <CardBody item={candidates[center]} />
               </div>
@@ -301,12 +404,13 @@ export default function Card() {
                 className="slot slot-left"
                 style={{
                   transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,
-                  zIndex: 2, // 왼쪽을 살짝 위로
+                  zIndex: 2,
                 }}
               >
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[center])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[center]} />
                 </div>
@@ -321,6 +425,7 @@ export default function Card() {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[otherIdx])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[otherIdx]} />
                 </div>
@@ -340,6 +445,7 @@ export default function Card() {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[idxFarLeft])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[idxFarLeft]} />
                 </div>
@@ -353,6 +459,7 @@ export default function Card() {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[idxLeft])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[idxLeft]} />
                 </div>
@@ -366,6 +473,7 @@ export default function Card() {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[center])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[center]} />
                 </div>
@@ -379,6 +487,7 @@ export default function Card() {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[idxRight])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[idxRight]} />
                 </div>
@@ -392,6 +501,7 @@ export default function Card() {
                 <div
                   className="card"
                   onClick={handleCardClick(candidates[idxFarRight])}
+                  {...dragHandlers}
                 >
                   <CardBody item={candidates[idxFarRight]} />
                 </div>
@@ -405,7 +515,7 @@ export default function Card() {
           <button
             type="button"
             className="cta-btn"
-            onClick={handleRematch}
+            onClick={openRematchConfirm}   // ✅ 컨펌 후 진행
             disabled={loading}
           >
             {loading ? "매칭 시작 중..." : "다시 매칭하기"}
@@ -413,7 +523,7 @@ export default function Card() {
         </div>
       </div>
 
-      {/* ✅ 모달: null 체크 + 포털 */}
+      {/* 상세 모달: 프로필 + 플러팅하기 콜백 */}
       {selectedUserId != null &&
         createPortal(
           <div
@@ -425,11 +535,39 @@ export default function Card() {
                 userId={selectedUserId}
                 onClose={() => setSelectedUserId(null)}
                 fromMatching={true}
+                onRequestFlirt={(targetId, targetName, avatar) =>
+                  handleRequestFlirt(targetId, targetName, avatar)
+                }
               />
             </div>
           </div>,
           document.body
         )}
+
+      {/* ✅ 공통 컨펌 모달 */}
+      {confirm?.open && (
+        <ConfirmModal
+          open
+          onClose={() => setConfirm(null)}
+          onAccept={async () => {
+            try {
+              await confirm.onAccept?.();
+            } finally {
+              setConfirm((prev) => (prev?.open ? null : prev));
+            }
+          }}
+          onReject={() => {
+            confirm.onReject?.();
+            setConfirm(null);
+          }}
+          title={confirm.title}
+          message={confirm.message}
+          acceptText={confirm.acceptText}
+          rejectText={confirm.rejectText}
+          showUser={confirm.showUser}
+          user={confirm.user}
+        />
+      )}
     </>
   );
 }

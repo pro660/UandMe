@@ -1,6 +1,6 @@
 :root{
-  --arch-height: 45%;     /* 아치가 카드 바닥에서 차지하는 높이 */
-  --arch-radius: 44px;    /* 아치 윗모서리 둥근 정도(양끝만 둥글게) */
+  --arch-height: 45%;
+  --arch-radius: 44px;
 }
 
 /* ===== 제목 ===== */
@@ -17,12 +17,7 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(
-    to right,
-    #FFF2FA 40%,
-    #FFCBEA 86%
-  );
-
+  background: linear-gradient(to right, #FFF2FA 40%, #FFCBEA 86%);
   flex-direction: column;
 }
 
@@ -49,8 +44,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%,-50%);
-  width: 13rem;      /* 카드 폭 */
-  height: 19.5rem;   /* 카드 높이 */
+  width: 13rem;
+  height: 19.5rem;
   display: grid;
   place-items: center;
   will-change: transform;
@@ -61,23 +56,21 @@
   position: relative;
   width: 100%;
   height: 100%;
-  /* 좌우 11%만 핑크, 중앙은 연핑크 */
   background:
-  linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.35) 0%,
-    rgba(255,255,255,0.4) 20%,
-    rgba(251,150,212,0.8) 100%
-  ),
-  linear-gradient(
-    to right,
-    rgba(251,150,212,0.5) 0%,
-    rgba(251,150,212,0.5) 11%,
-    #FFE3F4 50%,
-    rgba(251,150,212,0.5) 89%,
-    rgba(251,150,212,0.5) 100%
-  );
-
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.35) 0%,
+      rgba(255,255,255,0.4) 20%,
+      rgba(251,150,212,0.8) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgba(251,150,212,0.5) 0%,
+      rgba(251,150,212,0.5) 11%,
+      #FFE3F4 50%,
+      rgba(251,150,212,0.5) 89%,
+      rgba(251,150,212,0.5) 100%
+    );
   border-radius: 1rem;
   box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
   display: flex;
@@ -86,42 +79,40 @@
   gap: .6rem;
   padding: 1rem;
   backface-visibility: hidden;
-  overflow: hidden;                 /* 내부 아치 잘림 방지용 컨테이너 */
+  overflow: hidden;
   will-change: transform;
+
+  /* ✅ 스와이프 안정화 */
+  pointer-events: auto;
+  touch-action: pan-y;
 }
 
-.card-stars { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+/* ✅ 카드 내부 자식들이 이벤트를 잡지 않도록 */
+.card * {
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
 
+/* 별 배경 */
+.card-stars { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
 .card-stars .star {
   position: absolute;
   user-select: none;
   filter: drop-shadow(0 0 6px rgba(255,255,255,.9)) drop-shadow(0 2px 3px rgba(0,0,0,.3));
 }
 
-
-
 /* ===== 카드 안쪽 하단 아치 ===== */
-/* 평평한 상단 + 좌우만 둥근 느낌 → border-top-left/right-radius 사용 */
 .card .arch{
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;                         /* 카드 바닥에 붙이기 */
-  height: var(--arch-height);        /* 아치 높이 */
+  bottom: 0;
+  height: var(--arch-height);
   background: #fff;
   border-top-left-radius:  var(--arch-radius);
   border-top-right-radius: var(--arch-radius);
   z-index: -1;
-}
-
-/* ===== 콘텐츠는 아치 위로 ===== */
-.card .content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .6rem;
 }
 
 /* 아치 내부 텍스트 */
@@ -132,7 +123,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;          /* 아치 내부 중앙 정렬 */
+  justify-content: center;
 }
 
 /* introduce 줄바꿈 반영 */
@@ -156,25 +147,18 @@
   font-weight: 100;
   color: #575757;
 }
+
 .card-stars .star {
   position: absolute;
   user-select: none;
   filter: invert(0) saturate(200%) brightness(1.8) contrast(2) drop-shadow(0 2px 3px rgba(1,1,1,0.5));
 }
 
-
 /* ===== 이미지/텍스트 ===== */
-.img-wrap {
-  background: transparent;   /* ⬅️ #fff 제거 */
-  box-shadow: none;          /* ⬅️ 그림자 제거(원하면 남겨도 됨) */
-}
-
+.img-wrap { background: transparent; box-shadow: none; }
 .img-frame {
   width: 8rem;
   height: 8rem;
-  
-  margin-top: 1rem;
-
   pointer-events: none;
   -webkit-user-drag: none;
   user-select: none;
@@ -189,16 +173,14 @@
   margin-top: 1rem;
   display: flex;
   justify-content: center;
-
   position: fixed;
   bottom: 10vh;
 }
-
 .cta-btn{
   width: 90vw;
   height: 7vh;
   border: 0;
-  border-radius: 999px;          /* 완전 둥글게 */
+  border-radius: 999px;
   background: linear-gradient(90deg, #FF69C3, #E8048D);
   color: #fff;
   font-size: 1rem;
@@ -206,20 +188,15 @@
   letter-spacing: .2px;
   box-shadow: 0 10px 24px rgba(216,77,174,.28);
   transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
-
-  
 }
-
 .cta-btn:active { transform: scale(.98); }
 .cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
-
 
 .no-match {
   display: flex;
   text-align: center;
   justify-content: center;
   align-items: center;
-
   margin-top: 10rem;
 }
 
@@ -227,15 +204,14 @@
 @media (prefers-reduced-motion: reduce) {
   .card-wrap.snapping .slot { transition: none; }
 }
-
 @media (max-width: 380px) {
-  /* 타이틀은 음수 마진 제거하고 간격만 유지 */
   .title{
-    padding-top: 2.5rem;   /* 필요시 조절 */
-    margin-bottom: -8rem;      /* ⬅️ 겹침 원인 제거 */
+    padding-top: 2.5rem;
+    margin-bottom: -8rem;
   }
 }
 
+/* ===== Modal ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -243,26 +219,41 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
-  overflow: hidden; /* ✅ 배경 스크롤 방지 */
+  z-index: 20000;
+  overflow: hidden;
+  backdrop-filter: saturate(120%) blur(2px);
 }
-
-/* 모달 컨텐츠 */
 .modal-content {
-  width: 90%;
-  max-width: 640px;
-  max-height: 90vh; /* ✅ 화면 기준 높이 제한 */
-  background: transparent;
+  width: min(92vw, 640px);
+  max-height: 88vh;
+  background: #fff;
   border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.28);
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* ✅ 모달 내부만 스크롤 */
-  -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 22px;
+  margin: 0;
+  animation: modal-pop .16s ease-out;
+}
 
-  padding: 0; 
-    margin-top: 56px;
+/* 팝 애니메이션 */
+@keyframes modal-pop{
+  from { transform: translateY(4px) scale(.98); opacity: 0; }
+  to   { transform: translateY(0)   scale(1);   opacity: 1; }
+}
 
+/* === Swipe 안정화: 아치/텍스트가 이벤트를 가로채지 않게 === */
+.card .arch,
+.card .arch * {
+  pointer-events: none;
+  touch-action: pan-y;
+}
+.img-frame, .img-frame * {
+  pointer-events: none;
+  touch-action: pan-y;
 }
 
 .card-stars, .card-stars .star { pointer-events: none; }

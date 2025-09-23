@@ -95,7 +95,7 @@ button{cursor:pointer}
 .ph-text{ text-align:center; }
 .ph-dept{
   font-size:.86rem; font-weight:800; color:#575757;
-  max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:none; white-space:nowrap; overflow:visible; text-overflow: clip;
 }
 .ph-count{
   font-size:.78rem; font-weight:300; color:#fff;

@@ -1,56 +1,105 @@
 // src/jsx/matching/Matching.jsx
 import React, { useRef, useState, useEffect } from "react";
-import api from "../../api/axios";
 import Card from "./Card";
-import Nohuman from "./Nohuman";
 import "../../css/matching/Matching.css";
-import useUserStore from "../../api/userStore"; // ✅ 스토어 임포트
 
 import starImg from "../../image/matching/star.svg";
 import unKnownImg from "../../image/matching/unknown.svg";
-import ConfirmModal from "../common/ConfirmModal.jsx"; // ✅ 공통 컨펌 모달
 
+/* 카드 배경 별 위치 */
 const FIXED_STARS = [
   { id: 0, left: 26, top: 10, size: 100, rot: 0, op: 0.55 },
   { id: 1, left: 10, top: 50, size: 80, rot: 0.5, op: 0.5 },
   { id: 2, left: 88, top: 37, size: 110, rot: 0, op: 0.6 },
 ];
 
+/* Card로 넘길 더미 후보들 */
+const DUMMY_CANDIDATES = [
+  {
+    userId: 101,
+    name: "김하늘",
+    department: "미디어커뮤니케이션학과",
+    introduce: "사람 만나는 걸 좋아해요. 축제 먹거리 탐방 같이 갈 분?",
+    profileImageUrl: "",
+    typeImageUrl: "",
+  },
+  {
+    userId: 102,
+    name: "박시우",
+    department: "컴퓨터공학과",
+    introduce: "고양이 집사·사진 찍기 좋아함. 사진 스팟 추천해요!",
+    profileImageUrl: "",
+    typeImageUrl: "",
+  },
+  {
+    userId: 103,
+    name: "이서연",
+    department: "경영학과",
+    introduce: "밝고 유쾌한 사람 좋아요 :) 소소한 대화부터 시작해요",
+    profileImageUrl: "",
+    typeImageUrl: "",
+  },
+  {
+    userId: 104,
+    name: "최민준",
+    department: "스포츠과학과",
+    introduce: "러닝 메이트 구합니다! 축제 달리기 이벤트 같이 가요",
+    profileImageUrl: "",
+    typeImageUrl: "",
+  },
+  {
+    userId: 105,
+    name: "정다은",
+    department: "디자인학부",
+    introduce: "드로잉·전시 좋아해요. 포스터 부스 같이 구경해요!",
+    profileImageUrl: "",
+    typeImageUrl: "",
+  },
+];
+
 const rem = (r) => r * 16;
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const normalizeList = (data) => {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.candidates)) return data.candidates;
-  if (Array.isArray(data?.results)) return data.results;
-  return [];
-};
+
+/* 데모 카드 본문 (정적) */
+const CardBodyDemo = () => (
+  <>
+    <div className="card-stars" aria-hidden="true">
+      {FIXED_STARS.map((s) => (
+        <img
+          key={s.id}
+          src={starImg}
+          alt=""
+          className="star"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: `${s.size}px`,
+            height: `${s.size}px`,
+            opacity: s.op,
+            transform: `translate(-50%, -50%) rotate(${s.rot}deg)`,
+          }}
+        />
+      ))}
+    </div>
+    <div className="img-frame-m">
+      <img src={unKnownImg} alt="unknown" draggable={false} />
+    </div>
+    <div className="arch-m" aria-hidden={false}>
+      <div className="arch-content">
+        <p className="name">???</p>
+        <p className="major">?????????</p>
+        <p className="msg">“???”</p>
+      </div>
+    </div>
+  </>
+);
 
 export default function Matching() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [goCard, setGoCard] = useState(false);
-  const [resultList, setResultList] = useState([]);
+  const [resultList, setResultList] = useState([]); // → 더미를 이쪽에 담아 넘김
 
-  // ✅ 유저(크레딧 확인용)
-  const user = useUserStore((s) => s.user);
-
-  // ====== 컨펌 모달 상태 ======
-  const [confirm, setConfirm] = useState(null);
-  const openConfirm = (opts) =>
-    setConfirm({
-      open: true,
-      title: "확인",
-      message: "매칭하시겠습니까?",
-      acceptText: "매칭시작",
-      rejectText: "취소",
-      showUser: false,
-      user: null,
-      onAccept: null,
-      onReject: null,
-      ...opts,
-    });
-
-  // ====== 슬롯 애니메이션 관련 ======
+  // ====== 슬롯 애니메이션(가벼운 연출) ======
   const PLACEHOLDER_COUNT = 3;
   const N = PLACEHOLDER_COUNT;
   const [center, setCenter] = useState(0);
@@ -117,39 +166,6 @@ export default function Matching() {
     }
   };
 
-  const CardBodyDemo = () => (
-    <>
-      <div className="card-stars" aria-hidden="true">
-        {FIXED_STARS.map((s) => (
-          <img
-            key={s.id}
-            src={starImg}
-            alt=""
-            className="star"
-            style={{
-              left: `${s.left}%`,
-              top: `${s.top}%`,
-              width: `${s.size}px`,
-              height: `${s.size}px`,
-              opacity: s.op,
-              transform: `translate(-50%, -50%) rotate(${s.rot}deg)`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="img-frame-m">
-        <img src={unKnownImg} alt="unknown" draggable={false} />
-      </div>
-      <div className="arch-m" aria-hidden={false}>
-        <div className="arch-content">
-          <p className="name">???</p>
-          <p className="major">?????????</p>
-          <p className="msg">“???”</p>
-        </div>
-      </div>
-    </>
-  );
-
   // ====== 프리스핀 ======
   const spinTimerRef = useRef(null);
   const startPreSpin = () => {
@@ -168,81 +184,25 @@ export default function Matching() {
   };
   useEffect(() => () => stopPreSpin(), []);
 
-  // ====== 매칭 시작 (실행 함수) ======
-  const MIN_SPIN_MS = 1800;
+  // ====== 매칭 시작 (API 없이 더미로 전환) ======
+  const MIN_SPIN_MS = 1200; // 짧은 연출
 
-  const startMatching = async () => {
-    // ✅ 안전망: 크레딧 재확인
-    const creditsNow = user?.matchCredits ?? 0;
-    if (creditsNow <= 0) {
-      alert("매칭 기회가 없습니다!");
-      return;
-    }
-
+  const startMatching = () => {
     setLoading(true);
     setMessage("매칭 시작 중...");
     startPreSpin();
-    const t0 = Date.now();
 
-    try {
-      const resp = await api.post("/match/start");
-      const list = normalizeList(resp?.data);
-
-      // ✅ 성공 직후 내 프로필 재조회 → 스토어 최신화
-      try {
-        const refreshed = await api.get("/users/me/profile");
-        if (refreshed?.data) {
-          useUserStore.getState().updateUser(refreshed.data);
-        }
-      } catch (profileErr) {
-        console.warn("⚠️ 프로필 재조회 실패:", profileErr);
-      }
-
-      // 최소 스핀 시간 보장
-      const elapsed = Date.now() - t0;
-      if (elapsed < MIN_SPIN_MS) await sleep(MIN_SPIN_MS - elapsed);
-
+    setTimeout(() => {
       stopPreSpin();
-
-      setResultList(list);
+      setResultList(DUMMY_CANDIDATES); // ✅ 더미 후보 주입
       setGoCard(true);
-    } catch (err) {
-      console.error("❌ 매칭 실패:", err);
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "매칭 중 오류 발생";
-      setMessage(msg);
-      stopPreSpin();
       setLoading(false);
-    }
+      setMessage("");
+    }, MIN_SPIN_MS);
   };
 
-  // ✅ 컨펌 열기
-  const openStartMatchingConfirm = () => {
-    const credits = user?.matchCredits ?? 0;
-    if (credits <= 0) {
-      alert("매칭 기회가 없습니다!");
-      return;
-    }
-    openConfirm({
-      title: "매칭 확인",
-      message: `매칭 기회 1회를 사용하여 후보를 받아옵니다.\n현재 보유: ${credits}회\n진행하시겠습니까?`,
-      acceptText: "진행",
-      rejectText: "취소",
-      onAccept: async () => {
-        setConfirm(null);
-        await startMatching();
-      },
-      onReject: () => setConfirm(null),
-    });
-  };
-
-  // ✅ 결과 분기 처리
+  // ✅ 결과 분기: Card로 진입하며 더미 전달
   if (goCard) {
-    if (resultList.length === 0) {
-      return <Nohuman />;
-    }
     return <Card initialCandidates={resultList} />;
   }
 
@@ -283,43 +243,19 @@ export default function Matching() {
           <button
             type="button"
             className="cta-btn"
-            onClick={openStartMatchingConfirm}  // ✅ 컨펌 후 실행
+            onClick={startMatching}
             disabled={loading}
           >
             {loading ? "매칭 시작 중..." : "매칭하기"}
           </button>
         </div>
+
         {message && (
           <p style={{ textAlign: "center", marginTop: "0.5rem" }}>
             {message}
           </p>
         )}
       </div>
-
-      {/* ✅ 공통 컨펌 모달 */}
-      {confirm?.open && (
-        <ConfirmModal
-          open
-          onClose={() => setConfirm(null)}
-          onAccept={async () => {
-            try {
-              await confirm.onAccept?.();
-            } finally {
-              setConfirm((prev) => (prev?.open ? null : prev));
-            }
-          }}
-          onReject={() => {
-            confirm.onReject?.();
-            setConfirm(null);
-          }}
-          title={confirm.title}
-          message={confirm.message}
-          acceptText={confirm.acceptText}
-          rejectText={confirm.rejectText}
-          showUser={confirm.showUser}
-          user={confirm.user}
-        />
-      )}
     </div>
   );
 }
