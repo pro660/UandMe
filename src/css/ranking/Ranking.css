@@ -211,3 +211,10 @@ button{cursor:pointer}
   .rank-root{ height:85svh; }
   .podium-heads{ margin-top:.4rem; }
 }
+
+.rank-tabs {
+  position: relative;
+  display: flex;
+  justify-content: space-around;
+  border-bottom: 1px solid #eee;
+}
