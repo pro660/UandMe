@@ -15,7 +15,7 @@
 
 /* 페이지 */
 .tres-page{
-  max-width:100vh;
+  max-width:100vw;
   background: radial-gradient(120% 70% at 50% 0%, #ffe8f5 0%, #f9c7e4 55%, #ffffff 70%);
   display:flex;
   flex-direction:column;
@@ -62,20 +62,49 @@
   box-shadow:0 -8px 10px rgba(0,0,0,.08);
 }
 
-/* CTA 버튼 */
+/* =========================
+   CTA (시각용, 클릭 비활성)
+   ========================= */
 .tres-cta-wrap{
-  width:100%;
-  max-width:420px;
-  display:flex; justify-content:center;
-  margin-top:-30px;
+  width:20rem;
+  display:flex; justify-content:center; align-items:center;
+  pointer-events:none;                /* ✅ CTA 전체 클릭 통과 */
 }
 .tres-cta-btn{
+  display:flex; justify-content:center; align-items:center; text-align:center;
   width:min(92vw, 320px);
   height:48px;
   border:0; border-radius:999px;
   font-weight:800; font-size:1rem; letter-spacing:.2px; color:#fff;
   background:linear-gradient(90deg, var(--tres-pink-3), var(--tres-pink-4));
   box-shadow:0 10px 24px rgba(216,77,174,.28);
+  pointer-events:none;                /* ✅ 버튼도 클릭 통과 */
+  user-select:none;
+  bottom: 330px;
+}
+
+/* 튜토리얼 중 CTA는 화면 하단 '시각용' 고정 + 클릭 통과 */
+.tres-tutorial-alive{
+  position:fixed;
+  left:0; right:0; bottom:8vh;
+  top:auto;                           /* ✅ fixed일 때 top 초기화 */
+  margin:0 auto;
+  display:flex; justify-content:center;
+  z-index:var(--tres-z-cta);
+  pointer-events:none;                /* ✅ 래퍼 클릭 통과 */
+}
+.tres-tutorial-alive .tres-cta-btn{
+  position:relative;
+  z-index:calc(var(--tres-z-cta) + 1);
+  pointer-events:none;
+}
+
+/* 스텝 표시 */
+.tres-step{
+  display:flex;
+  margin-left:14.5rem;
+  height:10px;
+  font-size:.8rem;
 }
 
 /* 안내 박스 */
@@ -109,34 +138,21 @@
   position:fixed; inset:0;
   background:rgba(0,0,0,.5);
   z-index:var(--tres-z-dim);
-  pointer-events:auto;   /* 배경 클릭 차단 */
+  pointer-events:auto;               /* 배경 클릭 차단 */
   touch-action:none;
 }
 
-/* 버튼을 딤 위로 끌어올림 */
-.tres-tutorial-alive{
-  position:fixed;
-  left:0; right:0; bottom:8vh;
-  margin:0 auto;
-  display:flex; justify-content:center;
-  z-index:var(--tres-z-cta);
-}
-.tres-tutorial-alive .tres-cta-btn{
-  position:relative;
-  z-index:calc(var(--tres-z-cta) + 1);
-}
-
-/* 버튼 위 말풍선 모달 */
+/* 힌트 모달 (CTA보다 항상 위) */
 .tres-hint-wrap{
   position:fixed;
   left:50%;
-  bottom:calc(8vh + 64px);   /* CTA 버튼 위 여백 */
+  top:33vh;
   transform:translateX(-50%);
-  z-index:var(--tres-z-hint);
+  z-index: calc(var(--tres-z-cta) + 2);   /* ✅ CTA보다 확실히 위 */
 }
 .tres-hint{
   position:relative;
-  width:min(92vw, 420px);
+  width:min(85vw, 420px);
   background:#fff;
   border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.22);
@@ -148,17 +164,18 @@
   font-size:.92rem; line-height:1.55; color:#575757;
 }
 .tres-hint-footer{
-  display:flex; justify-content:flex-end; align-items:center; gap:8px;
+  display:flex; justify-content:flex-start; align-items:center; gap:8px;
 }
 .tres-hint-close{
   border:0; padding:8px 14px; border-radius:999px;
   background:#FF69C3; color:#fff; font-weight:700; font-size:.9rem;
+  touch-action:manipulation;        /* 모바일 탭 반응성 향상 */
 }
 
 /* 왼쪽-아래 뾰족이(버튼 쪽을 가리킴) */
 .tres-hint-caret{
   position:absolute;
-  left:18px;   /* 왼쪽 아래 모서리 쪽 */
+  left:59px;   /* 왼쪽 아래 모서리 쪽 */
   bottom:-6px;
   transform:rotate(45deg);
   width:12px; height:12px;
@@ -166,10 +183,7 @@
   border-radius:2px;
 }
 
-/* 접근성: 모션 줄이기 */
-@media (prefers-reduced-motion: reduce){
-  .tres-hint{ animation:none; }
-}
+.tres-hint-text b { color:#E8048D; }
 
 /* 팝 애니메이션 */
 @keyframes tres-pop{
@@ -179,6 +193,20 @@
 
 /* 모바일 보정 */
 @media (max-width:380px){
-  .tres-card-img{ width:90vw; }
-  .tres-cta-btn{ height:46px; }
+  .tres-hint-wrap{ top:45vh; }
+  .tres-hint-text{ font-size:0.9rem; }
+
+  /* ✅ 과거 코드의 top 덮어쓰기 방지: CTA는 항상 클릭 통과 + top 초기화 */
+  .tres-cta-wrap{ top:auto !important; }
+
+  .tres-hint-close{
+    font-size:.8rem;
+    white-space:nowrap;
+    display:flex;
+    text-align:center;
+    justify-content:center;
+    align-items:center;
+    padding:7px 15px;
+  }
+  .tres-step{ margin-left:12rem; }
 }

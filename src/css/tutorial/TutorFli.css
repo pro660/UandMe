@@ -7,29 +7,27 @@
   --z-hint: 10002;
 }
 
-.tur-hero{
+/* 배너/텍스트 레이어 */
+.fli-matching-banner { position: relative; width: 90vw; margin-left: 1.5rem; }
+
+/* 매칭 배너 이미지 */
+.fli-matching-banner-img { display:block; width:100%; height:auto; }
+
+.fli-hero{
   display: flex;
   justify-content: center;
   text-align: center;
-  align-items: center;
 }
 
-.tur-hero-logo-img {
-  margin-left: 1rem;
-}
-
-/* =========================
-   매칭 버튼: 이미지로 대체
-   spotlight는 래퍼(.tur-match-img-wrap)에 적용
-   ========================= */
-.tur-match-img-wrap{
-  position: relative;             /* 전역 .spotlight의 ::before/::after 기준점 */
+/* FlirtingTabs 대신 들어간 FliImg + spotlight 래퍼 */
+.fli-hero-img-wrap{
+  position: relative;                /* ::before/::after 기준 (spotlight용) */
   width: min(92vw, 440px);
-  margin: 12px auto 0;
-  z-index: var(--z-spotlight);
+  margin: 16px auto 0;
+  z-index: var(--z-spotlight);       /* 배너와 자연스러운 레이어 */
 }
-
-.tur-match-img{
+.fli-hero-logo-img{ margin-left: 1rem; }
+.fli-hero-img{
   display: block;
   width: 100%;
   height: auto;
@@ -37,33 +35,34 @@
   -webkit-user-drag: none;
 }
 
-/* =========================
-   힌트 박스
-   ========================= */
-.tur-home-hint-wrap{
+/* 힌트 박스 래퍼: 배너 아래 중앙 정렬
+   ✅ spotlight보다 항상 위로 오도록 z-index 상향 */
+.fli-hint-wrap{
   position: relative;
-  z-index: var(--z-hint);          /* dim/blocker보다 위 */
+  z-index: calc(var(--z-spotlight) + 20);  /* ⬅️ 핵심 변경: 이미지/spotlight 위 */
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-top: 10px;
+  margin-top: -70px;
   padding: 0 16px;                 /* 모바일 좌우 여백 */
 }
 
-.tur-home-hint{
+/* 힌트 말풍선(흰색 모달) */
+.fli-hint{
   position: relative;
   width: min(92vw, 440px);
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(0,0,0,.22);
-  padding: 14px 14px 12px;
+  padding: 14px 20px 12px;
   overflow: visible;
-  animation: home-hint-pop .18s ease-out; /* 키프레임 이름 유지 */
+  animation: fli-hint-pop .18s ease-out;
 }
 
-.tur-home-hint > .tur-home-hint-caret{
+/* 🔼 작은 사각형(화살표) — 모달 '윗쪽'으로 이동(확실히 고정) */
+.fli-hint > .fli-hint-caret{
   position: absolute;
-  top: -6px;                       /* 윗변 밖으로 6px */
+  bottom: -6px;                      
   left: 24px;                      /* 필요 시 16~32px 조정 */
   width: 12px; height: 12px;
   background: #fff;
@@ -73,25 +72,24 @@
   pointer-events: none;
 }
 
-.tur-home-hint-text{
+/* 텍스트 */
+.fli-hint-text{
   margin: 0 0 10px;
   font-size: .92rem;
   line-height: 1.55;
   color: #575757;
   word-break: keep-all;            /* 한글 줄바꿈 자연스럽게 */
 }
-.tur-home-hint-text .tur-home-hint-em{
-  color: #e8048d;
-  font-weight: 800;
-}
+.fli-hint-text .fli-hint-em{ color: #e8048d; font-weight: 800; }
 
-.tur-home-hint-footer{
+/* 하단 푸터 */
+.fli-hint-footer{
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
-.tur-home-hint-next{
+.fli-hint-next{
   border: 0;
   padding: 8px 14px;
   border-radius: 999px;
@@ -102,26 +100,24 @@
   opacity: .92;
   cursor: pointer;
 }
-.tur-home-hint-next:disabled{
+.fli-hint-next:disabled{
   cursor: default;
   opacity: .7;
 }
-.tur-home-hint-step{
+.fli-hint-step{
   font-size: .86rem;
   color: #575757;
 }
 
-/* =========================
-   모달 딤/클릭 차단
-   ========================= */
-.tur-home-modal-dim{
+/* 모달 딤/클릭 차단 */
+.fli-modal-dim{
   position: fixed; inset: 0;
   background: rgba(0,0,0,.45);
   z-index: var(--z-dim);
   pointer-events: auto;
   touch-action: none;
 }
-.tur-home-click-blocker{
+.fli-click-blocker{
   position: fixed; inset: 0;
   z-index: var(--z-blocker);
   background: transparent;
@@ -129,26 +125,22 @@
   touch-action: none;
 }
 
-/* =========================
-   텍스트 톤 통일
-   (영역 클래스만 tur-로 네임스페이스)
-   ========================= */
-.tur-hero-content, .tur-hero-content * {
-  color:#575757 !important;
-  fill:#575757 !important;
-}
+/* 텍스트 톤 통일 (영역 유지) */
+.fli-hero-content, .fli-hero-content * { color:#575757 !important; fill:#575757 !important; }
 
-/* =========================
-   모션 선호도
-   ========================= */
+/* 모션 선호도 */
 @media (prefers-reduced-motion: reduce){
-  .tur-home-hint{ animation: none; }
+  .fli-hint{ animation: none; }
 }
 
-/* =========================
-   팝 애니메이션 (이름 유지)
-   ========================= */
-@keyframes home-hint-pop{
+/* 팝 애니메이션 */
+@keyframes fli-hint-pop{
   from{ transform: translateY(4px) scale(.98); opacity: 0; }
   to{   transform: translateY(0)   scale(1);   opacity: 1; }
+}
+
+@media (max-width: 380px){
+    .fli-hero{
+        margin-top: -10rem;
+    }
 }

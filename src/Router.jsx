@@ -27,6 +27,8 @@ import Ranking from "./jsx/ranking/Ranking";
 import TutorHome from "./jsx/tutorial/TutorHome.jsx"
 import TutorMatching from "./jsx/tutorial/TutorMatching.jsx";
 import TutorResult from "./jsx/tutorial/TutorResult.jsx";
+import TutorFli from "./jsx/tutorial/TutorFli.jsx"
+import TutorPopup from "./jsx/tutorial/TutorPopup.jsx";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
@@ -132,6 +134,8 @@ function AppRouter() {
           <Route path="/tutorial/home" element={<TutorHome />} />
           <Route path="/tutorial/matching" element={<TutorMatching />} />
           <Route path="/tutorial/result" element={<TutorResult />} />
+          <Route path="/tutorial/flirting" element={<TutorFli />} />
+          <Route path="/tutorial/6" element={<TutorPopup />} />
         </Routes>
       </Layout>
     </BrowserRouter>

@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import "../../css/tutorial/TutorResult.css";
 import CardImg from "../../image/tutorial/card.svg";
 
 export default function TutorResult() {
   // 튜토리얼 말풍선(모달) 표시 여부
   const [showHint, setShowHint] = useState(true);
+  const navigate = useNavigate();
 
   return (
     <div className="tres-page" role="main" aria-label="튜토리얼 결과 화면">
@@ -36,16 +39,20 @@ export default function TutorResult() {
             <div className="tres-hint">
               <span className="tres-hint-caret" aria-hidden="true" />
               <p className="tres-hint-text">
-                이 버튼을 눌러 상대에게 <b>플러팅</b>을 보낼 수 있어요!
+                원하는 이성에게 <b>'플러팅하기'</b>를 실행하면, 해당 이성의 프로필에 플러팅이 표시됩니다.
               </p>
               <div className="tres-hint-footer">
                 <button
                   type="button"
                   className="tres-hint-close"
-                  onClick={() => setShowHint(false)}
+                  onClick={() => {
+                    setShowHint(false);
+                    navigate("/tutorial/flirting"); // ✅ 경로 오타 수정
+                  }}  
                 >
-                  알겠어요
+                  다음
                 </button>
+                <p className="tres-step">3/8</p>
               </div>
             </div>
           </div>
@@ -53,8 +60,9 @@ export default function TutorResult() {
       )}
 
       {/* CTA 버튼 (딤 위 레이어로 올림) */}
-      <div className={`tres-cta-wrap ${showHint ? "tres-tutorial-alive" : ""}`}>
-        <button type="button" className="tres-cta-btn">플러팅 하기</button>
+      <div className={`tres-cta-wrap ${showHint ? "tres-tutorial-alive" : ""}`}
+      aria-hidden="true">
+        <div className="tres-cta-btn">플러팅 하기</div>
       </div>
 
       {/* 안내 박스 */}

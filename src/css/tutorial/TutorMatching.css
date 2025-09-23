@@ -7,7 +7,7 @@
 }
 
 /* ===== 제목 ===== */
-.matching-title {
+.tur-matching-title {
   background-color: #f9fafb;
   text-align: center;
   padding-top: 5rem;
@@ -16,7 +16,7 @@
 }
 
 /* ===== 루트 ===== */
-.matching-card-root {
+.tur-matching-card-root {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -26,7 +26,7 @@
 }
 
 /* ===== 카드 래퍼 ===== */
-.matching-card-wrap {
+.tur-matching-card-wrap {
   position: relative;
   width: 100%;
   max-width: 40rem;
@@ -37,7 +37,7 @@
 }
 
 /* ===== 슬롯(정적 3장 배치에 사용) ===== */
-.matching-slot {
+.tur-matching-slot {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -49,7 +49,7 @@
 }
 
 /* ===== 카드 ===== */
-.matching-scope .matching-card {
+.tur-matching-scope .tur-matching-card {
   position: relative;
   width: 100%;
   height: 100%;
@@ -68,8 +68,8 @@
 }
 
 /* 배경 별 */
-.matching-scope .matching-card-stars { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.matching-scope .matching-card-stars .matching-star {
+.tur-matching-scope .tur-matching-card-stars { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.tur-matching-scope .tur-matching-card-stars .tur-matching-star {
   position: absolute;
   user-select: none;
   filter: invert(0) saturate(200%) brightness(1.8) contrast(2)
@@ -77,7 +77,7 @@
 }
 
 /* ===== 카드 안쪽 하단 아치 (✅ 복원: z-index 올림) ===== */
-.matching-scope .matching-card .matching-arch{
+.tur-matching-scope .tur-matching-card .tur-matching-arch{
   position: absolute;
   left: 0;
   right: 0;
@@ -90,7 +90,7 @@
 }
 
 /* 아치 내부 텍스트 및 프로필 */
-.matching-scope .matching-arch-content{
+.tur-matching-scope .tur-matching-arch-content{
   position: relative;
   z-index: 3; /* 텍스트는 아치 위 */
   display: flex;
@@ -98,28 +98,28 @@
   align-items: center;
   justify-content: center;
 }
-.matching-scope .matching-arch .matching-msg { white-space: pre-line; }
-.matching-scope .matching-arch-content .matching-name {
+.tur-matching-scope .tur-matching-arch .tur-matching-msg { white-space: pre-line; }
+.tur-matching-scope .tur-matching-arch-content .tur-matching-name {
   margin-top: 11rem;
   font-size: 1.1rem;
   font-weight: 700;
   color:#575757;
 }
-.matching-scope .matching-arch-content .matching-major {
+.tur-matching-scope .tur-matching-arch-content .tur-matching-major {
   margin-top: 0rem;
   margin-bottom: 0.8rem;
   font-size: .75rem;
   font-weight: 200;
   color: #575757;
 }
-.matching-scope .matching-arch-content .matching-msg {
+.tur-matching-scope .tur-matching-arch-content .tur-matching-msg {
   font-size: .8rem;
   font-weight: 100;
   color: #575757;
 }
 
 /* ===== 이미지 ===== */
-.matching-scope .matching-img-frame {
+.tur-matching-scope .tur-matching-img-frame {
   width: 12.5rem;
   height: 12.5rem;
   margin-top: -1rem;
@@ -129,7 +129,7 @@
 }
 
 /* ===== CTA 버튼 영역 ===== */
-.matching-cta-wrap{
+.tur-matching-cta-wrap{
   display: flex;
   justify-content: center;
   position: fixed;
@@ -137,7 +137,7 @@
   left: 0;
   right: 0;
 }
-.matching-cta-btn{
+.tur-matching-cta-btn{
   width: 90vw;
   height: 7vh;
   border: 0;
@@ -149,17 +149,17 @@
   letter-spacing: .2px;
   box-shadow: 0 10px 24px rgba(216,77,174,.28);
 }
-.matching-cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
+.tur-matching-cta-btn:focus-visible { outline: 3px solid rgba(225,91,183,.35); }
 
 /* ===== 모달 딤 + 클릭 차단 (버튼/힌트만 예외, 매칭 전용) ===== */
-.matching-modal-dim{
+.tur-matching-modal-dim{
   position: fixed; inset: 0;
   background: rgba(0,0,0,.45);
   z-index: var(--matching-z-dim);
   pointer-events: auto;
   touch-action: none;
 }
-.matching-click-blocker{
+.tur-matching-click-blocker{
   position: fixed; inset: 0;
   z-index: var(--matching-z-blocker);
   background: transparent;
@@ -168,9 +168,9 @@
 }
 
 /* 버튼/힌트를 딤 위로 올려 클릭 가능하게 */
-.matching-tutorial-alive { position: relative; z-index: var(--matching-z-hint); }
-.matching-cta-wrap.matching-tutorial-alive { z-index: calc(var(--matching-z-hint) + 1); }
-.matching-cta-wrap .matching-cta-btn { 
+.tur-matching-tutorial-alive { position: relative; z-index: var(--matching-z-hint); }
+.tur-matching-cta-wrap.tur-matching-tutorial-alive { z-index: calc(var(--matching-z-hint) + 1); }
+.tur-matching-cta-wrap .tur-matching-cta-btn { 
   position: relative; 
   z-index: calc(var(--matching-z-hint) + 2); 
   pointer-events: none;   /* 비활성 느낌 유지 시 */
@@ -178,13 +178,13 @@
 }
 
 /* ====== 튜토리얼 흰색 박스(말풍선) - 매칭 전용 ====== */
-.matching-hint-wrap{
+.tur-matching-hint-wrap{
   position: relative;
   z-index: var(--matching-z-hint);  /* 딤/블로커보다 위 */
 }
 
 /* ✅ 화면 정중앙 고정 + 팝 애니메이션 */
-.matching-hint{
+.tur-matching-hint{
   position: fixed;
   left: 50%;
   top: 50%;
@@ -199,7 +199,7 @@
 }
 
 /* 🔽 뾰족한 부분(캐럿) — 아래쪽으로 이동 & 가운데 정렬 */
-.matching-hint > .matching-hint-caret{
+.tur-matching-hint > .tur-matching-hint-caret{
   position: absolute;
   top: auto;
   bottom: -6px;               /* 아래로 6px 튀어나오게 */
@@ -208,28 +208,26 @@
   width: 12px; height: 12px;
   background: #fff;
   border-radius: 2px;
-  /* 그림자는 위로 번지게 y값 음수 */
- 
   z-index: 2;
   pointer-events: none;
 }
 
 /* 텍스트 */
-.matching-hint-text{
+.tur-matching-hint-text{
   margin: 0 0 10px;
   font-size: .92rem;
   line-height: 1.55;
   color: #575757;
 }
-.matching-hint-text .matching-hint-em{ color: #e8048d; font-weight: 800; }
+.tur-matching-hint-text .tur-matching-hint-em{ color: #e8048d; font-weight: 800; }
 
 /* 하단 푸터 */
-.matching-hint-footer{
+.tur-matching-hint-footer{
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.matching-hint-next{
+.tur-matching-hint-next{
   border: 0;
   padding: 8px 14px;
   border-radius: 999px;
@@ -240,21 +238,21 @@
   opacity: .92;
   cursor: pointer;
 }
-.matching-hint-next:disabled{ cursor: default; }
-.matching-hint-step{
+.tur-matching-hint-next:disabled{ cursor: default; }
+.tur-matching-hint-step{
   font-size: .86rem;
   color: #575757;
 }
 
 /* 히어로 마진(선택) */
-.matching-hero{ margin-top: -10rem; }
+.tur-matching-hero{ margin-top: -10rem; }
 
 /* ✅ 사용자 모션 선호도 고려 */
 @media (prefers-reduced-motion: reduce){
-  .matching-hint{ animation: none; }
+  .tur-matching-hint{ animation: none; }
 }
 
-/* ✅ 팝 애니메이션 키프레임 */
+/* ✅ 팝 애니메이션 키프레임 (이름 유지) */
 @keyframes matching-hint-pop{
   from{ transform: translate(-50%, calc(50% + 4px)) scale(.98); opacity: 0; }
   to{   transform: translate(-50%, 50%)             scale(1);   opacity: 1; }
@@ -262,7 +260,7 @@
 
 /* 모바일 보정 */
 @media (max-width: 380px){
-  .matching-title{
+  .tur-matching-title{
     padding-top: 2.5rem;
     margin-bottom: -8rem;
   }
@@ -274,14 +272,14 @@
     overscroll-behavior: none;    /* iOS/안드로 밴드 방지 */
   }
   
-  .matching-hint{
+  .tur-matching-hint{
     transform: translate(-50%, 20%);
   }
 
-  .matching-cta-wrap{ bottom: -3vh }
+  .tur-matching-cta-wrap{ bottom: -3vh }
 
   @keyframes matching-hint-pop{
-  from{ transform: translate(-50%, calc(20% + 4px)) scale(.98); opacity: 0; }
-  to{   transform: translate(-50%, 20%)             scale(1);   opacity: 1; }
-}
+    from{ transform: translate(-50%, calc(20% + 4px)) scale(.98); opacity: 0; }
+    to{   transform: translate(-50%, 20%)             scale(1);   opacity: 1; }
+  }
 }
