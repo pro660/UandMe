@@ -4,6 +4,66 @@ import { motion, AnimatePresence } from "framer-motion";
 import "../../css/ranking/Ranking.css";
 import King from "../../image/ranking/king.svg";
 
+/** ===== 더미 데이터 스위치 ===== */
+const USE_DUMMY = true;
+
+/** ===== 더미 데이터 ===== */
+// 학과 - 받은 플러팅
+const DUMMY_DEPT_FLIRT = [
+  { rank: 1, department: "컴퓨터공학과", count: 128, imageUrl: "" },
+  { rank: 2, department: "경영학과", count: 116, imageUrl: "" },
+  { rank: 3, department: "디자인학과", count: 103, imageUrl: "" },
+  { rank: 4, department: "영어영문학과", count: 97, imageUrl: "" },
+  { rank: 5, department: "체육학과", count: 91, imageUrl: "" },
+  { rank: 6, department: "수학과", count: 86, imageUrl: "" },
+  { rank: 7, department: "간호학과", count: 79, imageUrl: "" },
+  { rank: 8, department: "건축학과", count: 71, imageUrl: "" },
+  { rank: 9, department: "화학공학과", count: 66, imageUrl: "" },
+  { rank:10, department: "교육학과", count: 61, imageUrl: "" },
+];
+
+// 학과 - 성사된 매칭
+const DUMMY_DEPT_MATCH = [
+  { rank: 1, department: "디자인학과", count: 74, imageUrl: "" },
+  { rank: 2, department: "컴퓨터공학과", count: 69, imageUrl: "" },
+  { rank: 3, department: "경영학과", count: 67, imageUrl: "" },
+  { rank: 4, department: "간호학과", count: 58, imageUrl: "" },
+  { rank: 5, department: "영어영문학과", count: 55, imageUrl: "" },
+  { rank: 6, department: "체육학과", count: 51, imageUrl: "" },
+  { rank: 7, department: "건축학과", count: 47, imageUrl: "" },
+  { rank: 8, department: "화학공학과", count: 43, imageUrl: "" },
+  { rank: 9, department: "수학과", count: 41, imageUrl: "" },
+  { rank:10, department: "교육학과", count: 39, imageUrl: "" },
+];
+
+// MBTI - 받은 플러팅
+const DUMMY_MBTI_FLIRT = [
+  { rank: 1, mbti: "ENFP", count: 212, imageUrl: "" },
+  { rank: 2, mbti: "ISTJ", count: 198, imageUrl: "" },
+  { rank: 3, mbti: "INFJ", count: 187, imageUrl: "" },
+  { rank: 4, mbti: "INTJ", count: 176, imageUrl: "" },
+  { rank: 5, mbti: "ISFJ", count: 165, imageUrl: "" },
+  { rank: 6, mbti: "ENTJ", count: 158, imageUrl: "" },
+  { rank: 7, mbti: "ESFP", count: 149, imageUrl: "" },
+  { rank: 8, mbti: "INFP", count: 141, imageUrl: "" },
+  { rank: 9, mbti: "ESTP", count: 133, imageUrl: "" },
+  { rank:10, mbti: "ISTP", count: 128, imageUrl: "" },
+];
+
+// MBTI - 성사된 매칭
+const DUMMY_MBTI_MATCH = [
+  { rank: 1, mbti: "INTJ", count: 122, imageUrl: "" },
+  { rank: 2, mbti: "ENFP", count: 119, imageUrl: "" },
+  { rank: 3, mbti: "INFJ", count: 111, imageUrl: "" },
+  { rank: 4, mbti: "ISFJ", count: 106, imageUrl: "" },
+  { rank: 5, mbti: "ENTJ", count: 101, imageUrl: "" },
+  { rank: 6, mbti: "INFP", count: 96,  imageUrl: "" },
+  { rank: 7, mbti: "ISTJ", count: 92,  imageUrl: "" },
+  { rank: 8, mbti: "ESFP", count: 88,  imageUrl: "" },
+  { rank: 9, mbti: "ESTP", count: 84,  imageUrl: "" },
+  { rank:10, mbti: "ISTP", count: 81,  imageUrl: "" },
+];
+
 /** 공통 매핑: 학과 */
 function mapDeptRanking(apiItems = []) {
   return apiItems.slice(0, 10).map((it) => ({
@@ -55,13 +115,29 @@ export default function Ranking({ mode = "dept", onClickTopRight }) {
       setItems([]);
 
       try {
-        const res = await api.get(path, {
-          signal: controller.signal,
-          noAuth: true,
-        });
-        const arr = Array.isArray(res.data) ? res.data : [];
-        const mapped = mode === "dept" ? mapDeptRanking(arr) : mapMbtiRanking(arr);
-        setItems(mapped);
+        if (USE_DUMMY) {
+          // ✅ 더미 데이터 적용
+          const arr =
+            mode === "dept"
+              ? activeTab === "flirt"
+                ? DUMMY_DEPT_FLIRT
+                : DUMMY_DEPT_MATCH
+              : activeTab === "flirt"
+              ? DUMMY_MBTI_FLIRT
+              : DUMMY_MBTI_MATCH;
+
+          const mapped = mode === "dept" ? mapDeptRanking(arr) : mapMbtiRanking(arr);
+          setItems(mapped);
+        } else {
+          // 🔄 실제 API 호출
+          const res = await api.get(path, {
+            signal: controller.signal,
+            noAuth: true,
+          });
+          const arr = Array.isArray(res.data) ? res.data : [];
+          const mapped = mode === "dept" ? mapDeptRanking(arr) : mapMbtiRanking(arr);
+          setItems(mapped);
+        }
       } catch (e) {
         if (!controller.signal.aborted) {
           const msg =
@@ -151,7 +227,7 @@ export default function Ranking({ mode = "dept", onClickTopRight }) {
       {/* ===== 하단: 탭 + 랭킹 리스트 ===== */}
       <AnimatePresence mode="wait">
         <motion.section
-          key={`${mode}-${activeTab}`} 
+          key={`${mode}-${activeTab}`}
           className="rank-list-wrap"
           {...fade}
         >
