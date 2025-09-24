@@ -1,0 +1,218 @@
+/* ===== 레이어 토큰 ===== */
+:root{
+  --tupop-z-dim: 10000;           /* 회색 딤 */
+  --tupop-z-sheet: 10004;         /* 바텀시트 */
+  --tupop-shadow: 0 12px 28px rgba(0,0,0,.18);
+  --tupop-pink-3: #ff69c3;
+  --tupop-pink-4: #e8048d;
+  --tupop-text: #575757;
+  --tuend-side-gap: 16px;
+}
+
+/* ===== 헤더 (헤더 전체는 딤 아래 + 상호작용 차단) ===== */
+.tustr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 9999; /* 딤(10000) 아래 */
+  pointer-events: none;
+}
+.tustr-header .tustr-header-logo img { height: 30px; display: block; }
+
+/* 티켓 아이콘 (하이라이트 제거) */
+.tustr-header .tustr-ticket-icon {
+  height: 28px;
+  display: block;
+}
+
+/* 카운트 박스만 딤 위 */
+.tustr-header-ticket-area { position: relative; }
+.tustr-ticket-count-box {
+  position: fixed;
+  top: 14px;
+  right: 64px;
+  z-index: calc(var(--tupop-z-dim) + 1);
+  pointer-events: none;
+  background: #fff;
+  border-radius: 0.8rem;
+  padding: 0rem 0.5rem;
+  box-shadow: 0 0.2rem 0.4rem rgba(0, 0, 0, 0.1);
+  font-size: 0.8rem;
+  line-height: 0.7;
+}
+.tustr-ticket-label { color: #575757; font-size: 0.5rem; }
+.tustr-ticket-values { font-size: 0.65rem; color: #575757; }
+.tustr-ticket-values .tustr-highlight { color: #E8048D; font-weight: 600; margin: 0 0.2rem; }
+
+/* ===== 배경(상호작용 막음) ===== */
+.tustr-hero,
+.tustr-home-matching-banner,
+.tustr-fli-img,
+.tustr-qanda { pointer-events: none; }
+
+/* ===== Hero Section ===== */
+.tustr-hero {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: #fff2fc;
+  overflow: hidden;
+}
+.tustr-hero-bg {
+  position: absolute;
+  top: 80%;
+  left: 0;
+  width: 100%;
+  height: 90%;
+  background: #fff;
+  border-top-left-radius: 50% 15%;
+  border-top-right-radius: 50% 15%;
+  z-index: 0;
+}
+.tustr-hero-content {
+  position: relative;
+  z-index: 1;
+  margin-top: 4rem;
+  text-align: center;
+  padding: 0 1.5rem;
+}
+.tustr-hero-subtitle {
+  font-size: 1rem !important;
+  font-family: 'Taenada';
+  font-weight: 700;
+  color: #434343;
+  line-height: 1.6;
+  margin-bottom: 3rem;
+}
+.tustr-hero-subtitle .tustr-highlight { color: #e8048d; font-weight: 900; }
+.tustr-hero-logo-img { margin: 0 auto; width: 90%; }
+
+/* ===== 매칭 배너 ===== */
+.tustr-home-matching-banner {
+  position: relative;
+  display: flex;
+  justify-content: center; align-items: center;
+  margin: 2rem auto;
+  max-width: 100%;
+}
+.tustr-matching-banner-img { width: 90%; border-radius: 1rem; display: block; }
+.tustr-matching-banner-text {
+  position: absolute; top: 50%; left: 12%;
+  transform: translateY(-50%); text-align: left; color: #333;
+}
+.tustr-matching-banner-text h2 { font-size: 1.7rem; font-weight: bold; margin-bottom: 3.5rem; }
+.tustr-matching-banner-text p { font-size: 1rem; }
+
+/* ===== 항상 보이는 팝업 ===== */
+.tustr-modal-dim{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: var(--tupop-z-dim);
+  pointer-events: auto;
+  touch-action: none;               /* 모바일 스크롤 차단 */
+}
+.tustr-modal{
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  z-index: var(--tupop-z-modal);
+  pointer-events: none;             /* 카드만 클릭 가능 */
+  margin-top: -10rem;               /* 주어진 값 유지 */
+}
+.tustr-modal-card{
+  pointer-events: auto;
+  width: min(92vw, 360px);
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: var(--tupop-shadow);
+  overflow: hidden;
+}
+
+/* 팝업 헤더 */
+.tustr-modal-header{
+  position: relative;
+  height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid #eee;
+}
+.tustr-modal-title{ font-weight:700; color:#333; font-size:1rem; }
+.tustr-modal-close{
+  position: absolute; right:12px; top:50%; transform:translateY(-50%);
+  width:28px; height:28px; border-radius:50%;
+  display:grid; place-items:center; font-size:20px; line-height:1; color:#888;
+}
+
+/* 팝업 본문 */
+.tustr-modal-body{
+  padding: 30px 50px 30px 50px;
+  text-align: center;
+  color: var(--tupop-text);
+}
+.tustr-avatar{
+  width: 92px; height: 92px; margin: 8px auto 10px;
+  border-radius: 50%; overflow: hidden;
+  background: #fff5fb; border: 1px solid #f3e3ef;
+  display: grid; place-items: center;
+}
+.tustr-avatar img{ width:100%; height:100%; object-fit:cover; }
+.tustr-profile-name{ font-weight:500; margin-top:6px; color: #E8048D; font-size: 1rem; white-space: nowrap; display: flex; justify-content: center; align-items: center; text-align: center;}
+.tustr-question{ margin:40px 0 18px; font-size:0.8rem; font-weight:700; color:#575757; }
+
+.tustr-question .hello{
+    color: #E8048D;
+}
+
+/* 팝업 버튼 */
+.tustr-actions{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  white-space: nowrap;
+}
+.tustr-btn{
+  height: 44px;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: .8rem;
+  letter-spacing: .2px;
+  border: 0;
+  padding: 10px 90px;
+}
+.tustr-btn-ghost{
+  display:flex; justify-content:center; align-items:center; text-align:center;
+  background:#E8048D; color:#fff;
+  margin-top: 2rem;
+}
+
+/* ===== Q&A(레이아웃) ===== */
+.tustr-qanda { display:flex; justify-content:center; align-items:center; margin-top: 1rem; }
+.tustr-qanda-btn{
+  width:85%; min-height:72px; height:10vh; max-height:120px;
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  background: linear-gradient(to right, #FFEDF8 40%, #F6B7DD 100%);
+  color:#575757; border-radius:1.5rem; margin-bottom:10rem; padding:1rem 1.25rem;
+  text-align:left; border:none; cursor:default; font-size:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+.tustr-qanda-btn .tustr-q-title{ line-height:1.2; margin-bottom:.25rem; }
+.tustr-qanda-btn .tustr-q-subtitle{ line-height:1.2; opacity:.85; }
+.tustr-qanda-btn img{ flex:0 0 auto; height:100%; max-height:80px; width:10; margin-left:auto; object-fit:contain; }
+
+/* ===== 데코 이미지 ===== */
+.tustr-fli-img{ display:block; width:90%; margin:0 auto; }
+
+/* ===== 회색 딤 (전체 덮음) ===== */
+.tustr-modal-dim{
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: var(--tupop-z-dim);
+  pointer-events: auto;
+  touch-action: none;
+}

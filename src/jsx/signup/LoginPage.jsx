@@ -164,7 +164,7 @@ export default function LoginOrGate() {
 
   // ✅ 튜토리얼 진입
   const goTutorial = () => {
-    navigate("/tutorial/home");
+    navigate("/tutorial/start");
   };
 
   if (busy) {

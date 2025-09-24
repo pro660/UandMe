@@ -40,7 +40,7 @@ function TutorPopup() {
   }, []);
 
   // ✅ 이동할 경로(원하는 경로로 바꿔 쓰세요)
-  const NEXT_ROUTE = "/tutorial/8";
+  const NEXT_ROUTE = "/tutorial/7";
 
   const navigate = useNavigate();
 

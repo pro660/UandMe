@@ -30,11 +30,13 @@ import TutorResult from "./jsx/tutorial/TutorResult.jsx";
 import TutorFli from "./jsx/tutorial/TutorFli.jsx"
 import TutorPopup from "./jsx/tutorial/TutorPopup.jsx";
 import TutorCount from "./jsx/tutorial/TutorCount.jsx";
+import TutorEnd from "./jsx/tutorial/TutorEnd.jsx"
+import TutorStart from "./jsx/tutorial/TutorStart.jsx";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
-  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage","/tutorial/result", "/tutorial/8"];
+  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage","/tutorial/result", "/tutorial/7","/tutorial/end"];
   const shouldHide =
     hiddenPaths.includes(location.pathname) ||
     location.pathname.startsWith("/chat/");
@@ -132,12 +134,14 @@ function AppRouter() {
           <Route path="/ranking/dept" element={<RankingDeptPage />} />
           <Route path="/ranking/mbti" element={<RankingMbtiPage />} />
 
-          <Route path="/tutorial/home" element={<TutorHome />} />
-          <Route path="/tutorial/matching" element={<TutorMatching />} />
-          <Route path="/tutorial/result" element={<TutorResult />} />
-          <Route path="/tutorial/flirting" element={<TutorFli />} />
+          <Route path="/tutorial/2" element={<TutorHome />} />
+          <Route path="/tutorial/3" element={<TutorMatching />} />
+          <Route path="/tutorial/4" element={<TutorResult />} />
+          <Route path="/tutorial/5" element={<TutorFli />} />
           <Route path="/tutorial/6" element={<TutorPopup /> } />
-          <Route path="/tutorial/8" element={<TutorCount/> } />
+          <Route path="/tutorial/7" element={<TutorCount/> } />
+          <Route path="/tutorial/end" element={<TutorEnd/> } />
+          <Route path="/tutorial/start" element={<TutorStart/> } />
         </Routes>
       </Layout>
     </BrowserRouter>

@@ -16,7 +16,7 @@ export default function TutorMatching() {
   const navigate = useNavigate();   // ✅ 라우터 네비게이트 훅
 
   const handleNext = () => {
-    navigate("/tutorial/result");   // ✅ 원하는 경로로 이동
+    navigate("/tutorial/4");   // ✅ 원하는 경로로 이동
   };
 
   const CardBodyDemo = ({ name, department, introduce }) => (

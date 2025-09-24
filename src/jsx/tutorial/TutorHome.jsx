@@ -10,7 +10,7 @@ function TutorHome() {
   const navigate = useNavigate();   // ✅ 훅 사용
 
   const handleNext = () => {
-    navigate("/tutorial/matching");       // ✅ 원하는 튜토리얼 페이지 경로
+    navigate("/tutorial/3");       // ✅ 원하는 튜토리얼 페이지 경로
   };
 
   return (

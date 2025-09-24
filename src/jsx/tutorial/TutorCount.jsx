@@ -1,4 +1,3 @@
-// src/components/tutorial/TutorCount.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../css/tutorial/TutorCount.css";
@@ -9,7 +8,7 @@ import QandA from "../../image/home/q&a.svg";
 import TutorfliImg from "../../image/tutorial/fli.svg";
 
 function TutorCount() {
-  const NEXT_ROUTE = "/tutorial/7";
+  const NEXT_ROUTE = "/tutorial/end";
   const navigate = useNavigate();
 
   // ✅ 이 페이지에서만 배경 스크롤 방지
@@ -26,22 +25,19 @@ function TutorCount() {
 
   const TUTORIAL_STEPS = [
     <>매칭하기 및 플러팅 횟수는 이곳에서 확인 가능하며, 첫시작 혜택으로  <b>기본 3회</b>씩 제공됩니다.</>,
-    <>‘거절’을 누르면 해당 상대의 프로필은 더 이상 표시되지 않습니다.<br /><b>신중하게 선택해 주세요.</b></>,
+    <>매칭 및 플러팅의 기회를 늘리고 싶다면, 축제날<br /><b>‘멋쟁이 사자처럼’</b>부스에서 쿠폰을 발급받으세요.</>,
   ];
 
-  // ✅ 캐럿 위치(카드 내부 기준)
+  // 카드 내부 캐럿 위치
   const CARET_POS = [
     { top: -6, left: 260 },
-    { top: -6, left: 330 },
+    { top: 105, left: 40 },
   ];
 
-  // ✅ 모달(카드) 위치 — 단계별로 쉽게 수정 가능
-  // top/left/transform/정렬(padding) 등을 단계별로 지정하세요.
+  // ✅ 단계별 상단 위치와 가로 정렬만 지정 (좌/우 여백은 CSS에서 공통으로 관리)
   const TUTORIAL_PLACEMENTS = [
-    // step 1: 화면 상단 중앙
-    { top: "10%", left: "50%", transform: "translateX(-50%)", justify: "center" },
-    // step 2: 헤더 높이 근처, 화면 오른쪽(티켓 아이콘 쪽)
-    { top: "64px", left: "0", transform: "none", justify: "flex-end", pr: "16px" },
+    { top: "10%", justify: "center" },   // step 1: 가운데
+    { top: "33%", justify: "center" },   // step 2: 가운데(요청 코드 유지)
   ];
 
   const [stepIdx, setStepIdx] = useState(0);
@@ -52,13 +48,15 @@ function TutorCount() {
     else navigate(NEXT_ROUTE);
   };
 
+  // 두 번째 단계부터 티켓 글로우
+  const showGlow = stepIdx >= 1;
+
+  // ✅ 바텀시트 표시 여부 (요청사항)
+  const showSheet = stepIdx === 1;
+
   const wrapStyle = {
     top: TUTORIAL_PLACEMENTS[stepIdx]?.top,
-    left: TUTORIAL_PLACEMENTS[stepIdx]?.left,
-    transform: TUTORIAL_PLACEMENTS[stepIdx]?.transform,
     justifyContent: TUTORIAL_PLACEMENTS[stepIdx]?.justify,
-    paddingRight: TUTORIAL_PLACEMENTS[stepIdx]?.pr || 0,
-    paddingLeft: TUTORIAL_PLACEMENTS[stepIdx]?.pl || 0,
   };
 
   return (
@@ -80,8 +78,12 @@ function TutorCount() {
             </p>
           </div>
 
-          {/* 티켓 아이콘: 은은한 핑크 글로우 애니메이션 */}
-          <img src={TicketLogo} alt="Ticket Icon" className="tuhead-ticket-icon" />
+          {/* 티켓 아이콘: 글로우는 '다음' 누른 뒤(stepIdx>=1)부터 */}
+          <img
+            src={TicketLogo}
+            alt="Ticket Icon"
+            className={`tuhead-ticket-icon ${showGlow ? "tuhead-glow" : ""}`}
+          />
         </div>
       </header>
 
@@ -124,7 +126,28 @@ function TutorCount() {
       {/* 회색 딤 (전체 덮음) */}
       <div className="tucount-modal-dim" aria-hidden="true" />
 
-      {/* 튜토리얼 모달 — 단계별 위치 적용 */}
+      {/* ✅ 바텀시트: stepIdx === 1 일 때만 렌더 */}
+      {showSheet && (
+        <aside className="tucount-sheet" aria-label="쿠폰 등록 바텀시트">
+          <div className="tucount-sheet-inner">
+            <div className="tucount-sheet-handle" aria-hidden="true" />
+            <h3 className="tucount-sheet-title">쿠폰 등록하기</h3>
+            <div className="tucount-sheet-input">
+              <span className="tucount-sheet-placeholder">인증번호 입력하기</span>
+            </div>
+
+            <ul className="tucount-sheet-bullets">
+              <li>
+                더 많은 만남을 원하신다면, 축제날 <b>‘멋쟁이 사자처럼’</b> 부스를
+                방문해 음료와 함께 <b>특별한 쿠폰</b>을 받아보세요.
+              </li>
+              <li>매칭과 플러팅 기회를 더할 번쩍 더 드립니다.</li>
+            </ul>
+          </div>
+        </aside>
+      )}
+
+      {/* 튜토리얼 모달 — 좌/우 공통 여백 유지 + 단계별 가로 정렬/높이 보존 */}
       <div className="tucount-tutorial-wrap" role="note" aria-live="polite" style={wrapStyle}>
         <div className="tucount-tutorial">
           <span
@@ -136,7 +159,7 @@ function TutorCount() {
 
           <div className="tucount-tutorial-footer">
             <button type="button" className="tucount-tutorial-next" onClick={handleNext}>
-              {isLast ? "완료" : "다음"}
+              {isLast ? "다음" : "다음"}
             </button>
             <div className="tucount-tutorial-step">
               {stepIdx + 7}/{TUTORIAL_STEPS.length + 6}

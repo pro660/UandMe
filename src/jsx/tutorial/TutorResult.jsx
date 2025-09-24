@@ -47,7 +47,7 @@ export default function TutorResult() {
                   className="tres-hint-close"
                   onClick={() => {
                     setShowHint(false);
-                    navigate("/tutorial/flirting"); // ✅ 경로 오타 수정
+                    navigate("/tutorial/5"); // ✅ 경로 오타 수정
                   }}  
                 >
                   다음

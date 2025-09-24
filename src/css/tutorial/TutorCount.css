@@ -2,11 +2,12 @@
 :root{
   --tupop-z-dim: 10000;           /* 회색 딤 */
   --tupop-z-modal: 10002;         /* 튜토리얼 모달 (딤보다 위) */
+  --tupop-z-sheet: 10004;         /* 바텀시트 */
   --tupop-shadow: 0 12px 28px rgba(0,0,0,.18);
   --tupop-pink-3: #ff69c3;
   --tupop-pink-4: #e8048d;
   --tupop-text: #575757;
-  --tupop-tutorial-offset: 230px; /* 사용 안해도 무방(유지) */
+  --tucount-side-gap: 16px;       /* 모달 좌/우 공통 여백 */
 }
 
 /* ===== 헤더 (헤더 전체는 딤 아래 + 상호작용 차단) ===== */
@@ -19,33 +20,31 @@
   background-color: #fff;
   position: sticky;
   top: 0;
-  z-index: calc(var(--tupop-z-dim) - 1); /* ✅ 9999: 딤(10000) 아래 */
-  pointer-events: none; /* 헤더 전체 상호작용 차단 */
+  z-index: 10001; /* 딤(10000) 아래 */
+  pointer-events: none;
 }
+.tuhead-header .tuhead-header-logo img { height: 30px; display: block; }
 
-.tuhead-header .tuhead-header-logo img {
-  height: 30px;
-  display: block;
-}
-
-/* 티켓 아이콘: 은은한 핑크 글로우 */
+/* 티켓 아이콘 기본 */
 .tuhead-header .tuhead-ticket-icon {
   height: 28px;
   display: block;
-  filter: drop-shadow(0 0 0 rgba(232, 4, 141, 0));  /* 초기값 */
+  filter: drop-shadow(0 0 0 rgba(232, 4, 141, 0));
+}
+/* '다음' 후 글로우 */
+.tuhead-header .tuhead-ticket-icon.tuhead-glow {
   animation: tuheadGlow 2.2s ease-in-out infinite;
   will-change: filter;
 }
 
-/* ✅ 이 상자만 회색 딤 '위'로 띄워 원래 색 유지 (모달보다 아래) */
+/* 카운트 박스만 딤 위 */
 .tuhead-header-ticket-area { position: relative; }
-
 .tuhead-ticket-count-box {
-  position: fixed; /* 뷰포트 기준 */
-  top: 14px;       /* 헤더 높이에 맞춰 위치 */
-  right: 64px;     /* 티켓 아이콘 자리 */
-  z-index: calc(var(--tupop-z-dim) + 1); /* ✅ 10001: 딤 위, 모달 아래 */
-  pointer-events: none; /* 시각만 노출, 클릭 불가 */
+  position: fixed;
+  top: 14px;
+  right: 64px;
+  z-index: calc(var(--tupop-z-dim) + 1);
+  pointer-events: none;
   background: #fff;
   border-radius: 0.8rem;
   padding: 0rem 0.5rem;
@@ -53,76 +52,28 @@
   font-size: 0.8rem;
   line-height: 0.7;
 }
-
 .tuhead-ticket-label { color: #575757; font-size: 0.5rem; }
 .tuhead-ticket-values { font-size: 0.65rem; color: #575757; }
-.tuhead-ticket-values .tuhead-highlight {
-  color: #E8048D;
-  font-weight: 600;
-  margin: 0 0.2rem;
-}
+.tuhead-ticket-values .tuhead-highlight { color: #E8048D; font-weight: 600; margin: 0 0.2rem; }
 
 /* ===== 배경(상호작용 막음) ===== */
 .tucount-hero,
 .tucount-home-matching-banner,
 .tucount-fli-img,
-.tucount-qanda {
-  pointer-events: none;
-}
+.tucount-qanda { pointer-events: none; }
 
 /* ===== Hero Section ===== */
-.tucount-hero {
-  position: relative;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  background: #fff2fc;
-  overflow: hidden;
-}
-.tucount-hero-bg {
-  position: absolute;
-  top: 80%;
-  left: 0;
-  width: 100%;
-  height: 90%;
-  background: #fff;
-  border-top-left-radius: 50% 15%;
-  border-top-right-radius: 50% 15%;
-  z-index: 0;
-}
-.tucount-hero-content {
-  position: relative;
-  z-index: 1;
-  margin-top: 4rem;
-  text-align: center;
-  padding: 0 1.5rem;
-}
-.tucount-hero-subtitle {
-  font-size: 1rem !important;
-  font-family: 'Taenada';
-  font-weight: 700;
-  color: #434343;
-  line-height: 1.6;
-  margin-bottom: 3rem;
-}
+.tucount-hero { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: #fff2fc; overflow: hidden; }
+.tucount-hero-bg { position: absolute; top: 80%; left: 0; width: 100%; height: 90%; background: #fff; border-top-left-radius: 50% 15%; border-top-right-radius: 50% 15%; z-index: 0; }
+.tucount-hero-content { position: relative; z-index: 1; margin-top: 4rem; text-align: center; padding: 0 1.5rem; }
+.tucount-hero-subtitle { font-size: 1rem !important; font-family: 'Taenada'; font-weight: 700; color: #434343; line-height: 1.6; margin-bottom: 3rem; }
 .tucount-hero-subtitle .tucount-highlight { color: #e8048d; font-weight: 900; }
 .tucount-hero-logo-img { margin: 0 auto; width: 90%; }
 
 /* ===== 매칭 배너 ===== */
-.tucount-home-matching-banner {
-  position: relative;
-  display: flex;
-  justify-content: center; align-items: center;
-  margin: 2rem auto;
-  max-width: 100%;
-}
+.tucount-home-matching-banner { position: relative; display: flex; justify-content: center; align-items: center; margin: 2rem auto; max-width: 100%; }
 .tucount-matching-banner-img { width: 90%; border-radius: 1rem; display: block; }
-.tucount-matching-banner-text {
-  position: absolute; top: 50%; left: 12%;
-  transform: translateY(-50%); text-align: left; color: #333;
-}
+.tucount-matching-banner-text { position: absolute; top: 50%; left: 12%; transform: translateY(-50%); text-align: left; color: #333; }
 .tucount-matching-banner-text h2 { font-size: 1.7rem; font-weight: bold; margin-bottom: 3.5rem; }
 .tucount-matching-banner-text p { font-size: 1rem; }
 
@@ -143,30 +94,46 @@
 .tucount-fli-img{ display:block; width:90%; margin:0 auto; }
 
 /* ===== 회색 딤 (전체 덮음) ===== */
-.tucount-modal-dim{
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
-  z-index: var(--tupop-z-dim); /* 10000 */
-  pointer-events: auto;
-  touch-action: none;
-}
+.tucount-modal-dim{ position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: var(--tupop-z-dim); pointer-events: auto; touch-action: none; }
 
-/* ===== 튜토리얼 모달 (기본값은 중앙, inline style로 단계별 재배치) ===== */
+/* ===== 바텀시트 (고정, 절반 높이, 화면 하단) ===== */
+.tucount-sheet{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: clamp(260px, 50vh, 440px);
+  z-index: var(--tupop-z-sheet);
+  display: grid; place-items: stretch;
+  pointer-events: none;
+}
+.tucount-sheet-inner{
+  background: #fff;
+  border-top-left-radius: 20px; border-top-right-radius: 20px;
+  box-shadow: 0 -8px 20px rgba(0,0,0,0.18);
+  padding: 14px 16px 20px;
+  pointer-events: none;
+}
+.tucount-sheet-handle{ width: 40px; height: 4px; background: #e5e5e5; border-radius: 999px; margin: 4px auto 10px; }
+.tucount-sheet-title{ font-size: 0.95rem; font-weight: 700; color: #3d3d3d; margin: 6px 4px 10px; }
+.tucount-sheet-input{ height: 44px; border-radius: 999px; border: 1px solid #e6e6e6; background: #fff; display: flex; align-items: center; padding: 0 14px; margin: 0 4px 12px; }
+.tucount-sheet-placeholder{ font-size: 0.9rem; color: #b0b0b0; }
+.tucount-sheet-bullets{ list-style: disc; margin: 10px 0 0 22px; padding: 0 8px 0 0; color: #7a7a7a; font-size: 0.82rem; line-height: 1.55; }
+.tucount-sheet-bullets b{ color:#3d3d3d; }
+
+/* ===== 튜토리얼 모달 — 좌/우 공통 여백 + 단계별 가로 정렬 보존 ===== */
 .tucount-tutorial-wrap{
   position: fixed;
-  left: 50%;
-  top: 10%;
-  transform: translateX(-50%);
+  left: 0; right: 0;
+  padding-inline: var(--tucount-side-gap);
   width: 100%;
   display: flex;
-  justify-content: center;
-  z-index: var(--tupop-z-modal); /* 10002 */
+  z-index: var(--tupop-z-modal);
   pointer-events: none;
+  transform: none;
 }
 .tucount-tutorial{
   pointer-events: auto;
   position: relative;
-  width: min(92vw, 360px);
+  width: min(100%, 360px);
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(0,0,0,.22);
@@ -175,57 +142,31 @@
   animation: tupop-tutorial-pop .18s ease-out;
   will-change: transform, opacity;
 }
-.tucount-tutorial-caret{
-  position: absolute;
-  top: -6px;
-  left: 16px;
-  width: 12px; height: 12px;
-  background: #fff;
-  transform: rotate(45deg);
-  border-radius: 2px;
-}
-.tucount-tutorial-text{
-  margin: 0 0 10px;
-  font-size: .92rem;
-  line-height: 1.55;
-}
+.tucount-tutorial-caret{ position: absolute; top: -6px; left: 16px; width: 12px; height: 12px; background: #fff; transform: rotate(45deg); border-radius: 2px; }
+.tucount-tutorial-text{ margin: 0 0 10px; font-size: .92rem; line-height: 1.55; }
 .tucount-tutorial-text b{ color:#E8048D; }
-.tucount-tutorial-footer{
-  display: flex;
-  align-items: center;
-  justify-content: space_between;
-  margin-top: 8px;
-}
-.tucount-tutorial-next{
-  border: 0;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #FF69C3;
-  color: #fff;
-  font-weight: 700;
-  font-size: .9rem;
-  line-height: 1;
-  cursor: pointer;
-}
+.tucount-tutorial-footer{ display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.tucount-tutorial-next{ border: 0; padding: 8px 14px; border-radius: 999px; background: #FF69C3; color: #fff; font-weight: 700; font-size: .9rem; line-height: 1; cursor: pointer; }
 .tucount-tutorial-step{ font-size: .86rem; color:#8a8a8a; }
 
 /* 튜토리얼 등장 애니메이션 */
 @keyframes tupop-tutorial-pop{
-  from{ transform: translateY(6px) scale(.98); opacity: 0; }
-  to{   transform: translateY(0)   scale(1);   opacity: 1; }
+  from{ opacity: 0; transform: translateY(6px) scale(.98); }
+  to  { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-/* 티켓 글로우 애니메이션 */
+/* 티켓 글로우 */
 @keyframes tuheadGlow {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(232, 4, 141, 0)); }
-  50%      { filter: drop-shadow(0 0 16px rgba(232, 4, 141, 0.55)); }
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(232, 4, 141, 0.1)); }
+  50%      { filter: drop-shadow(0 0 18px rgba(255, 0, 0, 0.9)); }
 }
+.tuhead-header .tuhead-ticket-icon.tuhead-glow { animation: tuheadGlow 2.2s ease-in-out infinite; will-change: filter; }
 
 @media (prefers-reduced-motion: reduce){
   .tucount-tutorial{ animation: none; }
-  .tuhead-header .tuhead-ticket-icon{ animation: none; }
+  .tuhead-header .tuhead-ticket-icon.tuhead-glow{ animation: none; }
 }
 
 @media (max-width: 380px){
-  .tucount-tutorial-text { font-size: .88rem; }
+  .tucount-tutorial-wrap{ margin-top: -2rem; }
 }
