@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ 추가
 import "../../css/tutorial/TutorPopup.css";
 import Logo from "../../image/loginPage/logo.svg";
 import MatchingBanner from "../../image/home/match.svg";
@@ -7,25 +8,63 @@ import TutorfliImg from "../../image/tutorial/fli.svg";
 import DogImg from "../../image/tutorial/dog.svg";
 
 function TutorPopup() {
-  // ✅ 튜토리얼 문구들 (원하시는 문구로 자유롭게 수정)
+  // ✅ 이 컴포넌트가 떠 있는 동안만 배경 스크롤 잠금 (iOS 대응 포함)
+  useEffect(() => {
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      overscrollBehavior: body.style.overscrollBehavior,
+      touchAction: body.style.touchAction,
+    };
+    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    body.style.touchAction = "none";
+
+    return () => {
+      body.style.position = prev.position || "";
+      body.style.top = prev.top || "";
+      body.style.width = prev.width || "";
+      body.style.overflow = prev.overflow || "";
+      body.style.overscrollBehavior = prev.overscrollBehavior || "";
+      body.style.touchAction = prev.touchAction || "";
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  // ✅ 이동할 경로(원하는 경로로 바꿔 쓰세요)
+  const NEXT_ROUTE = "/tutorial/8";
+
+  const navigate = useNavigate();
+
+  // ✅ 튜토리얼 문구들
   const TUTORIAL_STEPS = [
     <>플러팅 '수락' 시 <b>매칭이 성사</b>되며, 상대방과의 채팅방이 활성화되어 대화를 시작할 수 있습니다.</>,
     <>‘거절’을 누르면 해당 상대의 프로필은 더 이상 표시되지 않습니다.<br /><b>신중하게 선택해 주세요.</b></>,
   ];
 
-  // ✅ 캐럿 위치를 단계별로 제어 (left만 사용해 위치 변경)
+  // ✅ 캐럿 위치(단계별)
   const CARET_POS = [
-    { top: -6, left: 260 },  // step 5 (현재 시작점)
-    { top: -6, left: 90 },   // step 6
+    { top: -6, left: 260 }, // step 1
+    { top: -6, left: 90 },  // step 2
   ];
 
-  // ✅ 5번째 문구(인덱스 4)부터 시작
   const [stepIdx, setStepIdx] = useState(0);
+  const isLast = stepIdx >= TUTORIAL_STEPS.length - 1;
 
   const handleNext = () => {
-    setStepIdx((prev) =>
-      prev < TUTORIAL_STEPS.length - 1 ? prev + 1 : prev
-    );
+    if (!isLast) {
+      setStepIdx((prev) => prev + 1);
+    } else {
+      navigate(NEXT_ROUTE); // ✅ 마지막 단계에서 이동
+    }
   };
 
   return (
@@ -102,7 +141,7 @@ function TutorPopup() {
       {/* ===== 팝업 아래 튜토리얼 모달 ===== */}
       <div className="tupop-tutorial-wrap" role="note" aria-live="polite">
         <div className="tupop-tutorial">
-          {/* 캐럿: 단계별 위치 적용 (inline style이 CSS보다 우선) */}
+          {/* 캐럿: 단계별 위치 적용 */}
           <span
             className="tupop-tutorial-caret"
             aria-hidden="true"
@@ -120,9 +159,8 @@ function TutorPopup() {
               type="button"
               className="tupop-tutorial-next"
               onClick={handleNext}
-              disabled={stepIdx >= TUTORIAL_STEPS.length - 1}
             >
-              다음
+              {isLast ? "다음" : "다음"}
             </button>
             <div className="tupop-tutorial-step">
               {stepIdx + 5}/{TUTORIAL_STEPS.length + 6}

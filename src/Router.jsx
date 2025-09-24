@@ -29,11 +29,12 @@ import TutorMatching from "./jsx/tutorial/TutorMatching.jsx";
 import TutorResult from "./jsx/tutorial/TutorResult.jsx";
 import TutorFli from "./jsx/tutorial/TutorFli.jsx"
 import TutorPopup from "./jsx/tutorial/TutorPopup.jsx";
+import TutorCount from "./jsx/tutorial/TutorCount.jsx";
 
 // 레이아웃 컴포넌트
 function Layout({ children }) {
   const location = useLocation();
-  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage","/tutorial/result"];
+  const hiddenPaths = ["/login", "/infoform", "/result", "/qpage","/tutorial/result", "/tutorial/8"];
   const shouldHide =
     hiddenPaths.includes(location.pathname) ||
     location.pathname.startsWith("/chat/");
@@ -135,7 +136,8 @@ function AppRouter() {
           <Route path="/tutorial/matching" element={<TutorMatching />} />
           <Route path="/tutorial/result" element={<TutorResult />} />
           <Route path="/tutorial/flirting" element={<TutorFli />} />
-          <Route path="/tutorial/6" element={<TutorPopup />} />
+          <Route path="/tutorial/6" element={<TutorPopup /> } />
+          <Route path="/tutorial/8" element={<TutorCount/> } />
         </Routes>
       </Layout>
     </BrowserRouter>

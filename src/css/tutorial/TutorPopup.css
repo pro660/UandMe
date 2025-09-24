@@ -12,10 +12,7 @@
 }
 
 /* ===== 페이지 스크롤/상호작용 잠금 ===== */
-html, body {
-  height: 100svh;
-  overflow: hidden;                /* 스크롤 불가 */
-}
+
 .tupop-hero,
 .tupop-home-matching-banner,
 .tupop-fli-img,
