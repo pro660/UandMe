@@ -1,3 +1,4 @@
+/* TutorCount.jsx */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../css/tutorial/TutorCount.css";
@@ -37,7 +38,7 @@ function TutorCount() {
   // ✅ 단계별 상단 위치와 가로 정렬만 지정 (좌/우 여백은 CSS에서 공통으로 관리)
   const TUTORIAL_PLACEMENTS = [
     { top: "10%", justify: "center" },   // step 1: 가운데
-    { top: "33%", justify: "center" },   // step 2: 가운데(요청 코드 유지)
+    { top: "20%", justify: "center" },   // step 2: 가운데
   ];
 
   const [stepIdx, setStepIdx] = useState(0);
@@ -51,7 +52,7 @@ function TutorCount() {
   // 두 번째 단계부터 티켓 글로우
   const showGlow = stepIdx >= 1;
 
-  // ✅ 바텀시트 표시 여부 (요청사항)
+  // ✅ 바텀시트 표시 여부
   const showSheet = stepIdx === 1;
 
   const wrapStyle = {
@@ -147,8 +148,14 @@ function TutorCount() {
         </aside>
       )}
 
-      {/* 튜토리얼 모달 — 좌/우 공통 여백 유지 + 단계별 가로 정렬/높이 보존 */}
-      <div className="tucount-tutorial-wrap" role="note" aria-live="polite" style={wrapStyle}>
+      {/* ✅ 튜토리얼 모달 — 좌/우 공통 여백 유지 + 단계별 가로 정렬/높이 보존
+          ⬇ stepIdx===1 때 전용 클래스 추가 (모바일에서 위치만 살짝 위로) */}
+      <div
+        className={`tucount-tutorial-wrap ${stepIdx === 1 ? "tucount-step-2" : ""}`}
+        role="note"
+        aria-live="polite"
+        style={wrapStyle}
+      >
         <div className="tucount-tutorial">
           <span
             className="tucount-tutorial-caret"

@@ -133,7 +133,8 @@ function AppRouter() {
           <Route path="/ranking" element={<Navigate to="/ranking/dept" replace />} />
           <Route path="/ranking/dept" element={<RankingDeptPage />} />
           <Route path="/ranking/mbti" element={<RankingMbtiPage />} />
-
+          
+          <Route path="/tutorial/start" element={<TutorStart/> } />
           <Route path="/tutorial/2" element={<TutorHome />} />
           <Route path="/tutorial/3" element={<TutorMatching />} />
           <Route path="/tutorial/4" element={<TutorResult />} />
@@ -141,7 +142,6 @@ function AppRouter() {
           <Route path="/tutorial/6" element={<TutorPopup /> } />
           <Route path="/tutorial/7" element={<TutorCount/> } />
           <Route path="/tutorial/end" element={<TutorEnd/> } />
-          <Route path="/tutorial/start" element={<TutorStart/> } />
         </Routes>
       </Layout>
     </BrowserRouter>

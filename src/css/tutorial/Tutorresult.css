@@ -1,3 +1,4 @@
+/* TutorResult.css */
 :root{
   --tres-pink-1:#ffd7ee;
   --tres-pink-2:#f7b3d6;
@@ -80,13 +81,13 @@
   box-shadow:0 10px 24px rgba(216,77,174,.28);
   pointer-events:none;                /* ✅ 버튼도 클릭 통과 */
   user-select:none;
-  bottom: 330px;
+  top: 8rem;
 }
 
 /* 튜토리얼 중 CTA는 화면 하단 '시각용' 고정 + 클릭 통과 */
 .tres-tutorial-alive{
   position:fixed;
-  left:0; right:0; bottom:8vh;
+  left:0; right:0; bottom:35vh;
   top:auto;                           /* ✅ fixed일 때 top 초기화 */
   margin:0 auto;
   display:flex; justify-content:center;
@@ -97,6 +98,12 @@
   position:relative;
   z-index:calc(var(--tres-z-cta) + 1);
   pointer-events:none;
+}
+
+.tres-hint-close{
+  display: flex;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 /* 스텝 표시 */
@@ -191,13 +198,18 @@
   to   { transform: translateY(0)   scale(1);   opacity:1; }
 }
 
-/* 모바일 보정 */
 @media (max-width:380px){
-  .tres-hint-wrap{ top:45vh; }
+  .tres-hint-wrap{ top:57vh; }
   .tres-hint-text{ font-size:0.9rem; }
 
-  /* ✅ 과거 코드의 top 덮어쓰기 방지: CTA는 항상 클릭 통과 + top 초기화 */
-  .tres-cta-wrap{ top:auto !important; }
+  /* ▼ 플러팅 버튼(CTA) 위치를 화면 하단으로 더 내리기 */
+  .tres-tutorial-alive{
+    bottom: 14vh; /* 기존 8vh → 더 아래(하단에 더 붙음) */
+  }
+  /* 혹시 기존 코드에서 top이 남아 있을 수 있어 확실히 제거 */
+  .tres-cta-wrap{
+    top: auto !important;
+  }
 
   .tres-hint-close{
     font-size:.8rem;
@@ -209,4 +221,10 @@
     padding:7px 15px;
   }
   .tres-step{ margin-left:12rem; }
+}
+
+@media (min-width: 430px){
+  .tres-tutorial-alive{
+    bottom: 40vh;
+  }
 }

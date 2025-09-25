@@ -1,3 +1,4 @@
+/* TutorCount.css */
 /* ===== 레이어 토큰 ===== */
 :root{
   --tupop-z-dim: 10000;           /* 회색 딤 */
@@ -149,6 +150,7 @@
 .tucount-tutorial-next{ border: 0; padding: 8px 14px; border-radius: 999px; background: #FF69C3; color: #fff; font-weight: 700; font-size: .9rem; line-height: 1; cursor: pointer; }
 .tucount-tutorial-step{ font-size: .86rem; color:#8a8a8a; }
 
+
 /* 튜토리얼 등장 애니메이션 */
 @keyframes tupop-tutorial-pop{
   from{ opacity: 0; transform: translateY(6px) scale(.98); }
@@ -167,6 +169,14 @@
   .tuhead-header .tuhead-ticket-icon.tuhead-glow{ animation: none; }
 }
 
+/* ===== 모바일(≤380px) 보정 ===== */
 @media (max-width: 380px){
-  .tucount-tutorial-wrap{ margin-top: -2rem; }
+  /* 기존 모바일 위치 보정이 있다면 유지/조정 */
+  .tucount-tutorial-wrap{ margin-top: 2rem; }
+
+  /* ✅ 두 번째 스텝(stepIdx === 1)일 때만 모달을 위로 살짝 올림 */
+  .tucount-tutorial-wrap.tucount-step-2{
+    top: 18% !important;   /* 기본 33% → 26%로 살짝 위로 */
+    margin-top: 0 !important;
+  }
 }

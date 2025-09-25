@@ -1,5 +1,7 @@
-import React from "react";
+/* TutorFli.jsx */
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
 import "../../css/tutorial/TutorFli.css";
 import Logo from "../../image/loginPage/logo.svg";
 import TutorMatchImg from "../../image/tutorial/tutormatch.svg";
@@ -7,6 +9,18 @@ import FliImg from "../../image/tutorial/fli.svg";
 
 function TutorFli() {
   const navigate = useNavigate();
+
+  // ✅ 이 페이지에서만 스크롤 방지
+  useEffect(() => {
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
 
   const handleNext = () => {
     navigate("/tutorial/6"); // 원하는 튜토리얼 페이지 경로

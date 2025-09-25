@@ -162,11 +162,6 @@ export default function LoginOrGate() {
     window.location.assign(url);
   };
 
-  // ✅ 튜토리얼 진입
-  const goTutorial = () => {
-    navigate("/tutorial/start");
-  };
-
   if (busy) {
     return (
       <main className="login-root" role="main" style={{ padding: 24 }}>
@@ -205,30 +200,19 @@ export default function LoginOrGate() {
             </svg>
             카카오로 시작하기
           </button>
-        </div>
 
-        {/* ✅ 튜토리얼 버튼 — 핑크 카드 내부 */}
-        <div className="extra-actions" style={{ marginTop: 12 }}>
+          {/* ✅ 튜토리얼로 이동 버튼 */}
           <button
             type="button"
             className="tutorial-btn"
-            onClick={goTutorial}
-            style={{
-              width: "100%",
-              height: 48,
-              borderRadius: 10,
-              border: "1.5px solid #E8048D",
-              background: "#fff",
-              color: "#E8048D",
-              fontWeight: 700,
-            }}
+            onClick={() => navigate("/tutorial/start")}
           >
             튜토리얼 시작하기
           </button>
         </div>
+        {/* Q&A 버튼 */}
       </section>
 
-      {/* FAQ 버튼 섹션 (핑크 카드 밖, 기존 그대로) */}
       <section className="QandA">
         <button
           className="QandA-btn"
@@ -236,10 +220,7 @@ export default function LoginOrGate() {
           type="button"
         >
           <div className="QandA-text">
-            <div
-              className="Q-title"
-              style={{ fontSize: "20px", fontWeight: "bold" }}
-            >
+            <div className="Q-title" style={{ fontSize: "20px", fontWeight: "bold" }}>
               FAQ
             </div>
             <div className="Q-subtitle" style={{ fontSize: "14px" }}>

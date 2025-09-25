@@ -1,3 +1,4 @@
+// src/jsx/matching/Card.jsx
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios.js";
@@ -25,7 +26,6 @@ const normalizeList = (data) => {
 };
 
 export default function Card({ initialCandidates = [] }) {
-  // ✅ 외부 스토어 없이 내부에서만 관리
   const [candidates, setCandidates] = useState(() => initialCandidates);
   useEffect(() => {
     setCandidates(Array.isArray(initialCandidates) ? initialCandidates : []);
@@ -61,11 +61,12 @@ export default function Card({ initialCandidates = [] }) {
   const [snapping, setSnapping] = useState(false);
   const [dir, setDir] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [isDragging, setIsDragging] = useState(false);
   const dragging = useRef(false);
   const movedRef = useRef(false);
   const lastX = useRef(0);
 
-  // 모달 열릴 때 body 스크롤 제어
   useEffect(() => {
     document.body.style.overflow = selectedUserId != null ? "hidden" : "auto";
     return () => {
@@ -74,7 +75,7 @@ export default function Card({ initialCandidates = [] }) {
   }, [selectedUserId]);
 
   const N = candidates.length;
-  if (N === 0) return null; // 빈 배열이면 상위에서 Matching을 보여줌
+  if (N === 0) return null;
 
   // 카드 배치 파라미터
   const CARD_W = rem(13);
@@ -86,8 +87,6 @@ export default function Card({ initialCandidates = [] }) {
   const hasOne = N === 1;
   const hasTwo = N === 2;
   const hasThreePlus = N >= 3;
-
-  // ✅ 스와이프 허용 여부(3장 이상일 때만 허용)
   const swipeEnabled = hasThreePlus;
 
   const TWO_MULT = 0.5;
@@ -95,10 +94,11 @@ export default function Card({ initialCandidates = [] }) {
   const xTwoRight = SPREAD * TWO_MULT + dx;
   const otherIdx = wrap(center + 1, N);
 
-  // 드래그
+  // 드래그 제스처
   const onStart = (x) => {
     if (!swipeEnabled) return;
     dragging.current = true;
+    setIsDragging(true);
     movedRef.current = false;
     setSnapping(false);
     setDir("");
@@ -117,6 +117,8 @@ export default function Card({ initialCandidates = [] }) {
   const onEnd = () => {
     if (!dragging.current || !swipeEnabled) return;
     dragging.current = false;
+    setIsDragging(false);
+
     const absDx = Math.abs(dx);
     const sign = dx < 0 ? -1 : 1;
     if (absDx >= MAX_DRAG / 2) completeSlide(sign);
@@ -146,7 +148,7 @@ export default function Card({ initialCandidates = [] }) {
     }, SNAP_MS);
   };
 
-  // ✅ 다시 매칭 시작 (API)
+  // 다시 매칭
   const doRematch = async () => {
     const credits = user?.matchCredits ?? 0;
     if (credits <= 0) {
@@ -164,31 +166,23 @@ export default function Card({ initialCandidates = [] }) {
       }
 
       setCandidates(nextList);
-
-      // ✅ 성공 직후 프로필 재조회 → 스토어 최신화
       try {
         const refreshed = await api.get("/users/me/profile");
         if (refreshed?.data) {
           useUserStore.getState().updateUser(refreshed.data);
         }
-      } catch (profileErr) {
-        console.warn("⚠️ 프로필 재조회 실패:", profileErr);
-      }
-
-      // 위치/상태 초기화
+      } catch {}
       setCenter(0);
       setDx(0);
       setSnapping(false);
       setDir("");
     } catch (err) {
-      console.error("❌ 매칭 시작 요청 실패:", err);
       alert(err?.response?.data?.message || "매칭을 다시 시작할 수 없습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ 다시 매칭 컨펌 열기
   const openRematchConfirm = () => {
     const credits = user?.matchCredits ?? 0;
     if (credits <= 0) {
@@ -208,18 +202,15 @@ export default function Card({ initialCandidates = [] }) {
     });
   };
 
-  // ✅ 플러팅 전송
   const sendFlirt = async (targetUserId) => {
     try {
       await api.post(`/signals/${targetUserId}`);
       alert("플러팅을 보냈어요!");
     } catch (err) {
-      console.error("❌ 플러팅 전송 실패:", err);
       alert(err?.response?.data?.message || "플러팅을 보낼 수 없습니다.");
     }
   };
 
-  // ✅ 프로필에서 '플러팅하기' 요청 받기 (YouProfile에서 호출)
   const handleRequestFlirt = (targetUserId, targetName, avatar) => {
     if (!targetUserId) return;
     openConfirm({
@@ -237,69 +228,28 @@ export default function Card({ initialCandidates = [] }) {
     });
   };
 
-  // 카드 내부 렌더
-  const breakAtHalf = (text) => {
-    const raw = (text ?? "").trim();
-    const arr = Array.from(raw);
-    const n = arr.length;
-    if (n < 2) return raw;
-    const mid = Math.floor(n / 2);
-    const isBreak = (ch) => /\s|[.,!?;:·・\-—]/.test(ch);
-    let idx = mid;
-    for (let d = 0; d <= Math.min(8, n - 1); d++) {
-      if (mid - d > 0 && isBreak(arr[mid - d])) {
-        idx = mid - d + 1;
-        break;
-      }
-      if (mid + d < n - 1 && isBreak(arr[mid + d])) {
-        idx = mid + d + 1;
-        break;
-      }
-    }
-    return arr.slice(0, idx).join("") + "\n" + arr.slice(idx).join("");
-  };
-
+  // ✅ introduce는 자연스럽게 그대로 표시
   const CardBody = ({ item = {} }) => {
     const {
       name = "이름 없음",
       department = "학과 없음",
       introduce = "소개 없음",
-      profileImageUrl, // ✅ 1순위
-      typeImageUrl, // ✅ 2순위
+      typeImageUrl2,
     } = item;
 
-    const msgText = breakAtHalf(introduce ?? "");
-
-    const primary = (profileImageUrl ?? "").trim() || null;
-    const fallback = (typeImageUrl ?? "").trim() || null;
-
-    const [imgSrc, setImgSrc] = useState(primary || fallback || null);
-    useEffect(() => {
-      setImgSrc(primary || fallback || null);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [primary, fallback]);
-
-    const handleImgError = () => {
-      if (imgSrc && imgSrc !== fallback && fallback) {
-        setImgSrc(fallback);
-      } else {
-        setImgSrc(null);
-      }
-    };
+    const currentSrc = (typeImageUrl2 ?? "").trim() || null;
 
     return (
       <>
-        <div
-          className="card-stars"
-          aria-hidden="true"
-          style={{ pointerEvents: "none" }}
-        >
+        <div className="card-stars" aria-hidden="true" style={{ pointerEvents: "none" }}>
           {FIXED_STARS.map((s) => (
             <img
               key={s.id}
               src={starImg}
               alt=""
               className="star"
+              draggable={false}
+              decoding="async"
               style={{
                 left: `${s.left}%`,
                 top: `${s.top}%`,
@@ -312,18 +262,18 @@ export default function Card({ initialCandidates = [] }) {
           ))}
         </div>
 
-        <div className="img-frame">
-          {imgSrc ? (
+        <div className="img-wrap">
+          {currentSrc ? (
             <img
-              src={imgSrc}
+              className="img-frame"
+              src={currentSrc}
               alt={name}
               draggable={false}
-              loading="lazy"
+              loading="eager"
               decoding="async"
-              onError={handleImgError}
             />
           ) : (
-            <div className="img-placeholder" aria-hidden="true" />
+            <div className="img-frame" aria-hidden="true" />
           )}
         </div>
 
@@ -331,17 +281,17 @@ export default function Card({ initialCandidates = [] }) {
           <div className="arch-content">
             <p className="name">{name}</p>
             <p className="major">{department}</p>
-            <p className="msg">“{msgText}”</p>
+            <p className="msg">{introduce ?? "소개 없음"}</p>
           </div>
         </div>
       </>
     );
   };
 
-  // 슬롯 좌표
+  // 위치 계산
   const xFarLeft = -2 * SPREAD + dx;
   const xLeft = -1 * SPREAD + dx;
-  const xCenter = 0 * SPREAD + dx;
+  const xCenter = dx;
   const xRight = 1 * SPREAD + dx;
   const xFarRight = 2 * SPREAD + dx;
 
@@ -357,6 +307,8 @@ export default function Card({ initialCandidates = [] }) {
     if (uid != null) setSelectedUserId(uid);
   };
 
+  const t3d = (px) => `translate3d(calc(-50% + ${px}px), -50%, 0)`;
+
   return (
     <>
       <div className="title">
@@ -365,16 +317,9 @@ export default function Card({ initialCandidates = [] }) {
 
       <div className="card-root">
         <div
-          className={`card-wrap ${snapping ? "snapping" : ""} ${dir}`}
-          /* ✅ 캡처 단계에서 제스처 처리 + 3장 이상일 때만 동작 */
-          onTouchStartCapture={(e) =>
-            swipeEnabled && onStart(e.touches[0].clientX)
-          }
-          onTouchMoveCapture={(e) => {
-            if (!swipeEnabled) return;
-            onMove(e.touches[0].clientX);
-            if (dragging.current) e.preventDefault();
-          }}
+          className={`card-wrap ${snapping ? "snapping" : ""} ${dir} ${isDragging ? "dragging" : ""}`}
+          onTouchStartCapture={(e) => swipeEnabled && onStart(e.touches[0].clientX)}
+          onTouchMoveCapture={(e) => swipeEnabled && onMove(e.touches[0].clientX)}
           onTouchEndCapture={swipeEnabled ? onEnd : undefined}
           onMouseDownCapture={(e) => swipeEnabled && onStart(e.clientX)}
           onMouseMoveCapture={(e) => swipeEnabled && onMove(e.clientX)}
@@ -384,10 +329,9 @@ export default function Card({ initialCandidates = [] }) {
           {/* === N=1 === */}
           {hasOne && (
             <div
+              key={getUid(candidates[center])}
               className="slot slot-center"
-              style={{
-                transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
-              }}
+              style={{ transform: t3d(xCenter) }}
             >
               <div className="card" onClick={handleCardClick(candidates[center])}>
                 <CardBody item={candidates[center]} />
@@ -395,26 +339,22 @@ export default function Card({ initialCandidates = [] }) {
             </div>
           )}
 
-          {/* === N=2 === (스와이프 비활성) */}
+          {/* === N=2 === */}
           {hasTwo && (
             <>
               <div
+                key={getUid(candidates[center])}
                 className="slot slot-left"
-                style={{
-                  transform: `translate(calc(-50% + ${xTwoLeft}px), -50%)`,
-                  zIndex: 2,
-                }}
+                style={{ transform: t3d(xTwoLeft), zIndex: 2 }}
               >
                 <div className="card" onClick={handleCardClick(candidates[center])}>
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
               <div
+                key={getUid(candidates[otherIdx])}
                 className="slot slot-right"
-                style={{
-                  transform: `translate(calc(-50% + ${xTwoRight}px), -50%)`,
-                  zIndex: 1,
-                }}
+                style={{ transform: t3d(xTwoRight), zIndex: 1 }}
               >
                 <div className="card" onClick={handleCardClick(candidates[otherIdx])}>
                   <CardBody item={candidates[otherIdx]} />
@@ -423,62 +363,51 @@ export default function Card({ initialCandidates = [] }) {
             </>
           )}
 
-          {/* === N>=3 === (스와이프 활성) */}
+          {/* === N>=3 === */}
           {hasThreePlus && (
             <>
               <div
+                key={getUid(candidates[idxFarLeft])}
                 className="slot slot-far-left"
-                style={{
-                  transform: `translate(calc(-50% + ${xFarLeft}px), -50%)`,
-                }}
+                style={{ transform: t3d(xFarLeft) }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[idxFarLeft])}
-                >
+                <div className="card" onClick={handleCardClick(candidates[idxFarLeft])}>
                   <CardBody item={candidates[idxFarLeft]} />
                 </div>
               </div>
               <div
+                key={getUid(candidates[idxLeft])}
                 className="slot slot-left"
-                style={{
-                  transform: `translate(calc(-50% + ${xLeft}px), -50%)`,
-                }}
+                style={{ transform: t3d(xLeft) }}
               >
                 <div className="card" onClick={handleCardClick(candidates[idxLeft])}>
                   <CardBody item={candidates[idxLeft]} />
                 </div>
               </div>
               <div
+                key={getUid(candidates[center])}
                 className="slot slot-center"
-                style={{
-                  transform: `translate(calc(-50% + ${xCenter}px), -50%)`,
-                }}
+                style={{ transform: t3d(xCenter) }}
               >
                 <div className="card" onClick={handleCardClick(candidates[center])}>
                   <CardBody item={candidates[center]} />
                 </div>
               </div>
               <div
+                key={getUid(candidates[idxRight])}
                 className="slot slot-right"
-                style={{
-                  transform: `translate(calc(-50% + ${xRight}px), -50%)`,
-                }}
+                style={{ transform: t3d(xRight) }}
               >
                 <div className="card" onClick={handleCardClick(candidates[idxRight])}>
                   <CardBody item={candidates[idxRight]} />
                 </div>
               </div>
               <div
+                key={getUid(candidates[idxFarRight])}
                 className="slot slot-far-right"
-                style={{
-                  transform: `translate(calc(-50% + ${xFarRight}px), -50%)`,
-                }}
+                style={{ transform: t3d(xFarRight) }}
               >
-                <div
-                  className="card"
-                  onClick={handleCardClick(candidates[idxFarRight])}
-                >
+                <div className="card" onClick={handleCardClick(candidates[idxFarRight])}>
                   <CardBody item={candidates[idxFarRight]} />
                 </div>
               </div>
@@ -486,20 +415,13 @@ export default function Card({ initialCandidates = [] }) {
           )}
         </div>
 
-        {/* CTA 버튼 */}
         <div className="cta-wrap">
-          <button
-            type="button"
-            className="cta-btn"
-            onClick={openRematchConfirm} // ✅ 컨펌 후 진행
-            disabled={loading}
-          >
+          <button type="button" className="cta-btn" onClick={openRematchConfirm} disabled={loading}>
             {loading ? "매칭 시작 중..." : "다시 매칭하기"}
           </button>
         </div>
       </div>
 
-      {/* 상세 모달: 프로필 + 플러팅하기 콜백 */}
       {selectedUserId != null &&
         createPortal(
           <div className="modal-overlay" onClick={() => setSelectedUserId(null)}>
@@ -517,7 +439,6 @@ export default function Card({ initialCandidates = [] }) {
           document.body
         )}
 
-      {/* ✅ 공통 컨펌 모달 */}
       {confirm?.open && (
         <ConfirmModal
           open
